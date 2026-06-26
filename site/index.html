@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI Context as Code</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <span class="brand-mark">ACC</span>
+          <span>AI Context as Code</span>
+        </div>
+        <input id="search" class="search" type="search" placeholder="Search notes">
+        <nav id="tree" class="tree" aria-label="Notes"></nav>
+      </aside>
+      <main class="content">
+        <article id="note" class="note"></article>
+      </main>
+      <aside class="context">
+        <section>
+          <h2>Backlinks</h2>
+          <div id="backlinks" class="link-list"></div>
+        </section>
+        <section>
+          <h2>Status</h2>
+          <div id="stats" class="stats"></div>
+        </section>
+      </aside>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
