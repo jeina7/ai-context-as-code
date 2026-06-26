@@ -5,31 +5,106 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI Context as Code</title>
     <link rel="stylesheet" href="./styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand">
-          <span class="brand-mark">ACC</span>
-          <span>AI Context as Code</span>
+      <header class="topbar">
+        <button id="nav-toggle" class="icon-button mobile-only" type="button" aria-label="Open navigation">☰</button>
+        <a class="brand" href="#/index" aria-label="AI Context as Code home">
+          <span class="brand-mark">AC</span>
+          <span class="brand-text">AI Context as Code</span>
+        </a>
+        <div class="global-search">
+          <span class="search-icon">⌕</span>
+          <input id="search" type="search" placeholder="Search notes">
         </div>
-        <input id="search" class="search" type="search" placeholder="Search notes">
-        <nav id="tree" class="tree" aria-label="Notes"></nav>
+        <button id="command-open" class="tool-button" type="button">⌘K</button>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle theme">◐</button>
+        <button id="edit-toggle" class="tool-button primary" type="button">Edit</button>
+      </header>
+
+      <aside id="sidebar" class="sidebar">
+        <div class="sidebar-section">
+          <div class="section-title">Notes</div>
+          <nav id="tree" class="tree" aria-label="Notes"></nav>
+        </div>
+        <div class="sidebar-section">
+          <div class="section-title">Filters</div>
+          <div id="type-filters" class="filter-list"></div>
+        </div>
       </aside>
-      <main class="content">
-        <article id="note" class="note"></article>
+
+      <main class="workspace">
+        <section id="reader" class="reader">
+          <div id="breadcrumbs" class="breadcrumbs"></div>
+          <div id="note-meta" class="note-meta"></div>
+          <article id="note" class="note"></article>
+        </section>
+
+        <section id="editor" class="editor hidden" aria-label="Editor">
+          <div class="editor-toolbar">
+            <div>
+              <strong id="editor-title">Edit note</strong>
+              <p id="draft-status" class="muted">Drafts stay in this browser until exported.</p>
+            </div>
+            <div class="editor-actions">
+              <button id="save-draft" class="tool-button" type="button">Save draft</button>
+              <button id="discard-draft" class="tool-button" type="button">Discard</button>
+              <button id="export-patch" class="tool-button primary" type="button">Export patch</button>
+            </div>
+          </div>
+          <div class="editor-grid">
+            <textarea id="editor-text" spellcheck="false"></textarea>
+            <article id="editor-preview" class="note preview"></article>
+          </div>
+        </section>
       </main>
-      <aside class="context">
+
+      <aside class="context-panel">
         <section>
-          <h2>Backlinks</h2>
+          <div class="section-title">Outline</div>
+          <div id="outline" class="outline"></div>
+        </section>
+        <section>
+          <div class="section-title">Backlinks</div>
           <div id="backlinks" class="link-list"></div>
         </section>
         <section>
-          <h2>Status</h2>
+          <div class="section-title">Local Graph</div>
+          <div id="local-graph" class="graph graph-small"></div>
+        </section>
+        <section>
+          <div class="section-title">Status</div>
           <div id="stats" class="stats"></div>
         </section>
       </aside>
+
+      <section class="graph-dock">
+        <div class="graph-header">
+          <div>
+            <div class="section-title">Knowledge Graph</div>
+            <p id="graph-summary" class="muted"></p>
+          </div>
+          <div class="graph-actions">
+            <button id="graph-local" class="tool-button active" type="button">Local</button>
+            <button id="graph-all" class="tool-button" type="button">All</button>
+          </div>
+        </div>
+        <div id="global-graph" class="graph graph-large"></div>
+      </section>
     </div>
+
+    <div id="command-palette" class="command-palette hidden" role="dialog" aria-modal="true" aria-label="Command palette">
+      <div class="command-box">
+        <input id="command-input" type="search" placeholder="Jump to note or run command">
+        <div id="command-results" class="command-results"></div>
+      </div>
+    </div>
+
+    <div id="hover-preview" class="hover-preview hidden"></div>
+    <a id="download-link" class="hidden" download></a>
     <script type="module" src="./app.js"></script>
   </body>
 </html>

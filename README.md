@@ -15,11 +15,24 @@ AI Context as Code is a markdown-based publishable knowledge system for notes th
 - Record the design and implementation process as the system's first publishable knowledge.
 - Become a publishable context brain that can support personal use first and organizational use later.
 
+## Current Features
+
+- Static GitHub Pages workspace.
+- Three-pane reading layout with search, filters, outline, backlinks, and status.
+- Wikilink hover previews.
+- Mermaid diagram rendering.
+- Local and full knowledge graph views.
+- Browser draft editing with localStorage.
+- Patch export for reviewing browser edits locally before committing.
+- Light and dark themes.
+- Generated reports for broken links, orphan notes, and hub notes.
+
 ## Non-Goals
 
 - This is not a full private Obsidian migration.
 - This does not publish private journals, company notes, finance notes, family context, or sensitive strategy.
-- This does not include auth, team permissions, or browser editing in v0.
+- This does not include auth, team permissions, or organization management.
+- Browser editing does not silently commit to GitHub. It drafts locally and exports patches.
 
 ## Structure
 

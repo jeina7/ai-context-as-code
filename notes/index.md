@@ -35,6 +35,7 @@ It is designed for humans to browse and for AI agents to read, review, and impro
 - [[knowledge-as-code]]
 - [[agentic-knowledge-systems]]
 - [[obsidian-transition-plan]]
+- [[system-interface-map]]
 - [[operating-routine]]
 - [[why-build-process-becomes-context]]
 - [[2026-06-27-obsidian-first-pass-import]]

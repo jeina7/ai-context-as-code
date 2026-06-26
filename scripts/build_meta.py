@@ -159,10 +159,85 @@ def build_search_index(notes):
             "slug": note["slug"],
             "title": note["title"],
             "type": note["type"],
+            "status": note["status"],
+            "updated": note["updated"],
             "text": f"{note['title']} {note['body'][:2000]}",
         }
         for note in notes
     ]
+
+
+def build_graph(notes):
+    nodes = [
+        {
+            "id": note["slug"],
+            "note_id": note["id"],
+            "title": note["title"],
+            "type": note["type"],
+            "status": note["status"],
+            "path": note["path"],
+            "link_count": len([link for link in note["links"] if link["resolved_slug"]]),
+            "backlink_count": len(note["backlinks"]),
+        }
+        for note in notes
+    ]
+    edges = []
+    seen = set()
+    for note in notes:
+        for link in note["links"]:
+            target = link["resolved_slug"]
+            if not target:
+                continue
+            key = (note["slug"], target)
+            if key in seen:
+                continue
+            seen.add(key)
+            edges.append({
+                "source": note["slug"],
+                "target": target,
+                "label": link["target"],
+            })
+    return {"nodes": nodes, "edges": edges}
+
+
+def build_report(notes, broken_links):
+    orphan_notes = [
+        {
+            "slug": note["slug"],
+            "title": note["title"],
+            "type": note["type"],
+        }
+        for note in notes
+        if note["slug"] != "index" and not note["backlinks"]
+    ]
+    hub_notes = sorted(
+        [
+            {
+                "slug": note["slug"],
+                "title": note["title"],
+                "type": note["type"],
+                "connection_count": len(note["backlinks"]) + len([link for link in note["links"] if link["resolved_slug"]]),
+            }
+            for note in notes
+        ],
+        key=lambda item: item["connection_count"],
+        reverse=True,
+    )[:10]
+    stale_notes = [
+        {
+            "slug": note["slug"],
+            "title": note["title"],
+            "updated": note["updated"],
+        }
+        for note in notes
+        if not note["updated"]
+    ]
+    return {
+        "orphan_notes": orphan_notes,
+        "hub_notes": hub_notes,
+        "stale_notes": stale_notes,
+        "broken_links": broken_links,
+    }
 
 
 def write_json(name, data):
@@ -205,6 +280,8 @@ def main():
         for note in notes
     ])
     write_json("search-index.json", build_search_index(notes))
+    write_json("graph.json", build_graph(notes))
+    write_json("report.json", build_report(notes, broken_links))
     write_json("stats.json", stats)
     mirror_to_site()
     print(f"Built {len(notes)} notes with {len(broken_links)} broken links.")
