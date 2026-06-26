@@ -19,5 +19,12 @@
   "notes/projects/ai-context-as-code-design.md": "n-ai-context-as-code-design",
   "notes/projects/obsidian-transition-plan.md": "n-obsidian-transition-plan",
   "notes/research/agentic-knowledge-systems.md": "n-agentic-knowledge-systems",
-  "notes/worklog/2026-06-27-initial-build.md": "n-2026-06-27-initial-build"
+  "notes/worklog/2026-06-27-initial-build.md": "n-2026-06-27-initial-build",
+  "notes/patterns/approval-before-external-side-effects.md": "n-approval-before-external-side-effects",
+  "notes/patterns/decision-records-as-context.md": "n-decision-records-as-context",
+  "notes/patterns/import-candidate-triage.md": "n-import-candidate-triage",
+  "notes/patterns/reviewable-ai-workflows.md": "n-reviewable-ai-workflows",
+  "notes/patterns/runtime-verification.md": "n-runtime-verification",
+  "notes/principles/single-source-of-truth.md": "n-single-source-of-truth",
+  "notes/worklog/2026-06-27-obsidian-first-pass-import.md": "n-2026-06-27-obsidian-first-pass-import"
 }
