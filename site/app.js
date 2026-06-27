@@ -57,27 +57,59 @@ const typeLabels = {
   reference: "Reference",
 };
 
+const typeLabelsKo = {
+  principle: "원칙",
+  pattern: "패턴",
+  research: "리서치",
+  decision: "결정",
+  project: "프로젝트",
+  worklog: "작업 기록",
+  reference: "참고",
+};
+
+const reasonLabelsKo = {
+  "no backlinks": "이 노트를 가리키는 링크가 없어요",
+  "no outgoing links": "다른 노트로 이어지는 링크가 없어요",
+  "needs stronger context": "연결을 더 보강하면 좋아요",
+  "recently changed": "최근 바뀌었어요",
+  "context is healthy": "상태가 좋아요",
+};
+
+function typeLabel(type) {
+  return state.lang === "ko" ? (typeLabelsKo[type] || typeLabels[type] || type) : (typeLabels[type] || type);
+}
+
+function reasonLabel(reason) {
+  if (state.lang !== "ko") return reason;
+  if (reasonLabelsKo[reason]) return reasonLabelsKo[reason];
+  const graphMatch = reason.match(/^(\d+) graph connections$/);
+  if (graphMatch) return `연결 ${graphMatch[1]}개`;
+  const statusMatch = reason.match(/^status: (.+)$/);
+  if (statusMatch) return `상태: ${statusMatch[1]}`;
+  return reason;
+}
+
 const uiText = {
   en: {
-    dashboard: "Context Dashboard",
-    dashboardSubtitle: "A working surface for reading, linking, reviewing, and evolving AI-ready context.",
-    reviewQueue: "Review Queue",
-    reviewQueueDescription: "Notes that need stronger links, status cleanup, or better context.",
+    dashboard: "Workspace Status",
+    dashboardSubtitle: "Notes to review, recent changes, and graph health in one place.",
+    reviewQueue: "Needs Review",
+    reviewQueueDescription: "Notes that changed recently or need stronger links.",
     recentlyChanged: "Recently Changed",
-    recentlyChangedDescription: "Fresh context that can be extended or linked.",
+    recentlyChangedDescription: "Fresh notes worth checking before the next change.",
     hubNotes: "Hub Notes",
-    hubNotesDescription: "Current centers of gravity in the graph.",
+    hubNotesDescription: "Notes other work depends on most often.",
     editorOriginal: "Editing canonical English source. Translations stay read-only in this browser.",
   },
   ko: {
-    dashboard: "컨텍스트 대시보드",
-    dashboardSubtitle: "AI가 읽고, 사람이 검토하며, 계속 진화시킬 수 있는 지식 작업면이에요.",
-    reviewQueue: "검토 대기",
-    reviewQueueDescription: "링크, 상태, 맥락 보강이 필요한 노트예요.",
+    dashboard: "작업 현황",
+    dashboardSubtitle: "검토할 노트, 최근 변경, 연결 상태를 한 화면에서 봐요.",
+    reviewQueue: "확인할 노트",
+    reviewQueueDescription: "최근 바뀌었거나 연결을 더 보강하면 좋은 노트예요.",
     recentlyChanged: "최근 변경",
-    recentlyChangedDescription: "확장하거나 연결할 수 있는 최신 맥락이에요.",
+    recentlyChangedDescription: "다음 작업 전에 한 번 보면 좋은 노트예요.",
     hubNotes: "중심 노트",
-    hubNotesDescription: "현재 그래프에서 연결이 많이 모이는 노트예요.",
+    hubNotesDescription: "다른 노트가 자주 기대는 노트예요.",
     editorOriginal: "편집기는 영어 원본 기준이에요. 한국어 번역은 브라우저에서 읽기 전용으로 보여줘요.",
   },
 };
@@ -247,7 +279,7 @@ function renderTypeFilters() {
   for (const note of state.notes) counts.set(note.type, (counts.get(note.type) || 0) + 1);
   els.typeFilters.innerHTML = [...counts.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([type, count]) => `<button class="filter-chip" data-filter="${type}" type="button">${typeLabels[type] || type}<span>${count}</span></button>`)
+    .map(([type, count]) => `<button class="filter-chip" data-filter="${type}" type="button">${typeLabel(type)}<span>${count}</span></button>`)
     .join("");
 }
 
@@ -316,7 +348,7 @@ function renderMeta(note) {
     .map((part, index) => `<span>${escapeHtml(part.replace(".md", ""))}</span>${index < parts.length - 1 ? "<b>/</b>" : ""}`)
     .join("");
   els.noteMeta.innerHTML = `
-    <span class="type-chip type-${note.type}">${escapeHtml(typeLabels[note.type] || note.type)}</span>
+    <span class="type-chip type-${note.type}">${escapeHtml(typeLabel(note.type))}</span>
     <span class="meta-chip">${escapeHtml(note.status)}</span>
     <span class="meta-chip">Updated ${escapeHtml(note.updated || "unknown")}</span>
     <span class="meta-chip">${localizedNote(note).hasTranslation ? state.lang.toUpperCase() : "EN"}</span>
@@ -345,7 +377,7 @@ function dashboardCard(item, extra = "") {
   const summary = note ? summaryFromMarkdown(localizedBody(note)) : item.summary;
   return `
     <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
-      <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
+      <span>${escapeHtml(typeLabel(item.type))}</span>
       <strong>${escapeHtml(title)}</strong>
       ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
       ${extra}
@@ -370,20 +402,20 @@ function renderDashboard() {
     <section class="dashboard-shell">
       <div class="dashboard-hero">
         <div>
-          <p class="eyebrow">Context cockpit</p>
+          <p class="eyebrow">AI Context as Code</p>
           <h1>${escapeHtml(t("dashboard"))}</h1>
           <p>${escapeHtml(t("dashboardSubtitle"))}</p>
         </div>
         <div class="dashboard-status">
-          <span>Ready for agent use</span>
-          <strong>${health.broken_links === 0 ? "Clean" : `${health.broken_links} broken links`}</strong>
+          <span>${state.lang === "ko" ? "배포 상태" : "Publish status"}</span>
+          <strong>${health.broken_links === 0 ? (state.lang === "ko" ? "정상" : "Clean") : `${health.broken_links} broken links`}</strong>
         </div>
       </div>
       <div class="health-grid">
-        <div><span>Notes</span><strong>${health.notes}</strong></div>
-        <div><span>Review</span><strong>${health.review_items}</strong></div>
-        <div><span>Orphans</span><strong>${health.orphans}</strong></div>
-        <div><span>Broken links</span><strong>${health.broken_links}</strong></div>
+        <div><span>${state.lang === "ko" ? "노트" : "Notes"}</span><strong>${health.notes}</strong></div>
+        <div><span>${state.lang === "ko" ? "확인할 것" : "Review"}</span><strong>${health.review_items}</strong></div>
+        <div><span>${state.lang === "ko" ? "고립 노트" : "Orphans"}</span><strong>${health.orphans}</strong></div>
+        <div><span>${state.lang === "ko" ? "깨진 링크" : "Broken links"}</span><strong>${health.broken_links}</strong></div>
       </div>
     </section>
     <section class="dashboard-layout">
@@ -397,9 +429,9 @@ function renderDashboard() {
         <div class="review-list">
           ${queue.map((item) => `
             <a class="review-item type-${item.type}" href="#/${item.slug}">
-              <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
+              <span>${escapeHtml(typeLabel(item.type))}</span>
               <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
-              <em>${item.reasons.map(escapeHtml).join(" · ")}</em>
+              <em>${item.reasons.map(reasonLabel).map(escapeHtml).join(" · ")}</em>
             </a>
           `).join("")}
         </div>
@@ -431,10 +463,10 @@ function renderDashboard() {
     </section>
     <section class="dashboard-section runtime-strip">
       <div>
-        <span>Agent runtime</span>
-        <strong>Instructions, commands, skills, and memory should be directly readable by agents.</strong>
+        <span>${state.lang === "ko" ? "에이전트 실행 기준" : "Agent runtime"}</span>
+        <strong>${state.lang === "ko" ? "에이전트가 읽는 규칙, 명령, 스킬, 기억 포인터를 한곳에 모아요." : "Instructions, commands, skills, and memory should be directly readable by agents."}</strong>
       </div>
-      <a class="tool-button primary" href="#/projects/agent-runtime-references">Open runtime plan</a>
+      <a class="tool-button primary" href="#/projects/agent-runtime-references">${state.lang === "ko" ? "기준 보기" : "Open runtime plan"}</a>
     </section>
   `;
   els.outline.innerHTML = "";
@@ -569,7 +601,7 @@ function renderGraphInsights(note, activeGraph) {
     : "No direct neighbors yet";
 
   els.graphInsights.innerHTML = [
-    graphInsight("Current", activeTitle, typeLabels[note.type] || note.type),
+    graphInsight("Current", activeTitle, typeLabel(note.type)),
     graphInsight("Incoming", `${incoming.length}`, incoming.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
     graphInsight("Outgoing", `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
     state.graphMode === "all"

@@ -6,28 +6,28 @@ title: 에이전트형 지식 시스템
 
 ## 요약
 
-에이전트형 지식 시스템은 AI agent가 매 session 처음부터 시작하지 않고 오래 남는 context로 작업하게 도와요.
-최근 흐름은 고립된 prompt에서 context engineering, codified context, agent-maintained knowledge layer로 이동하고 있어요.
-AI Context as Code는 이 방향의 가볍고 markdown-first인 구현이에요.
+에이전트형 지식 시스템은 AI 에이전트가 매 세션 처음부터 시작하지 않고 오래 남는 맥락으로 작업하게 도와요.
+최근 흐름은 고립된 프롬프트에서 맥락 설계, 코드화된 맥락, 에이전트가 관리하는 지식 층으로 이동하고 있어요.
+AI Context as Code는 이 방향을 가볍게 구현한 마크다운 기반 시스템이에요.
 
 ## 관찰
 
 관련 업계 용어는 다음과 같아요.
 
-- context engineering
-- agentic context engineering
-- codified context
-- knowledge layer
+- 맥락 설계
+- 에이전트형 맥락 설계
+- 코드화된 맥락
+- 지식 층
 - agent harness
 - Model Context Protocol
 
 이 용어들은 같은 근본 문제를 가리켜요.
-AI agent가 안정적으로 행동하려면 구조화되고, 검증되고, 진화하는 context가 필요해요.
+AI 에이전트가 안정적으로 행동하려면 구조화되고, 검증되고, 진화하는 맥락이 필요해요.
 
 ## 경계
 
-이 프로젝트는 full agent harness가 아니라 context layer로 시작해요.
-tool permission, execution trace, automatic commit 같은 harness 기능은 context source가 신뢰 가능해진 뒤에 붙일 수 있어요.
+이 프로젝트는 완성된 agent harness가 아니라 맥락 층으로 시작해요.
+도구 권한, 실행 기록, 자동 커밋 같은 harness 기능은 맥락 원본이 신뢰 가능해진 뒤에 붙일 수 있어요.
 
 ## 관련
 

@@ -7,8 +7,8 @@ title: 운영 루틴
 ## 요약
 
 AI Context as Code가 건강하게 유지되려면 작고 반복 가능한 routine이 필요해요.
-의미 있는 변경은 write, link, validate, build, review를 지나야 해요.
-그래야 context layer를 사람과 agent가 모두 쓸 수 있어요.
+의미 있는 변경은 write, link, validate, build, 검토를 지나야 해요.
+그래야 맥락 층를 사람과 에이전트가 모두 쓸 수 있어요.
 
 ## 루틴
 
@@ -19,7 +19,7 @@ AI Context as Code가 건강하게 유지되려면 작고 반복 가능한 routi
 3. 관련 wikilink를 추가해요.
 4. `python3 scripts/review_context.py`를 실행해요.
 5. safety, validation, broken link 문제를 고쳐요.
-6. check가 통과한 뒤에만 commit해요.
+6. check가 통과한 뒤에만 커밋해요.
 
 ## 주간 리뷰
 
@@ -27,9 +27,9 @@ AI Context as Code가 건강하게 유지되려면 작고 반복 가능한 routi
 
 - 중복 concept 찾기
 - 약한 summary 개선하기
-- 낡은 decision 확인하기
-- 유용한 worklog를 durable note로 승격하기
-- 실수가 반복되면 convention 업데이트하기
+- 낡은 결정 확인하기
+- 유용한 worklog를 오래 남길 노트로 승격하기
+- 실수가 반복되면 규칙 업데이트하기
 
 ## 관련
 

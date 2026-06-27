@@ -1,23 +1,23 @@
 ---
-title: 공유 가능한 맥락과 private 맥락의 분리
+title: 공유 가능한 맥락과 비공개 맥락의 분리
 ---
 
-# 공유 가능한 맥락과 private 맥락의 분리
+# 공유 가능한 맥락과 비공개 맥락의 분리
 
 ## 요약
 
-지식 시스템은 private vault의 직접 복사본이 되면 안 돼요.
-private note는 raw context를 담을 수 있지만, 공유 가능한 노트는 review와 generalization이 필요해요.
-이 분리는 풍부한 private memory를 유지하면서도 재사용 가능한 지식을 안전하게 드러낼 수 있게 해줘요.
+지식 시스템은 비공개 볼트의 직접 복사본이 되면 안 돼요.
+비공개 노트는 raw 맥락을 담을 수 있지만, 공유 가능한 노트는 검토와 generalization이 필요해요.
+이 분리는 풍부한 비공개 기억를 유지하면서도 재사용 가능한 지식을 안전하게 드러낼 수 있게 해줘요.
 
 ## 패턴
 
 두 공간을 써요.
 
-- raw, sensitive, personal material을 위한 private source space
-- 검토되고 일반화된 reusable note를 위한 memory space
+- raw, sensitive, personal 자료를 위한 비공개 원본 space
+- 검토되고 일반화된 reusable note를 위한 기억 space
 
-자료는 review step을 통해서만 private에서 공유 가능한 쪽으로 이동해요.
+자료는 검토 step을 통해서만 비공개에서 공유 가능한 쪽으로 이동해요.
 
 ```text
 private source

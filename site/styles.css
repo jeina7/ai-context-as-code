@@ -372,11 +372,12 @@ details div {
 
 .dashboard-mode .workspace {
   min-height: calc(100vh - 64px);
-  padding: 34px clamp(18px, 5vw, 72px) 56px;
+  padding: 26px clamp(18px, 3vw, 48px) 56px;
 }
 
 .dashboard-mode .reader {
-  max-width: 1180px;
+  max-width: none;
+  width: 100%;
 }
 
 .reader,
@@ -627,7 +628,8 @@ details div {
 }
 
 .dashboard-shell {
-  max-width: 1180px;
+  width: 100%;
+  max-width: none;
 }
 
 .dashboard-hero {
@@ -639,10 +641,10 @@ details div {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background:
-    linear-gradient(90deg, color-mix(in srgb, var(--surface-2) 80%, transparent), transparent 62%),
+    linear-gradient(90deg, color-mix(in srgb, var(--surface-2) 58%, transparent), transparent 74%),
     var(--surface);
-  padding: clamp(20px, 4vw, 34px);
-  margin-bottom: 12px;
+  padding: 22px 24px;
+  margin-bottom: 10px;
 }
 
 .dashboard-hero .eyebrow {
@@ -655,17 +657,20 @@ details div {
 }
 
 .dashboard-hero h1 {
-  margin-bottom: 12px;
+  margin: 0 0 8px;
+  font-size: clamp(28px, 2.7vw, 42px);
+  line-height: 1.08;
 }
 
 .dashboard-hero p:last-child {
-  max-width: 660px;
+  max-width: 580px;
   margin-bottom: 0;
   color: var(--muted);
+  font-size: 15px;
 }
 
 .dashboard-status {
-  flex: 0 0 210px;
+  flex: 0 0 190px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface-2) 72%, transparent);
@@ -684,13 +689,13 @@ details div {
 .dashboard-status strong {
   display: block;
   margin-top: 5px;
-  font-size: 22px;
+  font-size: 20px;
 }
 
 .health-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 8px;
   max-width: none;
   margin: 0;
 }
@@ -698,8 +703,8 @@ details div {
 .health-grid div {
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
-  padding: 13px;
+  background: color-mix(in srgb, var(--surface-2) 58%, transparent);
+  padding: 12px;
 }
 
 .health-grid span,
@@ -714,23 +719,23 @@ details div {
 
 .health-grid strong {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   color: var(--text);
-  font-size: 26px;
+  font-size: 24px;
   line-height: 1;
 }
 
 .dashboard-section {
-  max-width: 1180px;
+  max-width: none;
   margin-top: 30px;
 }
 
 .dashboard-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
-  gap: 18px;
-  max-width: 1180px;
-  margin-top: 30px;
+  grid-template-columns: minmax(0, 1.45fr) minmax(380px, 0.85fr);
+  gap: 16px;
+  max-width: none;
+  margin-top: 16px;
 }
 
 .dashboard-main,
@@ -739,12 +744,12 @@ details div {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
-  padding: 16px;
+  padding: 14px;
 }
 
 .dashboard-side {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .dashboard-heading {

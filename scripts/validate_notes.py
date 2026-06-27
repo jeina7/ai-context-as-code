@@ -10,6 +10,28 @@ FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 REQUIRED = ["title", "type", "status", "visibility", "created", "updated"]
 VALID_TYPES = {"principle", "pattern", "research", "decision", "project", "worklog", "reference"}
+KO_AWKWARD_PATTERNS = [
+    "맥락를",
+    "맥락가",
+    "맥락는",
+    "맥락로",
+    "문서 묶음로",
+    "문서 묶음를",
+    "원본를",
+    "원본가",
+    "기록가",
+    "층가",
+    "복사본가",
+    "검토able",
+    "저장소rt",
+    "주요tained",
+    "에이전트ic",
+    "reading copy",
+    "Agent-facing",
+    "working context product",
+    "document system",
+    "copy operation",
+]
 
 
 def parse_frontmatter(text):
@@ -22,6 +44,13 @@ def parse_frontmatter(text):
             key, value = line.split(":", 1)
             data[key.strip()] = value.strip().strip('"').strip("'")
     return data
+
+
+def strip_protected_markdown(text):
+    text = re.sub(r"```[\s\S]*?```", "", text)
+    text = re.sub(r"`[^`]+`", "", text)
+    text = re.sub(r"\[\[[^\]]+\]\]", "", text)
+    return text
 
 
 def main():
@@ -67,6 +96,10 @@ def main():
             errors.append(f"{rel}: missing frontmatter")
         elif not data.get("title"):
             errors.append(f"{rel}: missing `title`")
+        prose = strip_protected_markdown(text)
+        for pattern in KO_AWKWARD_PATTERNS:
+            if pattern in prose:
+                errors.append(f"{rel}: awkward Korean phrase `{pattern}`")
         for raw_target in WIKILINK_RE.findall(text):
             target = raw_target.split("|", 1)[0].strip().replace(".md", "")
             if target not in slugs:

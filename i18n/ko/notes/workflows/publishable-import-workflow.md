@@ -1,16 +1,16 @@
 ---
-title: 옮기기 전 검토 workflow
+title: 옮기기 전 검토 작업 흐름
 ---
 
-# 옮기기 전 검토 workflow
+# 옮기기 전 검토 작업 흐름
 
 ## 요약
 
-private note는 context layer로 바로 이동하면 안 돼요.
-분석, risk detection, rewriting, validation이 필요해요.
-import process는 copy operation이 아니라 filter예요.
+비공개 노트는 맥락 층으로 바로 옮기면 안 돼요.
+먼저 위험한 내용이 있는지 보고, 필요한 부분만 다시 써야 해요.
+가져오기는 복사가 아니라 선별이에요.
 
-## workflow
+## 작업 흐름
 
 ```text
 private source
@@ -24,10 +24,10 @@ private source
 
 ## 규칙
 
-- import report는 `private-staging/`에 남겨요.
-- raw private source는 `notes/`에 들어가지 않아요.
-- 다시 쓴 노트는 private event가 아니라 재사용 가능한 idea를 보존해야 해요.
-- safety check는 실수를 줄이지만 판단을 대체하지 않아요.
+- 가져오기 보고서는 `private-staging/`에 남겨요.
+- 날것의 비공개 원본은 `notes/`에 들어가지 않아요.
+- 다시 쓴 노트는 개인 사건이 아니라 재사용 가능한 아이디어를 보존해야 해요.
+- 안전 점검은 실수를 줄이지만 판단을 대체하지 않아요.
 
 ## 관련
 

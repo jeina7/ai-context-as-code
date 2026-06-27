@@ -6,19 +6,19 @@ title: 초기 구축 작업 기록
 
 ## 요약
 
-초기 구축에서는 static rendering과 validation을 가진 local markdown context system을 만들었어요.
-시스템은 이미 wikilink, backlink, search data, folder tree, safety check를 지원해요.
-다음 단계는 import dry-run과 agent command structure예요.
+초기 구축에서는 정적 렌더링과 검증을 가진 로컬 마크다운 맥락 시스템을 만들었어요.
+시스템은 이미 위키링크, 백링크, 검색 데이터, 폴더 트리, 안전 점검을 지원해요.
+다음 단계는 가져오기 전 미리 점검하는 기능과 에이전트 명령 구조예요.
 
 ## 완료
 
-- local repository structure 생성
-- seed note 추가
-- metadata build 구현
-- note validation 구현
-- safety check 구현
-- static site 생성
-- GitHub Pages workflow 초안 추가
+- 로컬 저장소 구조 생성
+- 시작 노트 추가
+- 메타데이터 build 구현
+- 노트 검증 구현
+- 안전 점검 구현
+- 정적 사이트 생성
+- GitHub Pages 작업 흐름 초안 추가
 - 프로젝트 이름을 AI Context as Code로 변경
 
 ## 관련

@@ -6,31 +6,31 @@ title: Obsidian 전환 계획
 
 ## 요약
 
-AI Context as Code는 private Obsidian vault를 한 번에 대체하지 않아요.
-먼저 외부에 보여도 되는 thinking의 source of truth가 돼요.
-private, personal, financial, organizational material은 private vault에 남겨요.
+AI Context as Code는 비공개 Obsidian 볼트를 한 번에 대체하지 않아요.
+먼저 외부에 보여도 되는 thinking의 기준 원본이 돼요.
+비공개, personal, financial, organizational 자료는 비공개 볼트에 남겨요.
 
 ## 전환
 
-Phase 1: private vault는 계속 main source로 유지해요.
+단계 1: 비공개 볼트는 계속 main 원본로 유지해요.
 
-Phase 2: 재사용 가능한 idea를 dry-run report로 분석하고 다시 써서 노트로 옮겨요.
+단계 2: 재사용 가능한 idea를 미리 점검한 보고서로 분석하고 다시 써서 노트로 옮겨요.
 
-Phase 3: project design, research, decision, context rule을 AI Context as Code에 직접 써요.
+단계 3: project design, 리서치, 결정, 맥락 규칙을 AI Context as Code에 직접 써요.
 
-Phase 4: private Obsidian은 외부에 보여줄 수 없는 life context와 raw draft를 위한 장소가 돼요.
+단계 4: 비공개 Obsidian은 외부에 보여줄 수 없는 life 맥락와 raw draft를 위한 장소가 돼요.
 
 ## 경계
 
-전환은 folder copy가 아니라 knowledge class 기준으로 해요.
+전환은 폴더 copy가 아니라 knowledge class 기준으로 해요.
 
 옮길 것:
 
 - reusable pattern
-- generalized decision
-- external research
+- generalized 결정
+- external 리서치
 - 배포해도 안전한 project design
-- context engineering principle
+- 맥락 설계 principle
 
 옮기지 않을 것:
 

@@ -43,4 +43,6 @@ The durable content.
 - Update existing notes when the new material strengthens an existing concept.
 - Use wikilinks for related notes.
 - Keep private context out of publishable notes.
-
+- Keep Korean translations in short friendly 해요체.
+- Korean translations should not read like literal English translations.
+- When a technical English term must remain, explain it briefly or keep it as a concrete code/file term.

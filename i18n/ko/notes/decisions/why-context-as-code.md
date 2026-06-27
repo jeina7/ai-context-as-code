@@ -1,26 +1,26 @@
 ---
-title: 왜 Context as Code인가
+title: 왜 맥락 as Code인가
 ---
 
-# 왜 Context as Code인가
+# 왜 맥락 as Code인가
 
 ## 요약
 
-프로젝트 이름은 AI context를 versioned, reviewable, testable artifact로 다루기 때문에 AI Context as Code예요.
-이름은 branded name이 아니라 설명형 이름이에요.
-현재 구현을 full agent harness로 과장하지 않으면서 context engineering 방향과 연결돼요.
+프로젝트 이름은 AI가 쓰는 맥락을 버전 관리하고, 검토하고, 검증할 수 있는 산출물로 다루기 때문에 AI Context as Code예요.
+이름은 고유명사처럼 꾸민 이름이 아니라 무엇을 하는지 설명하는 이름이에요.
+현재 구현을 완성된 에이전트 하네스로 과장하지 않으면서도 맥락 설계 방향과 연결돼요.
 
 ## 결정
 
-프로젝트 이름은 `AI Context as Code`, repository 이름은 `ai-context-as-code`를 사용해요.
+프로젝트 이름은 `AI Context as Code`, 저장소 이름은 `ai-context-as-code`를 사용해요.
 
 ## 이유
 
-`Context`는 memory보다 정확해요.
-이 시스템은 사실을 저장하기만 하는 것이 아니라 AI agent가 보고, 재사용하고, 개선할 수 있는 환경을 설계하기 때문이에요.
+`Context`는 기억보다 정확해요.
+이 시스템은 사실을 저장하기만 하는 것이 아니라 AI 에이전트가 보고, 재사용하고, 개선할 수 있는 환경을 설계하기 때문이에요.
 
 `as Code`도 정확해요.
-노트, convention, validation script, generated metadata가 repository에 있고, 배포 전에 check를 통과하기 때문이에요.
+노트, 규칙, 검증 스크립트, 생성된 메타데이터가 저장소에 있고, 배포 전에 검사를 통과하기 때문이에요.
 
 ## 관련
 
