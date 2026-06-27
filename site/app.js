@@ -75,6 +75,17 @@ const reasonLabelsKo = {
   "context is healthy": "상태가 좋아요",
 };
 
+const folderLabelsKo = {
+  start: "시작",
+  principles: "원칙",
+  concepts: "개념",
+  workflows: "워크플로",
+  projects: "프로젝트",
+  decisions: "결정",
+  research: "리서치",
+  worklog: "작업 기록",
+};
+
 function typeLabel(type) {
   return state.lang === "ko" ? (typeLabelsKo[type] || typeLabels[type] || type) : (typeLabels[type] || type);
 }
@@ -100,6 +111,26 @@ const uiText = {
     hubNotes: "Hub Notes",
     hubNotesDescription: "Notes other work depends on most often.",
     editorOriginal: "Editing canonical English source. Translations stay read-only in this browser.",
+    notes: "Notes",
+    brokenLinks: "Broken links",
+    orphans: "Orphans",
+    generated: "Generated",
+    backlinks: "Backlinks",
+    outgoing: "Outgoing",
+    status: "Status",
+    current: "Current",
+    incoming: "Incoming",
+    mapSignal: "Map signal",
+    related: "Related",
+    noOutgoing: "No outgoing links.",
+    noHeadings: "No headings.",
+    draftSaved: "Draft saved",
+    updated: "Updated",
+    noDirectNeighbors: "No direct neighbors yet",
+    notesUnit: "notes",
+    linksUnit: "links",
+    searchNotes: "Search notes",
+    command: "Command",
   },
   ko: {
     dashboard: "작업 현황",
@@ -111,6 +142,26 @@ const uiText = {
     hubNotes: "중심 노트",
     hubNotesDescription: "다른 노트가 자주 기대는 노트예요.",
     editorOriginal: "편집기는 영어 원본 기준이에요. 한국어 번역은 브라우저에서 읽기 전용으로 보여줘요.",
+    notes: "노트",
+    brokenLinks: "깨진 링크",
+    orphans: "고립 노트",
+    generated: "생성 시각",
+    backlinks: "받는 링크",
+    outgoing: "내보내는 링크",
+    status: "상태",
+    current: "현재 노트",
+    incoming: "받는 링크",
+    mapSignal: "전체 연결",
+    related: "연결된 노트",
+    noOutgoing: "아직 이어지는 링크가 없어요.",
+    noHeadings: "아직 제목 구조가 없어요.",
+    draftSaved: "임시 저장됨",
+    updated: "수정",
+    noDirectNeighbors: "아직 직접 연결된 노트가 없어요",
+    notesUnit: "노트",
+    linksUnit: "링크",
+    searchNotes: "노트 검색",
+    command: "명령",
   },
 };
 
@@ -145,6 +196,10 @@ function slugKey(value) {
 
 function t(key) {
   return uiText[state.lang]?.[key] || uiText.en[key] || key;
+}
+
+function folderLabel(folder) {
+  return state.lang === "ko" ? (folderLabelsKo[folder] || folderLabels[folder] || folder) : (folderLabels[folder] || folder);
 }
 
 function localizedNote(note) {
@@ -266,7 +321,7 @@ function renderTreeNode(node) {
   }
   const children = node.children.map(renderTreeNode).join("");
   if (node.name === "notes") return children;
-  return `<details open><summary>${escapeHtml(folderLabels[node.name] || node.name)}</summary><div>${children}</div></details>`;
+  return `<details open><summary>${escapeHtml(folderLabel(node.name))}</summary><div>${children}</div></details>`;
 }
 
 function renderTree() {
@@ -285,11 +340,11 @@ function renderTypeFilters() {
 
 function renderBacklinks(note) {
   if (!note) {
-    els.backlinks.innerHTML = `<p class="muted">Dashboard has no backlinks.</p>`;
+    els.backlinks.innerHTML = `<p class="muted">${state.lang === "ko" ? "대시보드는 문서가 아니라서 받는 링크를 표시하지 않아요." : "Dashboard has no backlinks."}</p>`;
     return;
   }
   if (!note.backlinks.length) {
-    els.backlinks.innerHTML = `<p class="muted">No backlinks yet.</p>`;
+    els.backlinks.innerHTML = `<p class="muted">${state.lang === "ko" ? "아직 이 노트를 가리키는 링크가 없어요." : "No backlinks yet."}</p>`;
     return;
   }
   els.backlinks.innerHTML = note.backlinks
@@ -300,13 +355,13 @@ function renderBacklinks(note) {
 function renderOutgoing(note) {
   if (!note) {
     els.outgoing.innerHTML = state.dashboard.hub_notes
-      .map((item) => `<a href="#/${item.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}<small>${item.connection_count} links</small></a>`)
+      .map((item) => `<a href="#/${item.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}<small>${item.connection_count} ${escapeHtml(t("linksUnit"))}</small></a>`)
       .join("");
     return;
   }
   const links = note.links.filter((link) => link.resolved_slug);
   if (!links.length) {
-    els.outgoing.innerHTML = `<p class="muted">No outgoing links.</p>`;
+    els.outgoing.innerHTML = `<p class="muted">${escapeHtml(t("noOutgoing"))}</p>`;
     return;
   }
   els.outgoing.innerHTML = links
@@ -318,10 +373,10 @@ function renderStats() {
   const generated = state.stats.generated_at ? new Date(state.stats.generated_at).toLocaleString() : "unknown";
   const orphanCount = state.report?.orphan_notes?.length ?? 0;
   els.stats.innerHTML = `
-    <div class="stat-row"><span>Notes</span><strong>${state.stats.note_count}</strong></div>
-    <div class="stat-row"><span>Broken links</span><strong>${state.stats.broken_link_count}</strong></div>
-    <div class="stat-row"><span>Orphans</span><strong>${orphanCount}</strong></div>
-    <div class="stat-row"><span>Generated</span><strong>${generated}</strong></div>
+    <div class="stat-row"><span>${escapeHtml(t("notes"))}</span><strong>${state.stats.note_count}</strong></div>
+    <div class="stat-row"><span>${escapeHtml(t("brokenLinks"))}</span><strong>${state.stats.broken_link_count}</strong></div>
+    <div class="stat-row"><span>${escapeHtml(t("orphans"))}</span><strong>${orphanCount}</strong></div>
+    <div class="stat-row"><span>${escapeHtml(t("generated"))}</span><strong>${generated}</strong></div>
   `;
 }
 
@@ -329,13 +384,13 @@ function renderContextHealth(note = null) {
   const health = state.dashboard?.context_health;
   if (!health) return;
   const noteSignals = note ? [
-    ["Backlinks", note.backlinks.length],
-    ["Outgoing", note.links.filter((link) => link.resolved_slug).length],
-    ["Status", note.status],
+    [t("backlinks"), note.backlinks.length],
+    [t("outgoing"), note.links.filter((link) => link.resolved_slug).length],
+    [t("status"), note.status],
   ] : [
-    ["Review queue", health.review_items],
-    ["Hub notes", state.dashboard.hub_notes.length],
-    ["Broken links", health.broken_links],
+    [t("reviewQueue"), health.review_items],
+    [t("hubNotes"), state.dashboard.hub_notes.length],
+    [t("brokenLinks"), health.broken_links],
   ];
   els.contextHealth.innerHTML = noteSignals
     .map(([label, value]) => `<div class="health-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`)
@@ -350,16 +405,16 @@ function renderMeta(note) {
   els.noteMeta.innerHTML = `
     <span class="type-chip type-${note.type}">${escapeHtml(typeLabel(note.type))}</span>
     <span class="meta-chip">${escapeHtml(note.status)}</span>
-    <span class="meta-chip">Updated ${escapeHtml(note.updated || "unknown")}</span>
+    <span class="meta-chip">${escapeHtml(t("updated"))} ${escapeHtml(note.updated || "unknown")}</span>
     <span class="meta-chip">${localizedNote(note).hasTranslation ? state.lang.toUpperCase() : "EN"}</span>
-    ${hasDraft(note) ? '<span class="meta-chip draft-chip">Draft saved</span>' : ""}
+    ${hasDraft(note) ? `<span class="meta-chip draft-chip">${escapeHtml(t("draftSaved"))}</span>` : ""}
   `;
 }
 
 function renderOutline(note) {
   const headings = extractHeadings({ ...note, body: localizedBody(note) });
   if (!headings.length) {
-    els.outline.innerHTML = `<p class="muted">No headings.</p>`;
+    els.outline.innerHTML = `<p class="muted">${escapeHtml(t("noHeadings"))}</p>`;
     return;
   }
   els.outline.innerHTML = headings
@@ -408,14 +463,14 @@ function renderDashboard() {
         </div>
         <div class="dashboard-status">
           <span>${state.lang === "ko" ? "배포 상태" : "Publish status"}</span>
-          <strong>${health.broken_links === 0 ? (state.lang === "ko" ? "정상" : "Clean") : `${health.broken_links} broken links`}</strong>
+          <strong>${health.broken_links === 0 ? (state.lang === "ko" ? "정상" : "Clean") : `${health.broken_links} ${t("brokenLinks")}`}</strong>
         </div>
       </div>
       <div class="health-grid">
-        <div><span>${state.lang === "ko" ? "노트" : "Notes"}</span><strong>${health.notes}</strong></div>
+        <div><span>${escapeHtml(t("notes"))}</span><strong>${health.notes}</strong></div>
         <div><span>${state.lang === "ko" ? "확인할 것" : "Review"}</span><strong>${health.review_items}</strong></div>
-        <div><span>${state.lang === "ko" ? "고립 노트" : "Orphans"}</span><strong>${health.orphans}</strong></div>
-        <div><span>${state.lang === "ko" ? "깨진 링크" : "Broken links"}</span><strong>${health.broken_links}</strong></div>
+        <div><span>${escapeHtml(t("orphans"))}</span><strong>${health.orphans}</strong></div>
+        <div><span>${escapeHtml(t("brokenLinks"))}</span><strong>${health.broken_links}</strong></div>
       </div>
     </section>
     <section class="dashboard-layout">
@@ -456,7 +511,7 @@ function renderDashboard() {
             </div>
           </div>
           <div class="dashboard-cards compact">
-            ${state.dashboard.hub_notes.slice(0, 5).map((item) => dashboardCard(item, `<em>${item.connection_count} connections</em>`)).join("")}
+            ${state.dashboard.hub_notes.slice(0, 5).map((item) => dashboardCard(item, `<em>${item.connection_count} ${escapeHtml(t("linksUnit"))}</em>`)).join("")}
           </div>
         </section>
       </div>
@@ -598,15 +653,15 @@ function renderGraphInsights(note, activeGraph) {
   const activeTitle = localizedTitle(note);
   const connected = local.nodes.length > 1
     ? local.nodes.filter((node) => node.id !== note.slug).map((node) => localizedTitle(state.notesBySlug.get(node.id) || node)).slice(0, 3).join(", ")
-    : "No direct neighbors yet";
+    : t("noDirectNeighbors");
 
   els.graphInsights.innerHTML = [
-    graphInsight("Current", activeTitle, typeLabel(note.type)),
-    graphInsight("Incoming", `${incoming.length}`, incoming.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
-    graphInsight("Outgoing", `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
+    graphInsight(t("current"), activeTitle, typeLabel(note.type)),
+    graphInsight(t("incoming"), `${incoming.length}`, incoming.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
+    graphInsight(t("outgoing"), `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
     state.graphMode === "all"
-      ? graphInsight("Map signal", `${activeGraph.nodes.length} notes`, hubs || review || "No graph signal yet")
-      : graphInsight("Related", `${Math.max(0, local.nodes.length - 1)} notes`, connected),
+      ? graphInsight(t("mapSignal"), `${activeGraph.nodes.length} ${t("notesUnit")}`, hubs || review || (state.lang === "ko" ? "아직 연결 신호가 약해요" : "No graph signal yet"))
+      : graphInsight(t("related"), `${Math.max(0, local.nodes.length - 1)} ${t("notesUnit")}`, connected),
   ].join("");
 }
 
@@ -614,7 +669,7 @@ function renderGraph() {
   const note = state.currentNote;
   const activeGraph = relatedGraph(note, state.graphMode);
   els.globalGraph.innerHTML = graphSvg(activeGraph, note, false);
-  els.graphSummary.textContent = `${activeGraph.nodes.length} nodes · ${activeGraph.edges.length} links`;
+  els.graphSummary.textContent = `${activeGraph.nodes.length} ${t("notesUnit")} · ${activeGraph.edges.length} ${t("linksUnit")}`;
   renderGraphInsights(note, activeGraph);
   els.graphLocal.classList.toggle("active", state.graphMode === "local");
   els.graphAll.classList.toggle("active", state.graphMode === "all");
@@ -626,7 +681,7 @@ function renderEditorState() {
   els.editorTitle.textContent = `Edit ${note.title}`;
   const draft = localStorage.getItem(draftKey(note));
   els.editorText.value = draft ?? note.body;
-  els.draftStatus.textContent = draft ? "Saved draft loaded from this browser." : t("editorOriginal");
+  els.draftStatus.textContent = draft ? (state.lang === "ko" ? "이 브라우저에 저장된 임시 글을 불러왔어요." : "Saved draft loaded from this browser.") : t("editorOriginal");
   if (!els.editor.classList.contains("hidden")) updateEditorPreview();
 }
 
@@ -710,7 +765,7 @@ function renderCommandResults(query) {
     .map((note) => ({ title: localizedTitle(note), subtitle: note.path, action: () => { location.hash = `#/${note.slug}`; } }));
   const commandResults = commands
     .filter((command) => !value || command.title.toLowerCase().includes(value))
-    .map((command) => ({ ...command, subtitle: "Command" }));
+    .map((command) => ({ ...command, subtitle: t("command") }));
   const results = [...commandResults, ...noteResults].slice(0, 10);
   els.commandResults.innerHTML = results
     .map((item, index) => `<button type="button" data-command-index="${index}"><span>${escapeHtml(item.title)}</span><small>${escapeHtml(item.subtitle)}</small></button>`)
@@ -734,6 +789,7 @@ function setLanguage(lang) {
   state.lang = lang;
   localStorage.setItem("acc-lang", lang);
   document.documentElement.lang = lang;
+  els.search.placeholder = t("searchNotes");
   els.langKo.classList.toggle("active", lang === "ko");
   els.langEn.classList.toggle("active", lang === "en");
   renderTree();
@@ -751,7 +807,7 @@ function showHoverPreview(event) {
   const rect = link.getBoundingClientRect();
   els.hoverPreview.innerHTML = `
     <strong>${escapeHtml(localizedTitle(note))}</strong>
-    <span>${escapeHtml(note.type)} · ${escapeHtml(note.updated || "unknown")}</span>
+    <span>${escapeHtml(typeLabel(note.type))} · ${escapeHtml(note.updated || "unknown")}</span>
     <p>${escapeHtml(localizedBody(note).replace(/^# .*\n?/, "").trim().slice(0, 220))}</p>
   `;
   els.hoverPreview.style.left = `${Math.min(rect.left, window.innerWidth - 340)}px`;
@@ -794,6 +850,7 @@ async function init() {
 
   renderTypeFilters();
   renderStats();
+  els.search.placeholder = t("searchNotes");
   els.langKo.classList.toggle("active", state.lang === "ko");
   els.langEn.classList.toggle("active", state.lang === "en");
   await renderNote();
@@ -812,7 +869,7 @@ document.querySelector("#save-draft").addEventListener("click", saveDraft);
 document.querySelector("#discard-draft").addEventListener("click", discardDraft);
 document.querySelector("#export-patch").addEventListener("click", exportPatch);
 els.editorText.addEventListener("input", () => {
-  els.draftStatus.textContent = "Unsaved browser draft.";
+  els.draftStatus.textContent = state.lang === "ko" ? "아직 저장하지 않은 브라우저 임시 글이에요." : "Unsaved browser draft.";
   updateEditorPreview();
 });
 els.commandInput.addEventListener("input", (event) => renderCommandResults(event.target.value));
