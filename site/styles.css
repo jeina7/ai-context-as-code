@@ -108,6 +108,10 @@ a {
   backdrop-filter: blur(22px) saturate(120%);
 }
 
+.topbar-row {
+  display: contents;
+}
+
 .brand {
   display: inline-flex;
   align-items: center;
@@ -1016,27 +1020,25 @@ textarea {
   }
 
   .topbar {
-    position: sticky;
     display: grid;
-    grid-template-columns: 40px 42px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "nav brand . actions"
-      "search search search search";
+      "row"
+      "search";
     gap: 8px;
     max-width: 100vw;
     overflow: visible;
     padding: 8px 14px 10px;
   }
 
-  .topbar::before {
-    content: "";
-    grid-column: 1 / -1;
-    grid-row: 1;
-    align-self: stretch;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: color-mix(in srgb, var(--surface-2) 58%, transparent);
-    pointer-events: none;
+  .topbar-row {
+    grid-area: row;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 8px;
+    padding: 0;
   }
 
   .mobile-only {
@@ -1044,15 +1046,13 @@ textarea {
   }
 
   #nav-toggle {
-    grid-area: nav;
-    z-index: 1;
+    flex: 0 0 38px;
   }
 
   .brand {
-    grid-area: brand;
+    flex: 0 0 42px;
     min-width: 0;
-    width: 34px;
-    z-index: 1;
+    width: 42px;
   }
 
   .brand-text {
@@ -1072,16 +1072,14 @@ textarea {
   }
 
   .topbar-actions {
-    grid-area: actions;
-    position: static;
+    margin-left: auto;
     width: auto;
-    justify-self: end;
     justify-content: flex-end;
     gap: 6px;
+    flex: 0 0 auto;
     min-width: 0;
-    max-width: 100%;
-    margin-left: 0;
-    z-index: 1;
+    max-width: calc(100% - 96px);
+    padding-right: 4px;
   }
 
   .language-toggle {
