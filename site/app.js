@@ -45,6 +45,8 @@ const els = {
   downloadLink: document.querySelector("#download-link"),
 };
 
+const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+
 const typeLabels = {
   principle: "Principle",
   pattern: "Pattern",
@@ -358,7 +360,11 @@ async function renderNote() {
   document.title = `${localizedTitle(note)} · AI Context as Code`;
   requestAnimationFrame(() => {
     const anchor = location.hash.split("#")[2];
-    if (anchor) document.getElementById(anchor)?.scrollIntoView({ block: "start" });
+    if (anchor) {
+      document.getElementById(anchor)?.scrollIntoView({ block: "start" });
+      return;
+    }
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   });
 }
 
@@ -650,6 +656,7 @@ function setLanguage(lang) {
 }
 
 function showHoverPreview(event) {
+  if (!finePointerQuery.matches) return;
   const link = event.target.closest("[data-preview]");
   if (!link) return;
   const note = state.notesBySlug.get(link.dataset.preview);
@@ -667,6 +674,12 @@ function showHoverPreview(event) {
 
 function hideHoverPreview() {
   els.hoverPreview.classList.add("hidden");
+}
+
+async function navigateHash() {
+  hideHoverPreview();
+  els.sidebar.classList.remove("open");
+  await renderNote();
 }
 
 async function init() {
@@ -725,12 +738,13 @@ els.typeFilters.addEventListener("click", (event) => {
   runSearch(button.dataset.filter);
   els.search.value = button.dataset.filter;
 });
-document.body.addEventListener("mouseover", showHoverPreview);
-document.body.addEventListener("mouseout", hideHoverPreview);
-window.addEventListener("hashchange", () => {
-  els.sidebar.classList.remove("open");
-  renderNote();
+document.body.addEventListener("pointerover", showHoverPreview);
+document.body.addEventListener("pointerout", (event) => {
+  if (!event.relatedTarget || !event.relatedTarget.closest("[data-preview]")) hideHoverPreview();
 });
+document.body.addEventListener("pointerdown", hideHoverPreview);
+window.addEventListener("scroll", hideHoverPreview, { passive: true });
+window.addEventListener("hashchange", navigateHash);
 window.addEventListener("keydown", (event) => {
   if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
     event.preventDefault();
