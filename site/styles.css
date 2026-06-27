@@ -1016,6 +1016,7 @@ textarea {
   }
 
   .topbar {
+    position: sticky;
     display: grid;
     grid-template-columns: 40px 42px minmax(0, 1fr) auto;
     grid-template-areas:
@@ -1027,18 +1028,31 @@ textarea {
     padding: 8px 14px 10px;
   }
 
+  .topbar::before {
+    content: "";
+    grid-column: 1 / -1;
+    grid-row: 1;
+    align-self: stretch;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--surface-2) 58%, transparent);
+    pointer-events: none;
+  }
+
   .mobile-only {
     display: inline-flex;
   }
 
   #nav-toggle {
     grid-area: nav;
+    z-index: 1;
   }
 
   .brand {
     grid-area: brand;
     min-width: 0;
     width: 34px;
+    z-index: 1;
   }
 
   .brand-text {
@@ -1067,6 +1081,7 @@ textarea {
     min-width: 0;
     max-width: 100%;
     margin-left: 0;
+    z-index: 1;
   }
 
   .language-toggle {
