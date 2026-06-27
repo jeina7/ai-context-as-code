@@ -339,11 +339,118 @@ function currentSlug() {
   return location.hash.replace(/^#\/?/, "").split("#")[0] || "dashboard";
 }
 
+function dashboardCard(item, extra = "") {
+  const note = state.notesBySlug.get(item.slug);
+  const title = note ? localizedTitle(note) : item.title;
+  const summary = note ? summaryFromMarkdown(localizedBody(note)) : item.summary;
+  return `
+    <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
+      <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
+      <strong>${escapeHtml(title)}</strong>
+      ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
+      ${extra}
+    </a>
+  `;
+}
+
+function renderDashboard() {
+  const overview = state.notesBySlug.get("start/overview") || state.notes[0];
+  state.currentNote = overview;
+  document.querySelector(".app-shell").classList.add("dashboard-mode");
+  const health = state.dashboard.context_health;
+  const queue = state.dashboard.review_queue.length
+    ? state.dashboard.review_queue
+    : [{ title: "No review items", type: "project", slug: "start/overview", reasons: ["context is healthy"] }];
+  els.editor.classList.add("hidden");
+  els.reader.classList.remove("hidden");
+  document.querySelector("#edit-toggle").textContent = "Edit";
+  els.breadcrumbs.innerHTML = "";
+  els.noteMeta.innerHTML = "";
+  els.note.innerHTML = `
+    <section class="dashboard-shell">
+      <div class="dashboard-hero">
+        <div>
+          <p class="eyebrow">Context cockpit</p>
+          <h1>${escapeHtml(t("dashboard"))}</h1>
+          <p>${escapeHtml(t("dashboardSubtitle"))}</p>
+        </div>
+        <div class="dashboard-status">
+          <span>Ready for agent use</span>
+          <strong>${health.broken_links === 0 ? "Clean" : `${health.broken_links} broken links`}</strong>
+        </div>
+      </div>
+      <div class="health-grid">
+        <div><span>Notes</span><strong>${health.notes}</strong></div>
+        <div><span>Review</span><strong>${health.review_items}</strong></div>
+        <div><span>Orphans</span><strong>${health.orphans}</strong></div>
+        <div><span>Broken links</span><strong>${health.broken_links}</strong></div>
+      </div>
+    </section>
+    <section class="dashboard-layout">
+      <div class="dashboard-main">
+        <div class="dashboard-heading">
+          <div>
+            <h2>${escapeHtml(t("reviewQueue"))}</h2>
+            <p>${escapeHtml(t("reviewQueueDescription"))}</p>
+          </div>
+        </div>
+        <div class="review-list">
+          ${queue.map((item) => `
+            <a class="review-item type-${item.type}" href="#/${item.slug}">
+              <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
+              <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
+              <em>${item.reasons.map(escapeHtml).join(" · ")}</em>
+            </a>
+          `).join("")}
+        </div>
+      </div>
+      <div class="dashboard-side">
+        <section>
+          <div class="dashboard-heading compact-heading">
+            <div>
+              <h2>${escapeHtml(t("recentlyChanged"))}</h2>
+              <p>${escapeHtml(t("recentlyChangedDescription"))}</p>
+            </div>
+          </div>
+          <div class="dashboard-cards compact">
+            ${state.dashboard.recent_notes.slice(0, 5).map((item) => dashboardCard(item, `<em>${escapeHtml(item.updated || "unknown")}</em>`)).join("")}
+          </div>
+        </section>
+        <section>
+          <div class="dashboard-heading compact-heading">
+            <div>
+              <h2>${escapeHtml(t("hubNotes"))}</h2>
+              <p>${escapeHtml(t("hubNotesDescription"))}</p>
+            </div>
+          </div>
+          <div class="dashboard-cards compact">
+            ${state.dashboard.hub_notes.slice(0, 5).map((item) => dashboardCard(item, `<em>${item.connection_count} connections</em>`)).join("")}
+          </div>
+        </section>
+      </div>
+    </section>
+    <section class="dashboard-section runtime-strip">
+      <div>
+        <span>Agent runtime</span>
+        <strong>Instructions, commands, skills, and memory should be directly readable by agents.</strong>
+      </div>
+      <a class="tool-button primary" href="#/projects/agent-runtime-references">Open runtime plan</a>
+    </section>
+  `;
+  els.outline.innerHTML = "";
+  renderBacklinks(null);
+  renderOutgoing(null);
+  renderContextHealth(null);
+  renderTree();
+  document.title = `${t("dashboard")} · AI Context as Code`;
+}
+
 async function renderNote() {
   if (currentSlug() === "dashboard") {
     renderDashboard();
     return;
   }
+  document.querySelector(".app-shell").classList.remove("dashboard-mode");
   const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("start/overview");
   state.currentNote = note;
   els.note.innerHTML = renderMarkdown(localizedBody(note));
@@ -367,94 +474,6 @@ async function renderNote() {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   });
 }
-
-function dashboardCard(item, extra = "") {
-  const note = state.notesBySlug.get(item.slug);
-  const title = note ? localizedTitle(note) : item.title;
-  const summary = note ? summaryFromMarkdown(localizedBody(note)) : item.summary;
-  return `
-    <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
-      <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
-      <strong>${escapeHtml(title)}</strong>
-      ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
-      ${extra}
-    </a>
-  `;
-}
-
-function renderDashboard() {
-  const overview = state.notesBySlug.get("start/overview") || state.notes[0];
-  state.currentNote = overview;
-  const health = state.dashboard.context_health;
-  els.breadcrumbs.innerHTML = `<span>workspace</span><b>/</b><span>dashboard</span>`;
-  els.noteMeta.innerHTML = `
-    <span class="type-chip type-project">Cockpit</span>
-    <span class="meta-chip">${health.notes} notes</span>
-    <span class="meta-chip">${health.review_items} review items</span>
-    <span class="meta-chip">${health.broken_links} broken links</span>
-  `;
-  els.note.innerHTML = `
-    <section class="dashboard-hero">
-      <p class="eyebrow">Context cockpit</p>
-      <h1>${escapeHtml(t("dashboard"))}</h1>
-      <p>${escapeHtml(t("dashboardSubtitle"))}</p>
-    </section>
-    <section class="health-grid">
-      <div><span>Notes</span><strong>${health.notes}</strong></div>
-      <div><span>Broken links</span><strong>${health.broken_links}</strong></div>
-      <div><span>Orphans</span><strong>${health.orphans}</strong></div>
-      <div><span>Review</span><strong>${health.review_items}</strong></div>
-    </section>
-    <section class="dashboard-section">
-      <div class="dashboard-heading">
-        <h2>${escapeHtml(t("reviewQueue"))}</h2>
-        <p>${escapeHtml(t("reviewQueueDescription"))}</p>
-      </div>
-      <div class="review-list">
-        ${(state.dashboard.review_queue.length ? state.dashboard.review_queue : [{ title: "No review items", type: "project", slug: "start/overview", reasons: ["context is healthy"] }]).map((item) => `
-          <a class="review-item type-${item.type}" href="#/${item.slug}">
-            <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
-            <span>${item.reasons.map(escapeHtml).join(" · ")}</span>
-          </a>
-        `).join("")}
-      </div>
-    </section>
-    <section class="dashboard-section dashboard-columns">
-      <div>
-        <div class="dashboard-heading">
-          <h2>${escapeHtml(t("recentlyChanged"))}</h2>
-          <p>${escapeHtml(t("recentlyChangedDescription"))}</p>
-        </div>
-        <div class="dashboard-cards">
-          ${state.dashboard.recent_notes.map((item) => dashboardCard(item, `<em>${escapeHtml(item.updated || "unknown")}</em>`)).join("")}
-        </div>
-      </div>
-      <div>
-        <div class="dashboard-heading">
-          <h2>${escapeHtml(t("hubNotes"))}</h2>
-          <p>${escapeHtml(t("hubNotesDescription"))}</p>
-        </div>
-        <div class="dashboard-cards compact">
-          ${state.dashboard.hub_notes.map((item) => dashboardCard(item, `<em>${item.connection_count} connections</em>`)).join("")}
-        </div>
-      </div>
-    </section>
-  `;
-  renderBacklinks(null);
-  renderOutgoing(null);
-  renderContextHealth(null);
-  els.outline.innerHTML = `
-    <a href="#/dashboard">Dashboard</a>
-    <a href="#/projects/system-interface-map">System map</a>
-    <a href="#/workflows/operating-routine">Operating routine</a>
-    <a href="#/workflows/reviewable-ai-workflows">Review workflow</a>
-  `;
-  renderTree();
-  state.graphMode = "all";
-  renderGraph();
-  document.title = `${t("dashboard")} · AI Context as Code`;
-}
-
 function runSearch(query) {
   const value = query.trim().toLowerCase();
   if (!value) {

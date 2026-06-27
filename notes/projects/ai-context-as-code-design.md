@@ -4,7 +4,7 @@ type: project
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # AI Context as Code Design
@@ -23,7 +23,7 @@ The system has five layers:
 - safety layer: `private-staging/`, publish checks, and validation
 - build layer: metadata, links, backlinks, search, and generated JSON
 - serving layer: static GitHub Pages site
-- agent layer: rules, commands, review loops, and future skills
+- agent runtime layer: symlinked rules, commands, review loops, and future skills or memory references
 
 ## Boundary
 
@@ -35,11 +35,13 @@ That means product code, product decisions, and example context can live togethe
 - product code proves the system can be used
 - product decisions explain why the system exists
 - context corpus shows how the system captures useful knowledge over time
+- agent runtime shows what agents can read directly while operating
 
 The corpus is not a full mirror of a private vault. It only contains reviewed and generalized material that can stand without private source context.
 
 ## Related
 
 - [[why-build-ai-context-as-code]]
+- [[agent-runtime-references]]
 - [[publishable-private-context-split]]
 - [[context-engineering]]

@@ -59,6 +59,8 @@ notes/
     interface-map.md
     design-principles.md
     roadmap.md
+  runtime/
+    agent-runtime-references.md
   method/
     principles/
     concepts/
@@ -77,6 +79,7 @@ notes/
 When reviewing Obsidian notes, use this rule:
 
 - product design, interface, roadmap, and system behavior go to `product/`
+- agent-readable instructions, commands, skills, and memory references go to `runtime/`
 - reusable thinking patterns and operating rules go to `method/`
 - actual imported context that proves the system works goes to `corpus/`
 - irreversible choices go to `decisions/`
@@ -93,5 +96,6 @@ It gives the repo a shape that can support both an open source product and a rea
 ## Related
 
 - [[ai-context-as-code-design]]
+- [[agent-runtime-references]]
 - [[obsidian-transition-plan]]
 - [[publishable-private-context-split]]

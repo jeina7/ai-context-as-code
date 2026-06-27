@@ -315,39 +315,35 @@ def build_dashboard(notes, report):
     )[:8]
     review_queue = []
     connection_counts = {}
+    latest_updated = max((note["updated"] or note["created"] or "") for note in notes)
     for note in notes:
-        connection_counts[note["slug"]] = len(note["backlinks"]) + len([link for link in note["links"] if link["resolved_slug"]])
+        resolved_links = [link for link in note["links"] if link["resolved_slug"]]
+        connection_counts[note["slug"]] = len(note["backlinks"]) + len(resolved_links)
         reasons = []
         if note["status"] != "active":
             reasons.append(f"status: {note['status']}")
         if note["slug"] != "start/overview" and not note["backlinks"]:
             reasons.append("no backlinks")
-        if len([link for link in note["links"] if link["resolved_slug"]]) == 0 and note["type"] != "worklog":
+        if len(resolved_links) == 0 and note["type"] != "worklog":
             reasons.append("no outgoing links")
+        if note["type"] != "worklog" and note["slug"] != "start/overview" and connection_counts[note["slug"]] <= 2:
+            reasons.append(f"{connection_counts[note['slug']]} graph connections")
+        if note["type"] in {"project", "decision"} and connection_counts[note["slug"]] <= 4:
+            reasons.append("needs stronger context")
+        if note["type"] != "worklog" and note["slug"] != "start/overview" and (note["updated"] or note["created"] or "") == latest_updated:
+            reasons.append("recently changed")
         if reasons:
             review_queue.append({
                 "slug": note["slug"],
                 "title": note["title"],
                 "type": note["type"],
                 "reasons": reasons,
+                "connection_count": connection_counts[note["slug"]],
             })
-    if not review_queue:
-        low_connection_notes = sorted(
-            [
-                note for note in notes
-                if note["type"] != "worklog" and note["slug"] != "start/overview"
-            ],
-            key=lambda note: (connection_counts[note["slug"]], note["updated"] or "", note["title"]),
-        )[:6]
-        review_queue = [
-            {
-                "slug": note["slug"],
-                "title": note["title"],
-                "type": note["type"],
-                "reasons": [f"{connection_counts[note['slug']]} graph connections", "candidate for stronger context"],
-            }
-            for note in low_connection_notes
-        ]
+    review_queue = sorted(
+        review_queue,
+        key=lambda item: (item["connection_count"], item["type"] == "worklog", item["title"]),
+    )
     stage_counts = {}
     for note in notes:
         section = note["path"].split("/", 1)[0]
@@ -368,7 +364,7 @@ def build_dashboard(notes, report):
             for note in recent_notes
         ],
         "hub_notes": report["hub_notes"][:6],
-        "review_queue": review_queue[:8],
+        "review_queue": review_queue[:10],
         "stage_counts": stage_counts,
         "context_health": {
             "notes": len(notes),

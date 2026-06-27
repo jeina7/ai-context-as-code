@@ -54,6 +54,8 @@ notes/
     interface-map.md
     design-principles.md
     roadmap.md
+  runtime/
+    agent-runtime-references.md
   method/
     principles/
     concepts/
@@ -72,6 +74,7 @@ notes/
 Obsidian note를 검토할 때는 이 기준을 써요.
 
 - 제품 설계, 인터페이스, 로드맵, 시스템 동작은 `product/`로 가요.
+- Agent가 직접 읽는 instruction, command, skill, memory reference는 `runtime/`으로 가요.
 - 재사용 가능한 사고 패턴과 운영 규칙은 `method/`로 가요.
 - 시스템이 실제로 쓸모 있다는 걸 보여주는 imported context는 `corpus/`로 가요.
 - 되돌리기 어려운 선택은 `decisions/`로 가요.
@@ -88,5 +91,6 @@ Obsidian note를 검토할 때는 이 기준을 써요.
 ## 관련
 
 - [[ai-context-as-code-design]]
+- [[agent-runtime-references]]
 - [[obsidian-transition-plan]]
 - [[publishable-private-context-split]]

@@ -18,7 +18,7 @@ AI Context as Code는 사람과 AI agent를 위한 markdown-first context system
 - safety layer: `private-staging/`, safety check, validation
 - build layer: metadata, link, backlink, search, generated JSON
 - serving layer: static GitHub Pages site
-- agent layer: rule, command, review loop, future skill
+- agent runtime layer: symlink된 rule, command, review loop, future skill 또는 memory reference
 
 ## 경계
 
@@ -30,6 +30,7 @@ AI Context as Code는 사람과 AI agent를 위한 markdown-first context system
 - product code는 시스템을 실제로 쓸 수 있음을 보여줘요.
 - product decision은 시스템이 왜 존재하는지 설명해요.
 - context corpus는 시간이 지나며 유용한 지식을 어떻게 포착하는지 보여줘요.
+- agent runtime은 agent가 작동할 때 무엇을 직접 읽을 수 있는지 보여줘요.
 
 이 corpus는 private vault의 전체 mirror가 아니에요.
 private source 없이도 이해되는, 검토되고 일반화된 material만 담아요.
@@ -37,5 +38,6 @@ private source 없이도 이해되는, 검토되고 일반화된 material만 담
 ## 관련
 
 - [[why-build-ai-context-as-code]]
+- [[agent-runtime-references]]
 - [[publishable-private-context-split]]
 - [[context-engineering]]
