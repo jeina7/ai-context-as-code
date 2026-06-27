@@ -7,6 +7,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTES_DIR = ROOT / "notes"
+I18N_DIR = ROOT / "i18n"
 DATA_DIR = ROOT / "data"
 BUILD_DIR = ROOT / "_build"
 SITE_BUILD_DIR = ROOT / "site" / "_build"
@@ -255,6 +256,32 @@ def note_summary(note, limit=220):
     return body.strip()[:limit]
 
 
+def load_translation(lang, slug):
+    path = I18N_DIR / lang / "notes" / f"{slug}.md"
+    if not path.exists():
+        return None
+    text = path.read_text(encoding="utf-8")
+    frontmatter, body = parse_frontmatter(text)
+    title = frontmatter.get("title")
+    if not title:
+        heading = re.search(r"^#\s+(.+)$", body, flags=re.MULTILINE)
+        title = heading.group(1).strip() if heading else None
+    return {
+        "title": title,
+        "body": body.strip(),
+    }
+
+
+def attach_translations(notes):
+    for note in notes:
+        translations = {}
+        ko = load_translation("ko", note["slug"])
+        if ko:
+            translations["ko"] = ko
+        note["lang"] = "en"
+        note["translations"] = translations
+
+
 def build_dashboard(notes, report):
     recent_notes = sorted(
         notes,
@@ -344,6 +371,7 @@ def mirror_to_site():
 def main():
     registry = load_registry()
     notes, slug_to_note = read_notes(registry)
+    attach_translations(notes)
     resolve_links(notes, slug_to_note)
     prune_registry(registry, notes)
     save_registry(registry)

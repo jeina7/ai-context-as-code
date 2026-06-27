@@ -7,6 +7,7 @@ const state = {
   report: null,
   dashboard: null,
   currentNote: null,
+  lang: new URLSearchParams(location.search).get("lang") || localStorage.getItem("acc-lang") || "ko",
   graphMode: "local",
   theme: localStorage.getItem("acc-theme") || "dark",
 };
@@ -33,6 +34,8 @@ const els = {
   graphSummary: document.querySelector("#graph-summary"),
   graphLocal: document.querySelector("#graph-local"),
   graphAll: document.querySelector("#graph-all"),
+  langKo: document.querySelector("#lang-ko"),
+  langEn: document.querySelector("#lang-en"),
   typeFilters: document.querySelector("#type-filters"),
   commandPalette: document.querySelector("#command-palette"),
   commandInput: document.querySelector("#command-input"),
@@ -50,6 +53,31 @@ const typeLabels = {
   project: "Project",
   worklog: "Worklog",
   reference: "Reference",
+};
+
+const uiText = {
+  en: {
+    dashboard: "Context Dashboard",
+    dashboardSubtitle: "A working surface for reading, linking, reviewing, and evolving AI-ready context.",
+    reviewQueue: "Review Queue",
+    reviewQueueDescription: "Notes that need stronger links, status cleanup, or better context.",
+    recentlyChanged: "Recently Changed",
+    recentlyChangedDescription: "Fresh context that can be extended or linked.",
+    hubNotes: "Hub Notes",
+    hubNotesDescription: "Current centers of gravity in the graph.",
+    editorOriginal: "Editing canonical English source. Translations stay read-only in this browser.",
+  },
+  ko: {
+    dashboard: "컨텍스트 대시보드",
+    dashboardSubtitle: "AI가 읽고, 사람이 검토하며, 계속 진화시킬 수 있는 지식 작업면이에요.",
+    reviewQueue: "검토 대기",
+    reviewQueueDescription: "링크, 상태, 맥락 보강이 필요한 노트예요.",
+    recentlyChanged: "최근 변경",
+    recentlyChangedDescription: "확장하거나 연결할 수 있는 최신 맥락이에요.",
+    hubNotes: "중심 노트",
+    hubNotesDescription: "현재 그래프에서 연결이 많이 모이는 노트예요.",
+    editorOriginal: "편집기는 영어 원본 기준이에요. 한국어 번역은 브라우저에서 읽기 전용으로 보여줘요.",
+  },
 };
 
 const folderLabels = {
@@ -79,6 +107,39 @@ function escapeHtml(value) {
 
 function slugKey(value) {
   return value.replace(/\.md$/, "");
+}
+
+function t(key) {
+  return uiText[state.lang]?.[key] || uiText.en[key] || key;
+}
+
+function localizedNote(note) {
+  const translation = note?.translations?.[state.lang];
+  return {
+    ...note,
+    displayTitle: translation?.title || note.title,
+    displayBody: translation?.body || note.body,
+    hasTranslation: Boolean(translation),
+  };
+}
+
+function localizedTitle(note) {
+  return localizedNote(note).displayTitle;
+}
+
+function localizedBody(note) {
+  return localizedNote(note).displayBody;
+}
+
+function summaryFromMarkdown(markdown, limit = 180) {
+  return markdown
+    .replace(/^# .*\n?/, "")
+    .replace(/^#{2,6}\s+.*$/gm, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/\[\[([^\]|]+)\|?([^\]]*)\]\]/g, (_match, target, label) => label || target)
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, limit);
 }
 
 function resolveNote(target) {
@@ -164,8 +225,10 @@ function addHeadingAnchors(container) {
 
 function renderTreeNode(node) {
   if (node.type === "note") {
+    const note = state.notesBySlug.get(node.slug);
+    const title = note ? localizedTitle(note) : node.title;
     const active = currentSlug() !== "dashboard" && state.currentNote?.slug === node.slug ? " active" : "";
-    return `<a class="tree-note${active}" href="#/${node.slug}">${escapeHtml(node.title)}</a>`;
+    return `<a class="tree-note${active}" href="#/${node.slug}">${escapeHtml(title)}</a>`;
   }
   const children = node.children.map(renderTreeNode).join("");
   if (node.name === "notes") return children;
@@ -174,7 +237,7 @@ function renderTreeNode(node) {
 
 function renderTree() {
   const active = currentSlug() === "dashboard" ? " active" : "";
-  els.tree.innerHTML = `<a class="tree-note dashboard-link${active}" href="#/dashboard">Context Dashboard</a>` + renderTreeNode(state.tree);
+  els.tree.innerHTML = `<a class="tree-note dashboard-link${active}" href="#/dashboard">${escapeHtml(t("dashboard"))}</a>` + renderTreeNode(state.tree);
 }
 
 function renderTypeFilters() {
@@ -196,14 +259,14 @@ function renderBacklinks(note) {
     return;
   }
   els.backlinks.innerHTML = note.backlinks
-    .map((link) => `<a href="#/${link.slug}">${escapeHtml(link.title)}</a>`)
+    .map((link) => `<a href="#/${link.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(link.slug) || link))}</a>`)
     .join("");
 }
 
 function renderOutgoing(note) {
   if (!note) {
     els.outgoing.innerHTML = state.dashboard.hub_notes
-      .map((item) => `<a href="#/${item.slug}">${escapeHtml(item.title)}<small>${item.connection_count} links</small></a>`)
+      .map((item) => `<a href="#/${item.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}<small>${item.connection_count} links</small></a>`)
       .join("");
     return;
   }
@@ -213,7 +276,7 @@ function renderOutgoing(note) {
     return;
   }
   els.outgoing.innerHTML = links
-    .map((link) => `<a href="#/${link.resolved_slug}">${escapeHtml(link.resolved_title)}</a>`)
+    .map((link) => `<a href="#/${link.resolved_slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(link.resolved_slug) || { title: link.resolved_title }))}</a>`)
     .join("");
 }
 
@@ -254,12 +317,13 @@ function renderMeta(note) {
     <span class="type-chip type-${note.type}">${escapeHtml(typeLabels[note.type] || note.type)}</span>
     <span class="meta-chip">${escapeHtml(note.status)}</span>
     <span class="meta-chip">Updated ${escapeHtml(note.updated || "unknown")}</span>
+    <span class="meta-chip">${localizedNote(note).hasTranslation ? state.lang.toUpperCase() : "EN"}</span>
     ${hasDraft(note) ? '<span class="meta-chip draft-chip">Draft saved</span>' : ""}
   `;
 }
 
 function renderOutline(note) {
-  const headings = extractHeadings(note);
+  const headings = extractHeadings({ ...note, body: localizedBody(note) });
   if (!headings.length) {
     els.outline.innerHTML = `<p class="muted">No headings.</p>`;
     return;
@@ -280,7 +344,7 @@ async function renderNote() {
   }
   const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("00-start/overview");
   state.currentNote = note;
-  els.note.innerHTML = renderMarkdown(note.body);
+  els.note.innerHTML = renderMarkdown(localizedBody(note));
   addHeadingAnchors(els.note);
   await renderMermaid(els.note);
   renderMeta(note);
@@ -291,7 +355,7 @@ async function renderNote() {
   renderTree();
   renderGraph();
   renderEditorState();
-  document.title = `${note.title} · AI Context as Code`;
+  document.title = `${localizedTitle(note)} · AI Context as Code`;
   requestAnimationFrame(() => {
     const anchor = location.hash.split("#")[2];
     if (anchor) document.getElementById(anchor)?.scrollIntoView({ block: "start" });
@@ -299,11 +363,14 @@ async function renderNote() {
 }
 
 function dashboardCard(item, extra = "") {
+  const note = state.notesBySlug.get(item.slug);
+  const title = note ? localizedTitle(note) : item.title;
+  const summary = note ? summaryFromMarkdown(localizedBody(note)) : item.summary;
   return `
     <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
       <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
-      <strong>${escapeHtml(item.title)}</strong>
-      ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ""}
+      <strong>${escapeHtml(title)}</strong>
+      ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
       ${extra}
     </a>
   `;
@@ -323,8 +390,8 @@ function renderDashboard() {
   els.note.innerHTML = `
     <section class="dashboard-hero">
       <p class="eyebrow">Context cockpit</p>
-      <h1>${escapeHtml(state.dashboard.hero.title)}</h1>
-      <p>${escapeHtml(state.dashboard.hero.subtitle)}</p>
+      <h1>${escapeHtml(t("dashboard"))}</h1>
+      <p>${escapeHtml(t("dashboardSubtitle"))}</p>
     </section>
     <section class="health-grid">
       <div><span>Notes</span><strong>${health.notes}</strong></div>
@@ -334,13 +401,13 @@ function renderDashboard() {
     </section>
     <section class="dashboard-section">
       <div class="dashboard-heading">
-        <h2>Review Queue</h2>
-        <p>Notes that need stronger links, status cleanup, or better context.</p>
+        <h2>${escapeHtml(t("reviewQueue"))}</h2>
+        <p>${escapeHtml(t("reviewQueueDescription"))}</p>
       </div>
       <div class="review-list">
         ${(state.dashboard.review_queue.length ? state.dashboard.review_queue : [{ title: "No review items", type: "project", slug: "00-start/overview", reasons: ["context is healthy"] }]).map((item) => `
           <a class="review-item type-${item.type}" href="#/${item.slug}">
-            <strong>${escapeHtml(item.title)}</strong>
+            <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
             <span>${item.reasons.map(escapeHtml).join(" · ")}</span>
           </a>
         `).join("")}
@@ -349,8 +416,8 @@ function renderDashboard() {
     <section class="dashboard-section dashboard-columns">
       <div>
         <div class="dashboard-heading">
-          <h2>Recently Changed</h2>
-          <p>Fresh context that can be extended or linked.</p>
+          <h2>${escapeHtml(t("recentlyChanged"))}</h2>
+          <p>${escapeHtml(t("recentlyChangedDescription"))}</p>
         </div>
         <div class="dashboard-cards">
           ${state.dashboard.recent_notes.map((item) => dashboardCard(item, `<em>${escapeHtml(item.updated || "unknown")}</em>`)).join("")}
@@ -358,8 +425,8 @@ function renderDashboard() {
       </div>
       <div>
         <div class="dashboard-heading">
-          <h2>Hub Notes</h2>
-          <p>Current centers of gravity in the graph.</p>
+          <h2>${escapeHtml(t("hubNotes"))}</h2>
+          <p>${escapeHtml(t("hubNotesDescription"))}</p>
         </div>
         <div class="dashboard-cards compact">
           ${state.dashboard.hub_notes.map((item) => dashboardCard(item, `<em>${item.connection_count} connections</em>`)).join("")}
@@ -379,7 +446,7 @@ function renderDashboard() {
   renderTree();
   state.graphMode = "all";
   renderGraph();
-  document.title = "Context Dashboard · AI Context as Code";
+  document.title = `${t("dashboard")} · AI Context as Code`;
 }
 
 function runSearch(query) {
@@ -388,9 +455,9 @@ function runSearch(query) {
     renderTree();
     return;
   }
-  const matches = state.notes.filter((note) => `${note.title} ${note.type} ${note.body}`.toLowerCase().includes(value));
+  const matches = state.notes.filter((note) => `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value));
   els.tree.innerHTML = matches
-    .map((note) => `<a class="tree-note" href="#/${note.slug}"><span>${escapeHtml(note.title)}</span><small>${escapeHtml(note.type)}</small></a>`)
+    .map((note) => `<a class="tree-note" href="#/${note.slug}"><span>${escapeHtml(localizedTitle(note))}</span><small>${escapeHtml(note.type)}</small></a>`)
     .join("") || `<p class="muted empty">No matches.</p>`;
 }
 
@@ -441,7 +508,7 @@ function graphSvg(graph, note, compact = false) {
       return `
         <a href="#/${node.id}" class="graph-node-link">
           <circle class="graph-node type-${node.type}${active}" cx="${node.x}" cy="${node.y}" r="${r}"></circle>
-          <text x="${node.x}" y="${node.y + r + 13}">${escapeHtml(node.title.slice(0, compact ? 18 : 28))}</text>
+          <text x="${node.x}" y="${node.y + r + 13}">${escapeHtml(localizedTitle(state.notesBySlug.get(node.id) || node).slice(0, compact ? 18 : 28))}</text>
         </a>
       `;
     })
@@ -466,7 +533,7 @@ function renderEditorState() {
   els.editorTitle.textContent = `Edit ${note.title}`;
   const draft = localStorage.getItem(draftKey(note));
   els.editorText.value = draft ?? note.body;
-  els.draftStatus.textContent = draft ? "Saved draft loaded from this browser." : "Drafts stay in this browser until exported.";
+  els.draftStatus.textContent = draft ? "Saved draft loaded from this browser." : t("editorOriginal");
   if (!els.editor.classList.contains("hidden")) updateEditorPreview();
 }
 
@@ -545,9 +612,9 @@ function renderCommandResults(query) {
     { title: "Show full graph", action: () => { state.graphMode = "all"; renderGraph(); } },
   ];
   const noteResults = state.notes
-    .filter((note) => !value || `${note.title} ${note.type} ${note.body}`.toLowerCase().includes(value))
+    .filter((note) => !value || `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value))
     .slice(0, 8)
-    .map((note) => ({ title: note.title, subtitle: note.path, action: () => { location.hash = `#/${note.slug}`; } }));
+    .map((note) => ({ title: localizedTitle(note), subtitle: note.path, action: () => { location.hash = `#/${note.slug}`; } }));
   const commandResults = commands
     .filter((command) => !value || command.title.toLowerCase().includes(value))
     .map((command) => ({ ...command, subtitle: "Command" }));
@@ -570,6 +637,18 @@ function toggleTheme() {
   renderNote();
 }
 
+function setLanguage(lang) {
+  state.lang = lang;
+  localStorage.setItem("acc-lang", lang);
+  document.documentElement.lang = lang;
+  els.langKo.classList.toggle("active", lang === "ko");
+  els.langEn.classList.toggle("active", lang === "en");
+  renderTree();
+  renderTypeFilters();
+  renderStats();
+  renderNote();
+}
+
 function showHoverPreview(event) {
   const link = event.target.closest("[data-preview]");
   if (!link) return;
@@ -577,9 +656,9 @@ function showHoverPreview(event) {
   if (!note) return;
   const rect = link.getBoundingClientRect();
   els.hoverPreview.innerHTML = `
-    <strong>${escapeHtml(note.title)}</strong>
+    <strong>${escapeHtml(localizedTitle(note))}</strong>
     <span>${escapeHtml(note.type)} · ${escapeHtml(note.updated || "unknown")}</span>
-    <p>${escapeHtml(note.body.replace(/^# .*\n?/, "").trim().slice(0, 220))}</p>
+    <p>${escapeHtml(localizedBody(note).replace(/^# .*\n?/, "").trim().slice(0, 220))}</p>
   `;
   els.hoverPreview.style.left = `${Math.min(rect.left, window.innerWidth - 340)}px`;
   els.hoverPreview.style.top = `${rect.bottom + 10}px`;
@@ -592,6 +671,7 @@ function hideHoverPreview() {
 
 async function init() {
   document.documentElement.dataset.theme = state.theme;
+  document.documentElement.lang = state.lang;
   const [notes, tree, stats, graph, report, dashboard] = await Promise.all([
     loadJson("./_build/notes.json"),
     loadJson("./_build/tree.json"),
@@ -614,6 +694,8 @@ async function init() {
 
   renderTypeFilters();
   renderStats();
+  els.langKo.classList.toggle("active", state.lang === "ko");
+  els.langEn.classList.toggle("active", state.lang === "en");
   await renderNote();
 }
 
@@ -622,6 +704,8 @@ els.graphLocal.addEventListener("click", () => { state.graphMode = "local"; rend
 els.graphAll.addEventListener("click", () => { state.graphMode = "all"; renderGraph(); });
 document.querySelector("#edit-toggle").addEventListener("click", () => toggleEditor());
 document.querySelector("#theme-toggle").addEventListener("click", toggleTheme);
+els.langKo.addEventListener("click", () => setLanguage("ko"));
+els.langEn.addEventListener("click", () => setLanguage("en"));
 document.querySelector("#command-open").addEventListener("click", openCommandPalette);
 document.querySelector("#nav-toggle").addEventListener("click", () => els.sidebar.classList.toggle("open"));
 document.querySelector("#save-draft").addEventListener("click", saveDraft);

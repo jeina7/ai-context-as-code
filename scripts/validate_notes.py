@@ -5,6 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTES_DIR = ROOT / "notes"
+I18N_DIR = ROOT / "i18n"
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 REQUIRED = ["title", "type", "status", "visibility", "created", "updated"]
@@ -45,8 +46,27 @@ def main():
             errors.append(f"{rel}: visibility must be publishable")
         if data.get("type") and data["type"] not in VALID_TYPES:
             errors.append(f"{rel}: invalid type `{data['type']}`")
+        ko_path = I18N_DIR / "ko" / "notes" / path.relative_to(NOTES_DIR)
+        if not ko_path.exists():
+            errors.append(f"{rel}: missing Korean translation `{ko_path.relative_to(ROOT)}`")
 
     for rel, text in note_texts:
+        for raw_target in WIKILINK_RE.findall(text):
+            target = raw_target.split("|", 1)[0].strip().replace(".md", "")
+            if target not in slugs:
+                errors.append(f"{rel}: broken wikilink `[[{raw_target}]]`")
+
+    for path in sorted((I18N_DIR / "ko" / "notes").rglob("*.md")):
+        rel = path.relative_to(ROOT)
+        source_path = NOTES_DIR / path.relative_to(I18N_DIR / "ko" / "notes")
+        if not source_path.exists():
+            errors.append(f"{rel}: translation has no source note `{source_path.relative_to(ROOT)}`")
+        text = path.read_text(encoding="utf-8")
+        data = parse_frontmatter(text)
+        if data is None:
+            errors.append(f"{rel}: missing frontmatter")
+        elif not data.get("title"):
+            errors.append(f"{rel}: missing `title`")
         for raw_target in WIKILINK_RE.findall(text):
             target = raw_target.split("|", 1)[0].strip().replace(".md", "")
             if target not in slugs:

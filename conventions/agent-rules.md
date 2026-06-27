@@ -1,6 +1,7 @@
 # Agent Rules
 
-AI agents working in this repository should treat `notes/` as the publishable source of truth.
+AI agents working in this repository should treat `notes/` as the canonical English source of truth.
+Localized files under `i18n/` are for human reading in the site UI.
 
 ## Behavior
 
@@ -10,6 +11,8 @@ AI agents working in this repository should treat `notes/` as the publishable so
 4. Run publish safety and validation checks before publishing.
 5. For large structure changes, write a plan before editing.
 6. If a correction applies broadly, update the conventions instead of fixing only one note.
+7. Write AI-facing source context in English under `notes/`.
+8. Add or update the Korean translation under `i18n/ko/notes/` when changing a note.
 
 ## Initial Commands
 

@@ -144,6 +144,23 @@ a {
   max-width: 760px;
 }
 
+.language-toggle {
+  display: inline-flex;
+  gap: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-2) 62%, transparent);
+  padding: 3px;
+}
+
+.language-toggle .tool-button {
+  min-width: 38px;
+  height: 30px;
+  border-color: transparent;
+  background: transparent;
+  padding: 0 8px;
+}
+
 .global-search input,
 .command-box input {
   width: 100%;

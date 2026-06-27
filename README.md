@@ -25,6 +25,7 @@ AI Context as Code is a markdown-based publishable knowledge system for notes th
 - Browser draft editing with localStorage.
 - Patch export for reviewing browser edits locally before committing.
 - Light and dark themes.
+- Korean and English reading modes.
 - Generated reports for broken links, orphan notes, and hub notes.
 
 ## Non-Goals
@@ -38,6 +39,7 @@ AI Context as Code is a markdown-based publishable knowledge system for notes th
 
 ```text
 notes/                 publishable markdown notes
+i18n/                  localized reading copies; notes/ remains canonical English
 private-staging/       ignored local staging area for private source material
 conventions/           note, safety, and agent rules
 agents/                command procedures for AI-assisted work
@@ -58,6 +60,12 @@ python3 -m http.server 8000 --directory site
 ```
 
 The site expects generated JSON under `site/_build/`. `build_meta.py` writes there automatically for local preview.
+
+## Language Model
+
+`notes/` is the canonical English source for AI agents and automation.
+Korean reading copies live under `i18n/ko/notes/` with the same slug.
+The site defaults to Korean for human reading, while generated metadata keeps the English source body available for AI-facing use.
 
 ## Import Dry Run
 
