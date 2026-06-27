@@ -29,8 +29,8 @@ const els = {
   breadcrumbs: document.querySelector("#breadcrumbs"),
   noteMeta: document.querySelector("#note-meta"),
   outline: document.querySelector("#outline"),
-  localGraph: document.querySelector("#local-graph"),
   globalGraph: document.querySelector("#global-graph"),
+  graphInsights: document.querySelector("#graph-insights"),
   graphSummary: document.querySelector("#graph-summary"),
   graphLocal: document.querySelector("#graph-local"),
   graphAll: document.querySelector("#graph-all"),
@@ -522,13 +522,49 @@ function graphSvg(graph, note, compact = false) {
   return `<svg viewBox="0 0 ${width} ${height}" role="img" aria-label="Knowledge graph"><g class="graph-edges">${edgeSvg}</g><g>${nodeSvg}</g></svg>`;
 }
 
+function graphInsight(label, value, detail = "") {
+  return `
+    <div class="graph-insight-card">
+      <span>${escapeHtml(label)}</span>
+      <strong>${escapeHtml(value)}</strong>
+      ${detail ? `<small>${escapeHtml(detail)}</small>` : ""}
+    </div>
+  `;
+}
+
+function renderGraphInsights(note, activeGraph) {
+  const local = relatedGraph(note, "local");
+  const incoming = note.backlinks || [];
+  const outgoing = (note.links || []).filter((link) => link.resolved_slug);
+  const hubs = state.dashboard.hub_notes
+    .slice(0, 3)
+    .map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item))
+    .join(", ");
+  const review = state.dashboard.review_queue
+    .slice(0, 3)
+    .map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item))
+    .join(", ");
+  const activeTitle = localizedTitle(note);
+  const connected = local.nodes.length > 1
+    ? local.nodes.filter((node) => node.id !== note.slug).map((node) => localizedTitle(state.notesBySlug.get(node.id) || node)).slice(0, 3).join(", ")
+    : "No direct neighbors yet";
+
+  els.graphInsights.innerHTML = [
+    graphInsight("Current", activeTitle, typeLabels[note.type] || note.type),
+    graphInsight("Incoming", `${incoming.length}`, incoming.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
+    graphInsight("Outgoing", `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
+    state.graphMode === "all"
+      ? graphInsight("Map signal", `${activeGraph.nodes.length} notes`, hubs || review || "No graph signal yet")
+      : graphInsight("Related", `${Math.max(0, local.nodes.length - 1)} notes`, connected),
+  ].join("");
+}
+
 function renderGraph() {
   const note = state.currentNote;
-  const local = relatedGraph(note, "local");
-  els.localGraph.innerHTML = graphSvg(local, note, true);
   const activeGraph = relatedGraph(note, state.graphMode);
   els.globalGraph.innerHTML = graphSvg(activeGraph, note, false);
   els.graphSummary.textContent = `${activeGraph.nodes.length} nodes · ${activeGraph.edges.length} links`;
+  renderGraphInsights(note, activeGraph);
   els.graphLocal.classList.toggle("active", state.graphMode === "local");
   els.graphAll.classList.toggle("active", state.graphMode === "all");
 }
@@ -615,7 +651,7 @@ function renderCommandResults(query) {
     { title: "Open dashboard", action: () => { location.hash = "#/dashboard"; } },
     { title: "Toggle editor", action: () => toggleEditor() },
     { title: "Toggle theme", action: () => toggleTheme() },
-    { title: "Show full graph", action: () => { state.graphMode = "all"; renderGraph(); } },
+    { title: "Show full context map", action: () => { state.graphMode = "all"; renderGraph(); } },
   ];
   const noteResults = state.notes
     .filter((note) => !value || `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value))

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI Context as Code</title>
-    <link rel="stylesheet" href="./styles.css?v=20260628-0257">
+    <link rel="stylesheet" href="./styles.css?v=20260628-0318">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
   </head>
@@ -88,10 +88,6 @@
           <div id="context-health" class="health-list"></div>
         </section>
         <section>
-          <div class="section-title">Local Graph</div>
-          <div id="local-graph" class="graph graph-small"></div>
-        </section>
-        <section>
           <div class="section-title">Status</div>
           <div id="stats" class="stats"></div>
         </section>
@@ -100,14 +96,15 @@
       <section class="graph-dock">
         <div class="graph-header">
           <div>
-            <div class="section-title">Knowledge Graph</div>
+            <div class="section-title">Context Map</div>
             <p id="graph-summary" class="muted"></p>
           </div>
           <div class="graph-actions">
-            <button id="graph-local" class="tool-button active" type="button">Local</button>
-            <button id="graph-all" class="tool-button" type="button">All</button>
+            <button id="graph-local" class="tool-button active" type="button">Related</button>
+            <button id="graph-all" class="tool-button" type="button">Full map</button>
           </div>
         </div>
+        <div id="graph-insights" class="graph-insights"></div>
         <div id="global-graph" class="graph graph-large"></div>
       </section>
     </div>
@@ -121,6 +118,6 @@
 
     <div id="hover-preview" class="hover-preview hidden"></div>
     <a id="download-link" class="hidden" download></a>
-    <script type="module" src="./app.js?v=20260628-0257"></script>
+    <script type="module" src="./app.js?v=20260628-0318"></script>
   </body>
 </html>
