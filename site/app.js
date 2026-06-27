@@ -46,6 +46,8 @@ const els = {
 };
 
 const finePointerQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+let commandItems = [];
+let commandSelectionIndex = 0;
 
 const typeLabels = {
   principle: "Principle",
@@ -130,7 +132,10 @@ const uiText = {
     notesUnit: "notes",
     linksUnit: "links",
     searchNotes: "Search notes",
+    searchPrompt: "Search notes or run a command",
     command: "Command",
+    commands: "Commands",
+    notesGroup: "Notes",
   },
   ko: {
     dashboard: "작업 현황",
@@ -161,7 +166,10 @@ const uiText = {
     notesUnit: "노트",
     linksUnit: "링크",
     searchNotes: "노트 검색",
+    searchPrompt: "노트 검색 또는 명령 실행",
     command: "명령",
+    commands: "명령",
+    notesGroup: "노트",
   },
 };
 
@@ -518,10 +526,10 @@ function renderDashboard() {
     </section>
     <section class="dashboard-section runtime-strip">
       <div>
-        <span>${state.lang === "ko" ? "에이전트 실행 기준" : "Agent runtime"}</span>
-        <strong>${state.lang === "ko" ? "에이전트가 읽는 규칙, 명령, 스킬, 기억 포인터를 한곳에 모아요." : "Instructions, commands, skills, and memory should be directly readable by agents."}</strong>
+        <span>${state.lang === "ko" ? "에이전트 설정" : "Agent config"}</span>
+        <strong>${state.lang === "ko" ? "AGENTS.md, CLAUDE.md, skill, memory, command 같은 익숙한 설정 표면을 기준으로 삼아요." : "Use familiar surfaces such as AGENTS.md, CLAUDE.md, skills, memory, and commands."}</strong>
       </div>
-      <a class="tool-button primary" href="#/projects/agent-runtime-references">${state.lang === "ko" ? "기준 보기" : "Open runtime plan"}</a>
+      <a class="tool-button primary" href="#/projects/agent-runtime-references">${state.lang === "ko" ? "설정 보기" : "Open config plan"}</a>
     </section>
   `;
   els.outline.innerHTML = "";
@@ -740,15 +748,38 @@ function exportPatch() {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function openCommandPalette() {
+function openCommandPalette(initialQuery = "") {
   els.commandPalette.classList.remove("hidden");
-  els.commandInput.value = "";
-  renderCommandResults("");
+  els.commandInput.value = initialQuery;
+  commandSelectionIndex = 0;
+  renderCommandResults(initialQuery);
   els.commandInput.focus();
 }
 
 function closeCommandPalette() {
   els.commandPalette.classList.add("hidden");
+  els.search.value = "";
+}
+
+function commandText(command) {
+  if (state.lang !== "ko") return command.title;
+  const labels = {
+    "Open dashboard": "대시보드 열기",
+    "Toggle editor": "편집기 전환",
+    "Toggle theme": "테마 전환",
+    "Show full context map": "전체 context map 보기",
+  };
+  return labels[command.title] || command.title;
+}
+
+function snippetFor(note, query) {
+  const body = localizedBody(note).replace(/^# .*\n?/, "").replace(/\s+/g, " ").trim();
+  if (!query) return summaryFromMarkdown(localizedBody(note), 110);
+  const index = body.toLowerCase().indexOf(query.toLowerCase());
+  if (index < 0) return summaryFromMarkdown(localizedBody(note), 110);
+  const start = Math.max(0, index - 42);
+  const end = Math.min(body.length, index + query.length + 82);
+  return `${start > 0 ? "..." : ""}${body.slice(start, end)}${end < body.length ? "..." : ""}`;
 }
 
 function renderCommandResults(query) {
@@ -762,20 +793,60 @@ function renderCommandResults(query) {
   const noteResults = state.notes
     .filter((note) => !value || `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value))
     .slice(0, 8)
-    .map((note) => ({ title: localizedTitle(note), subtitle: note.path, action: () => { location.hash = `#/${note.slug}`; } }));
+    .map((note) => ({
+      kind: "note",
+      title: localizedTitle(note),
+      subtitle: `${typeLabel(note.type)} · ${note.path}`,
+      detail: snippetFor(note, value),
+      action: () => { location.hash = `#/${note.slug}`; },
+    }));
   const commandResults = commands
-    .filter((command) => !value || command.title.toLowerCase().includes(value))
-    .map((command) => ({ ...command, subtitle: t("command") }));
-  const results = [...commandResults, ...noteResults].slice(0, 10);
-  els.commandResults.innerHTML = results
-    .map((item, index) => `<button type="button" data-command-index="${index}"><span>${escapeHtml(item.title)}</span><small>${escapeHtml(item.subtitle)}</small></button>`)
+    .filter((command) => !value || `${command.title} ${commandText(command)}`.toLowerCase().includes(value))
+    .map((command) => ({ ...command, kind: "command", title: commandText(command), subtitle: t("command") }));
+  commandItems = [...commandResults, ...noteResults].slice(0, 10);
+  commandSelectionIndex = Math.min(commandSelectionIndex, Math.max(0, commandItems.length - 1));
+  const grouped = [
+    [t("commands"), commandItems.filter((item) => item.kind === "command")],
+    [t("notesGroup"), commandItems.filter((item) => item.kind === "note")],
+  ].filter(([, items]) => items.length);
+  let visibleIndex = 0;
+  els.commandResults.innerHTML = grouped
+    .map(([label, items]) => `
+      <div class="command-group">${escapeHtml(label)}</div>
+      ${items.map((item) => {
+        const index = visibleIndex++;
+        return `
+          <button class="${index === commandSelectionIndex ? "active" : ""}" type="button" data-command-index="${index}">
+            <span>
+              <strong>${escapeHtml(item.title)}</strong>
+              <small>${escapeHtml(item.subtitle)}</small>
+            </span>
+            ${item.kind === "command" ? '<kbd class="command-kbd">Run</kbd>' : ""}
+            ${item.detail ? `<p>${escapeHtml(item.detail)}</p>` : ""}
+          </button>
+        `;
+      }).join("")}
+    `)
     .join("");
   els.commandResults.querySelectorAll("button").forEach((button, index) => {
     button.addEventListener("click", () => {
-      results[index].action();
+      commandItems[index].action();
       closeCommandPalette();
     });
   });
+}
+
+function moveCommandSelection(delta) {
+  if (!commandItems.length) return;
+  commandSelectionIndex = (commandSelectionIndex + delta + commandItems.length) % commandItems.length;
+  renderCommandResults(els.commandInput.value);
+}
+
+function runSelectedCommand() {
+  const item = commandItems[commandSelectionIndex];
+  if (!item) return;
+  item.action();
+  closeCommandPalette();
 }
 
 function toggleTheme() {
@@ -790,6 +861,7 @@ function setLanguage(lang) {
   localStorage.setItem("acc-lang", lang);
   document.documentElement.lang = lang;
   els.search.placeholder = t("searchNotes");
+  els.commandInput.placeholder = t("searchPrompt");
   els.langKo.classList.toggle("active", lang === "ko");
   els.langEn.classList.toggle("active", lang === "en");
   renderTree();
@@ -851,19 +923,22 @@ async function init() {
   renderTypeFilters();
   renderStats();
   els.search.placeholder = t("searchNotes");
+  els.commandInput.placeholder = t("searchPrompt");
   els.langKo.classList.toggle("active", state.lang === "ko");
   els.langEn.classList.toggle("active", state.lang === "en");
   await renderNote();
 }
 
-els.search.addEventListener("input", (event) => runSearch(event.target.value));
+els.search.addEventListener("focus", () => openCommandPalette(els.search.value));
+els.search.addEventListener("click", () => openCommandPalette(els.search.value));
+els.search.addEventListener("input", (event) => openCommandPalette(event.target.value));
 els.graphLocal.addEventListener("click", () => { state.graphMode = "local"; renderGraph(); });
 els.graphAll.addEventListener("click", () => { state.graphMode = "all"; renderGraph(); });
 document.querySelector("#edit-toggle").addEventListener("click", () => toggleEditor());
 document.querySelector("#theme-toggle").addEventListener("click", toggleTheme);
 els.langKo.addEventListener("click", () => setLanguage("ko"));
 els.langEn.addEventListener("click", () => setLanguage("en"));
-document.querySelector("#command-open").addEventListener("click", openCommandPalette);
+document.querySelector("#command-open").addEventListener("click", () => openCommandPalette());
 document.querySelector("#nav-toggle").addEventListener("click", () => els.sidebar.classList.toggle("open"));
 document.querySelector("#save-draft").addEventListener("click", saveDraft);
 document.querySelector("#discard-draft").addEventListener("click", discardDraft);
@@ -872,7 +947,24 @@ els.editorText.addEventListener("input", () => {
   els.draftStatus.textContent = state.lang === "ko" ? "아직 저장하지 않은 브라우저 임시 글이에요." : "Unsaved browser draft.";
   updateEditorPreview();
 });
-els.commandInput.addEventListener("input", (event) => renderCommandResults(event.target.value));
+els.commandInput.addEventListener("input", (event) => {
+  commandSelectionIndex = 0;
+  renderCommandResults(event.target.value);
+});
+els.commandInput.addEventListener("keydown", (event) => {
+  if (event.key === "ArrowDown") {
+    event.preventDefault();
+    moveCommandSelection(1);
+  }
+  if (event.key === "ArrowUp") {
+    event.preventDefault();
+    moveCommandSelection(-1);
+  }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    runSelectedCommand();
+  }
+});
 els.commandPalette.addEventListener("click", (event) => {
   if (event.target === els.commandPalette) closeCommandPalette();
 });

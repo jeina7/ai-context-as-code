@@ -1,9 +1,11 @@
-# Agent Runtime
+# Agent Configuration Index
 
-`agent-runtime/` is the direct-read surface for AI agents.
+`agent-runtime/` is a compatibility index for AI agents.
+It is not a separate framework or a proprietary runtime model.
 
-It gathers instructions, commands, review rules, and future skills or memory files in one stable place.
-Files in this folder can be symlinks to their source folders when another directory is the canonical editing location.
+It gathers recognizable agent configuration surfaces in one stable place.
+The source of truth should still be common files and folders such as `AGENTS.md`, `CLAUDE.md`, `agents/`, `skills/`, `memory/`, and `conventions/`.
+Files in this folder can be symlinks when another directory is the canonical editing location.
 
 Current references:
 
@@ -14,10 +16,10 @@ Current references:
 - `context-rules.md` -> `agents/shared/context-rules.md`
 - `commands/` -> `agents/commands/`
 
-Future references:
+Future references should use familiar names:
 
 - `skills/` for reusable agent procedures
 - `memory/` for compact, agent-readable pointers into durable notes
-- `profiles/` for runtime-specific agent behavior
+- `AGENTS.md` or `CLAUDE.md` for tool-specific entry instructions when needed
 
-The goal is simple: if an agent needs to know how to operate this repository, it should start here.
+The goal is simple: if an agent needs to know how to operate this repository, it can start here without learning a custom structure.

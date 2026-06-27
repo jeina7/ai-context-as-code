@@ -23,7 +23,7 @@ The system has five layers:
 - safety layer: `private-staging/`, publish checks, and validation
 - build layer: metadata, links, backlinks, search, and generated JSON
 - serving layer: static GitHub Pages site
-- agent runtime layer: symlinked rules, commands, review loops, and future skills or memory references
+- agent configuration layer: familiar agent surfaces such as rules, commands, skills, memory pointers, and future `AGENTS.md` or `CLAUDE.md` entries
 
 ## Boundary
 
@@ -35,7 +35,7 @@ That means product code, product decisions, and example context can live togethe
 - product code proves the system can be used
 - product decisions explain why the system exists
 - context corpus shows how the system captures useful knowledge over time
-- agent runtime shows what agents can read directly while operating
+- agent configuration shows what agents can read directly without inventing a custom runtime
 
 The corpus is not a full mirror of a private vault. It only contains reviewed and generalized material that can stand without private source context.
 

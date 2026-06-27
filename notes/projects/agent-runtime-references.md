@@ -1,5 +1,5 @@
 ---
-title: Agent Runtime References
+title: Agent Configuration References
 type: project
 status: active
 visibility: publishable
@@ -7,27 +7,28 @@ created: 2026-06-28
 updated: 2026-06-28
 ---
 
-# Agent Runtime References
+# Agent Configuration References
 
 ## Summary
 
-AI Context as Code needs a direct-read surface for agents.
-The best name for that surface is `agent-runtime/`.
+AI Context as Code needs a direct-read surface for agent configuration.
+That surface should not become a custom agent framework.
+It should mirror common agent files and folders such as `AGENTS.md`, `CLAUDE.md`, skills, memory, and commands.
 
-`config` is too broad.
-`harness` sounds like a test wrapper.
-`agent-runtime` says what the folder is for: files that agents read while operating.
+The current `agent-runtime/` folder is only a compatibility entry point.
+It gathers references that agents can read.
+It does not define a new runtime model.
 
 ## Rule
 
-Agent-facing instructions should have one stable entry point.
-That entry point can use symlinks to source files when another folder owns the editable source.
+Agent-facing instructions should use recognizable config surfaces.
+When another folder owns the editable source, the agent-readable entry point can use symlinks instead of copying content.
 
-This mirrors the way an Obsidian-backed agent setup can expose skills, memory, commands, and instructions without copying them into every runtime.
+This follows the same pattern as an Obsidian-backed agent setup exposing skills, memory, commands, and instructions without copying them into every tool.
 
 ## Current References
 
-The first runtime references are:
+The first config references are:
 
 - `agent-runtime/agent-rules.md`
 - `agent-runtime/note-format.md`
@@ -37,33 +38,32 @@ The first runtime references are:
 - `agent-runtime/commands/`
 
 These are symlinks into `conventions/` and `agents/`.
-Agents can read `agent-runtime/` first, while humans can still edit the source folders.
+Agents can read `agent-runtime/` as an index, while humans can still edit the source folders.
 
 ## Future Shape
 
-The runtime surface can grow like this:
+The long-term shape should use familiar names:
 
 ```text
-agent-runtime/
-  README.md
-  agent-rules.md
-  note-format.md
-  review-rules.md
-  publish-safety.md
-  context-rules.md
+AGENTS.md
+CLAUDE.md
+agents/
   commands/
-  skills/
-  memory/
+  shared/
+skills/
+memory/
+conventions/
 ```
 
 `skills/` should hold reusable agent procedures.
 `memory/` should hold compact pointers into durable notes, not full private context.
+`AGENTS.md` or `CLAUDE.md` should be generated or linked from the same source rules when this repository needs tool-specific entry files.
 
 ## Non-Goals
 
 This does not copy private Obsidian memory into the repository.
 It does not make agent instructions editable from the browser yet.
-It creates a clear runtime entry point that can later be generated, synced, or checked.
+It does not invent a proprietary agent configuration standard.
 
 ## Related
 
