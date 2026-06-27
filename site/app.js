@@ -7,7 +7,7 @@ const state = {
   report: null,
   currentNote: null,
   graphMode: "local",
-  theme: localStorage.getItem("acc-theme") || "light",
+  theme: localStorage.getItem("acc-theme") || "dark",
 };
 
 const els = {
