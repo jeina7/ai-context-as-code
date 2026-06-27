@@ -13,6 +13,16 @@ BUILD_DIR = ROOT / "_build"
 SITE_BUILD_DIR = ROOT / "site" / "_build"
 REGISTRY_PATH = DATA_DIR / "id-registry.json"
 ALIASES_PATH = DATA_DIR / "aliases.json"
+SECTION_ORDER = {
+    "start": 0,
+    "principles": 10,
+    "concepts": 20,
+    "workflows": 30,
+    "projects": 40,
+    "decisions": 50,
+    "research": 60,
+    "worklog": 90,
+}
 
 WIKILINK_RE = re.compile(r"\[\[([^\]]+)\]\]")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n(.*)$", re.DOTALL)
@@ -157,7 +167,22 @@ def build_tree(notes):
             "slug": note["slug"],
             "title": note["title"],
         })
+    sort_tree(root)
     return root
+
+
+def tree_sort_key(item):
+    if item["type"] == "directory":
+        return (SECTION_ORDER.get(item["name"], 500), item["name"])
+    return (1000, item.get("title") or item["name"])
+
+
+def sort_tree(node):
+    if node["type"] != "directory":
+        return
+    node["children"].sort(key=tree_sort_key)
+    for child in node["children"]:
+        sort_tree(child)
 
 
 def build_search_index(notes):
@@ -216,7 +241,7 @@ def build_report(notes, broken_links):
             "type": note["type"],
         }
         for note in notes
-        if note["slug"] != "00-start/overview" and not note["backlinks"]
+        if note["slug"] != "start/overview" and not note["backlinks"]
     ]
     hub_notes = sorted(
         [
@@ -295,7 +320,7 @@ def build_dashboard(notes, report):
         reasons = []
         if note["status"] != "active":
             reasons.append(f"status: {note['status']}")
-        if note["slug"] != "00-start/overview" and not note["backlinks"]:
+        if note["slug"] != "start/overview" and not note["backlinks"]:
             reasons.append("no backlinks")
         if len([link for link in note["links"] if link["resolved_slug"]]) == 0 and note["type"] != "worklog":
             reasons.append("no outgoing links")
@@ -310,7 +335,7 @@ def build_dashboard(notes, report):
         low_connection_notes = sorted(
             [
                 note for note in notes
-                if note["type"] != "worklog" and note["slug"] != "00-start/overview"
+                if note["type"] != "worklog" and note["slug"] != "start/overview"
             ],
             key=lambda note: (connection_counts[note["slug"]], note["updated"] or "", note["title"]),
         )[:6]

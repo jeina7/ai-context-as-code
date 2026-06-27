@@ -12,7 +12,7 @@ updated: 2026-06-27
 ## Summary
 
 AI Context as Code is a markdown-first context system for humans and AI agents.
-It starts as a publishable personal context layer.
+It starts as a product repo with its own development context as the first working corpus.
 It can later grow into an organizational context system without changing the core source format.
 
 ## Design
@@ -27,11 +27,19 @@ The system has five layers:
 
 ## Boundary
 
-The system is not a direct mirror of a private vault. It only contains reviewed and generalized material that is safe to publish.
+The repository should not look like a private vault that happened to have a UI.
+It should look like a product whose first dataset is its own reviewed context.
+
+That means product code, product decisions, and example context can live together, but they need distinct roles:
+
+- product code proves the system can be used
+- product decisions explain why the system exists
+- context corpus shows how the system captures useful knowledge over time
+
+The corpus is not a full mirror of a private vault. It only contains reviewed and generalized material that can stand without private source context.
 
 ## Related
 
 - [[why-build-ai-context-as-code]]
 - [[publishable-private-context-split]]
 - [[context-engineering]]
-

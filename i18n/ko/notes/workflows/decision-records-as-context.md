@@ -23,7 +23,7 @@ title: 결정 기록을 컨텍스트로 쓰기
 
 ## 적용
 
-이 repo는 naming, local-first 구현, GitHub Pages, build process가 context가 되는 이유 같은 프로젝트 선택을 `notes/50-decisions/`에 남겨요.
+이 repo는 naming, local-first 구현, GitHub Pages, build process가 context가 되는 이유 같은 프로젝트 선택을 `notes/decisions/`에 남겨요.
 
 ## 관련
 

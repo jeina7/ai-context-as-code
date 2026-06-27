@@ -2,18 +2,25 @@
 
 Project name confirmed: `AI Context as Code`.
 
-AI Context as Code is a markdown-based publishable knowledge system for notes that are safe to publish, easy for humans to browse, and structured enough to become durable context for AI agents to read, review, and improve.
+AI Context as Code is a markdown-based context system for knowledge that is easy for humans to browse and structured enough for AI agents to read, review, and improve.
+
+This repository has two roles:
+
+- the product code and design for AI Context as Code
+- the first context corpus that demonstrates the product on its own development history
+
+That corpus is not a private life vault. It is the reviewed example dataset that makes the product useful, inspectable, and resume-ready.
 
 ## Goals
 
-- Keep publishable knowledge in plain markdown.
+- Keep reviewed knowledge in plain markdown.
 - Support wikilinks, backlinks, search, and a folder tree.
 - Publish as a static GitHub Pages site.
-- Separate private staging from publishable notes.
+- Separate private staging from reviewed notes.
 - Add safety checks before anything is published.
 - Evolve toward agent-assisted note creation, review, and synthesis.
-- Record the design and implementation process as the system's first publishable knowledge.
-- Become a publishable context brain that can support personal use first and organizational use later.
+- Record the design and implementation process as the system's first context corpus.
+- Become a context brain that can support personal use first and organizational use later.
 
 ## Current Features
 
@@ -38,7 +45,7 @@ AI Context as Code is a markdown-based publishable knowledge system for notes th
 ## Structure
 
 ```text
-notes/                 publishable markdown notes
+notes/                 canonical English context corpus
 i18n/                  localized reading copies; notes/ remains canonical English
 private-staging/       ignored local staging area for private source material
 conventions/           note, safety, and agent rules

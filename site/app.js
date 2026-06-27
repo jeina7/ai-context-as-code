@@ -81,14 +81,14 @@ const uiText = {
 };
 
 const folderLabels = {
-  "00-start": "00 Start",
-  "10-principles": "10 Principles",
-  "20-concepts": "20 Concepts",
-  "30-workflows": "30 Workflows",
-  "40-projects": "40 Projects",
-  "50-decisions": "50 Decisions",
-  "60-research": "60 Research",
-  "90-worklog": "90 Worklog",
+  "start": "Start",
+  "principles": "Principles",
+  "concepts": "Concepts",
+  "workflows": "Workflows",
+  "projects": "Projects",
+  "decisions": "Decisions",
+  "research": "Research",
+  "worklog": "Worklog",
 };
 
 async function loadJson(path) {
@@ -342,7 +342,7 @@ async function renderNote() {
     renderDashboard();
     return;
   }
-  const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("00-start/overview");
+  const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("start/overview");
   state.currentNote = note;
   els.note.innerHTML = renderMarkdown(localizedBody(note));
   addHeadingAnchors(els.note);
@@ -377,7 +377,7 @@ function dashboardCard(item, extra = "") {
 }
 
 function renderDashboard() {
-  const overview = state.notesBySlug.get("00-start/overview") || state.notes[0];
+  const overview = state.notesBySlug.get("start/overview") || state.notes[0];
   state.currentNote = overview;
   const health = state.dashboard.context_health;
   els.breadcrumbs.innerHTML = `<span>workspace</span><b>/</b><span>dashboard</span>`;
@@ -405,7 +405,7 @@ function renderDashboard() {
         <p>${escapeHtml(t("reviewQueueDescription"))}</p>
       </div>
       <div class="review-list">
-        ${(state.dashboard.review_queue.length ? state.dashboard.review_queue : [{ title: "No review items", type: "project", slug: "00-start/overview", reasons: ["context is healthy"] }]).map((item) => `
+        ${(state.dashboard.review_queue.length ? state.dashboard.review_queue : [{ title: "No review items", type: "project", slug: "start/overview", reasons: ["context is healthy"] }]).map((item) => `
           <a class="review-item type-${item.type}" href="#/${item.slug}">
             <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
             <span>${item.reasons.map(escapeHtml).join(" · ")}</span>
@@ -439,9 +439,9 @@ function renderDashboard() {
   renderContextHealth(null);
   els.outline.innerHTML = `
     <a href="#/dashboard">Dashboard</a>
-    <a href="#/40-projects/system-interface-map">System map</a>
-    <a href="#/30-workflows/operating-routine">Operating routine</a>
-    <a href="#/30-workflows/reviewable-ai-workflows">Review workflow</a>
+    <a href="#/projects/system-interface-map">System map</a>
+    <a href="#/workflows/operating-routine">Operating routine</a>
+    <a href="#/workflows/reviewable-ai-workflows">Review workflow</a>
   `;
   renderTree();
   state.graphMode = "all";

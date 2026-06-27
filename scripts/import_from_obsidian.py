@@ -19,12 +19,12 @@ RISK_PATTERNS = [
 ]
 
 ROUTE_RULES = [
-    ("principle", re.compile(r"\b(?:principle|원칙|expertise|전문성)\b", re.IGNORECASE), "notes/10-principles/"),
-    ("pattern", re.compile(r"\b(?:pattern|workflow|loop|방법)\b", re.IGNORECASE), "notes/30-workflows/"),
-    ("research", re.compile(r"\b(?:research|리서치|source|출처|trend|용어)\b", re.IGNORECASE), "notes/60-research/"),
-    ("decision", re.compile(r"\b(?:decision|결정|why|tradeoff|ADR)\b", re.IGNORECASE), "notes/50-decisions/"),
-    ("project", re.compile(r"\b(?:project|design|architecture|plan|설계)\b", re.IGNORECASE), "notes/40-projects/"),
-    ("reference", re.compile(r"\b(?:context|knowledge as code|concept|개념)\b", re.IGNORECASE), "notes/20-concepts/"),
+    ("principle", re.compile(r"\b(?:principle|원칙|expertise|전문성)\b", re.IGNORECASE), "notes/principles/"),
+    ("pattern", re.compile(r"\b(?:pattern|workflow|loop|방법)\b", re.IGNORECASE), "notes/workflows/"),
+    ("research", re.compile(r"\b(?:research|리서치|source|출처|trend|용어)\b", re.IGNORECASE), "notes/research/"),
+    ("decision", re.compile(r"\b(?:decision|결정|why|tradeoff|ADR)\b", re.IGNORECASE), "notes/decisions/"),
+    ("project", re.compile(r"\b(?:project|design|architecture|plan|설계)\b", re.IGNORECASE), "notes/projects/"),
+    ("reference", re.compile(r"\b(?:context|knowledge as code|concept|개념)\b", re.IGNORECASE), "notes/concepts/"),
 ]
 
 
@@ -32,7 +32,7 @@ def classify(text):
     for note_type, pattern, destination in ROUTE_RULES:
         if pattern.search(text):
             return note_type, destination
-    return "reference", "notes/20-concepts/"
+    return "reference", "notes/concepts/"
 
 
 def risk_findings(text):
