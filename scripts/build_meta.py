@@ -102,6 +102,13 @@ def read_notes(registry):
     return notes, slug_to_note
 
 
+def prune_registry(registry, notes):
+    current_paths = {f"notes/{note['path']}" for note in notes}
+    stale_paths = [path for path in registry if path.startswith("notes/") and path not in current_paths]
+    for path in stale_paths:
+        del registry[path]
+
+
 def resolve_links(notes, slug_to_note):
     backlinks = {note["id"]: [] for note in notes}
     for note in notes:
@@ -208,7 +215,7 @@ def build_report(notes, broken_links):
             "type": note["type"],
         }
         for note in notes
-        if note["slug"] != "index" and not note["backlinks"]
+        if note["slug"] != "00-start/overview" and not note["backlinks"]
     ]
     hub_notes = sorted(
         [
@@ -240,6 +247,86 @@ def build_report(notes, broken_links):
     }
 
 
+def note_summary(note, limit=220):
+    body = re.sub(r"^# .*\n?", "", note["body"]).strip()
+    body = re.sub(r"^#{2,6}\s+.*$", "", body, flags=re.MULTILINE)
+    body = re.sub(r"\[\[([^\]|]+)\|?([^\]]*)\]\]", lambda match: match.group(2) or match.group(1), body)
+    body = re.sub(r"\s+", " ", body)
+    return body.strip()[:limit]
+
+
+def build_dashboard(notes, report):
+    recent_notes = sorted(
+        notes,
+        key=lambda note: (note["updated"] or "", note["created"] or "", note["title"]),
+        reverse=True,
+    )[:8]
+    review_queue = []
+    connection_counts = {}
+    for note in notes:
+        connection_counts[note["slug"]] = len(note["backlinks"]) + len([link for link in note["links"] if link["resolved_slug"]])
+        reasons = []
+        if note["status"] != "active":
+            reasons.append(f"status: {note['status']}")
+        if note["slug"] != "00-start/overview" and not note["backlinks"]:
+            reasons.append("no backlinks")
+        if len([link for link in note["links"] if link["resolved_slug"]]) == 0 and note["type"] != "worklog":
+            reasons.append("no outgoing links")
+        if reasons:
+            review_queue.append({
+                "slug": note["slug"],
+                "title": note["title"],
+                "type": note["type"],
+                "reasons": reasons,
+            })
+    if not review_queue:
+        low_connection_notes = sorted(
+            [
+                note for note in notes
+                if note["type"] != "worklog" and note["slug"] != "00-start/overview"
+            ],
+            key=lambda note: (connection_counts[note["slug"]], note["updated"] or "", note["title"]),
+        )[:6]
+        review_queue = [
+            {
+                "slug": note["slug"],
+                "title": note["title"],
+                "type": note["type"],
+                "reasons": [f"{connection_counts[note['slug']]} graph connections", "candidate for stronger context"],
+            }
+            for note in low_connection_notes
+        ]
+    stage_counts = {}
+    for note in notes:
+        section = note["path"].split("/", 1)[0]
+        stage_counts[section] = stage_counts.get(section, 0) + 1
+    return {
+        "hero": {
+            "title": "Context Dashboard",
+            "subtitle": "A working surface for reading, linking, reviewing, and evolving AI-ready context.",
+        },
+        "recent_notes": [
+            {
+                "slug": note["slug"],
+                "title": note["title"],
+                "type": note["type"],
+                "updated": note["updated"],
+                "summary": note_summary(note, 180),
+            }
+            for note in recent_notes
+        ],
+        "hub_notes": report["hub_notes"][:6],
+        "review_queue": review_queue[:8],
+        "stage_counts": stage_counts,
+        "context_health": {
+            "notes": len(notes),
+            "broken_links": len(report["broken_links"]),
+            "orphans": len(report["orphan_notes"]),
+            "review_items": len(review_queue),
+        },
+    }
+
+
 def write_json(name, data):
     BUILD_DIR.mkdir(exist_ok=True)
     (BUILD_DIR / name).write_text(
@@ -258,6 +345,7 @@ def main():
     registry = load_registry()
     notes, slug_to_note = read_notes(registry)
     resolve_links(notes, slug_to_note)
+    prune_registry(registry, notes)
     save_registry(registry)
 
     broken_links = [
@@ -280,9 +368,11 @@ def main():
         for note in notes
     ])
     write_json("search-index.json", build_search_index(notes))
+    report = build_report(notes, broken_links)
     write_json("graph.json", build_graph(notes))
-    write_json("report.json", build_report(notes, broken_links))
+    write_json("report.json", report)
     write_json("stats.json", stats)
+    write_json("dashboard.json", build_dashboard(notes, report))
     mirror_to_site()
     print(f"Built {len(notes)} notes with {len(broken_links)} broken links.")
 

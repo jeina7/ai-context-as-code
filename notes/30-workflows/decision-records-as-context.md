@@ -28,7 +28,7 @@ The note should answer:
 
 ## Application
 
-This repo uses `notes/decisions/` for durable project choices such as naming, local-first implementation, GitHub Pages, and why the build process itself becomes context.
+This repo uses `notes/50-decisions/` for durable project choices such as naming, local-first implementation, GitHub Pages, and why the build process itself becomes context.
 
 ## Related
 

@@ -5,6 +5,7 @@ const state = {
   stats: null,
   graph: { nodes: [], edges: [] },
   report: null,
+  dashboard: null,
   currentNote: null,
   graphMode: "local",
   theme: localStorage.getItem("acc-theme") || "dark",
@@ -21,6 +22,8 @@ const els = {
   tree: document.querySelector("#tree"),
   search: document.querySelector("#search"),
   backlinks: document.querySelector("#backlinks"),
+  outgoing: document.querySelector("#outgoing"),
+  contextHealth: document.querySelector("#context-health"),
   stats: document.querySelector("#stats"),
   breadcrumbs: document.querySelector("#breadcrumbs"),
   noteMeta: document.querySelector("#note-meta"),
@@ -47,6 +50,17 @@ const typeLabels = {
   project: "Project",
   worklog: "Worklog",
   reference: "Reference",
+};
+
+const folderLabels = {
+  "00-start": "00 Start",
+  "10-principles": "10 Principles",
+  "20-concepts": "20 Concepts",
+  "30-workflows": "30 Workflows",
+  "40-projects": "40 Projects",
+  "50-decisions": "50 Decisions",
+  "60-research": "60 Research",
+  "90-worklog": "90 Worklog",
 };
 
 async function loadJson(path) {
@@ -150,16 +164,17 @@ function addHeadingAnchors(container) {
 
 function renderTreeNode(node) {
   if (node.type === "note") {
-    const active = state.currentNote?.slug === node.slug ? " active" : "";
+    const active = currentSlug() !== "dashboard" && state.currentNote?.slug === node.slug ? " active" : "";
     return `<a class="tree-note${active}" href="#/${node.slug}">${escapeHtml(node.title)}</a>`;
   }
   const children = node.children.map(renderTreeNode).join("");
   if (node.name === "notes") return children;
-  return `<details open><summary>${escapeHtml(node.name)}</summary><div>${children}</div></details>`;
+  return `<details open><summary>${escapeHtml(folderLabels[node.name] || node.name)}</summary><div>${children}</div></details>`;
 }
 
 function renderTree() {
-  els.tree.innerHTML = renderTreeNode(state.tree);
+  const active = currentSlug() === "dashboard" ? " active" : "";
+  els.tree.innerHTML = `<a class="tree-note dashboard-link${active}" href="#/dashboard">Context Dashboard</a>` + renderTreeNode(state.tree);
 }
 
 function renderTypeFilters() {
@@ -172,12 +187,33 @@ function renderTypeFilters() {
 }
 
 function renderBacklinks(note) {
+  if (!note) {
+    els.backlinks.innerHTML = `<p class="muted">Dashboard has no backlinks.</p>`;
+    return;
+  }
   if (!note.backlinks.length) {
     els.backlinks.innerHTML = `<p class="muted">No backlinks yet.</p>`;
     return;
   }
   els.backlinks.innerHTML = note.backlinks
     .map((link) => `<a href="#/${link.slug}">${escapeHtml(link.title)}</a>`)
+    .join("");
+}
+
+function renderOutgoing(note) {
+  if (!note) {
+    els.outgoing.innerHTML = state.dashboard.hub_notes
+      .map((item) => `<a href="#/${item.slug}">${escapeHtml(item.title)}<small>${item.connection_count} links</small></a>`)
+      .join("");
+    return;
+  }
+  const links = note.links.filter((link) => link.resolved_slug);
+  if (!links.length) {
+    els.outgoing.innerHTML = `<p class="muted">No outgoing links.</p>`;
+    return;
+  }
+  els.outgoing.innerHTML = links
+    .map((link) => `<a href="#/${link.resolved_slug}">${escapeHtml(link.resolved_title)}</a>`)
     .join("");
 }
 
@@ -190,6 +226,23 @@ function renderStats() {
     <div class="stat-row"><span>Orphans</span><strong>${orphanCount}</strong></div>
     <div class="stat-row"><span>Generated</span><strong>${generated}</strong></div>
   `;
+}
+
+function renderContextHealth(note = null) {
+  const health = state.dashboard?.context_health;
+  if (!health) return;
+  const noteSignals = note ? [
+    ["Backlinks", note.backlinks.length],
+    ["Outgoing", note.links.filter((link) => link.resolved_slug).length],
+    ["Status", note.status],
+  ] : [
+    ["Review queue", health.review_items],
+    ["Hub notes", state.dashboard.hub_notes.length],
+    ["Broken links", health.broken_links],
+  ];
+  els.contextHealth.innerHTML = noteSignals
+    .map(([label, value]) => `<div class="health-row"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`)
+    .join("");
 }
 
 function renderMeta(note) {
@@ -217,17 +270,23 @@ function renderOutline(note) {
 }
 
 function currentSlug() {
-  return location.hash.replace(/^#\/?/, "").split("#")[0] || "index";
+  return location.hash.replace(/^#\/?/, "").split("#")[0] || "dashboard";
 }
 
 async function renderNote() {
-  const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("index");
+  if (currentSlug() === "dashboard") {
+    renderDashboard();
+    return;
+  }
+  const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("00-start/overview");
   state.currentNote = note;
   els.note.innerHTML = renderMarkdown(note.body);
   addHeadingAnchors(els.note);
   await renderMermaid(els.note);
   renderMeta(note);
   renderBacklinks(note);
+  renderOutgoing(note);
+  renderContextHealth(note);
   renderOutline(note);
   renderTree();
   renderGraph();
@@ -237,6 +296,90 @@ async function renderNote() {
     const anchor = location.hash.split("#")[2];
     if (anchor) document.getElementById(anchor)?.scrollIntoView({ block: "start" });
   });
+}
+
+function dashboardCard(item, extra = "") {
+  return `
+    <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
+      <span>${escapeHtml(typeLabels[item.type] || item.type)}</span>
+      <strong>${escapeHtml(item.title)}</strong>
+      ${item.summary ? `<p>${escapeHtml(item.summary)}</p>` : ""}
+      ${extra}
+    </a>
+  `;
+}
+
+function renderDashboard() {
+  const overview = state.notesBySlug.get("00-start/overview") || state.notes[0];
+  state.currentNote = overview;
+  const health = state.dashboard.context_health;
+  els.breadcrumbs.innerHTML = `<span>workspace</span><b>/</b><span>dashboard</span>`;
+  els.noteMeta.innerHTML = `
+    <span class="type-chip type-project">Cockpit</span>
+    <span class="meta-chip">${health.notes} notes</span>
+    <span class="meta-chip">${health.review_items} review items</span>
+    <span class="meta-chip">${health.broken_links} broken links</span>
+  `;
+  els.note.innerHTML = `
+    <section class="dashboard-hero">
+      <p class="eyebrow">Context cockpit</p>
+      <h1>${escapeHtml(state.dashboard.hero.title)}</h1>
+      <p>${escapeHtml(state.dashboard.hero.subtitle)}</p>
+    </section>
+    <section class="health-grid">
+      <div><span>Notes</span><strong>${health.notes}</strong></div>
+      <div><span>Broken links</span><strong>${health.broken_links}</strong></div>
+      <div><span>Orphans</span><strong>${health.orphans}</strong></div>
+      <div><span>Review</span><strong>${health.review_items}</strong></div>
+    </section>
+    <section class="dashboard-section">
+      <div class="dashboard-heading">
+        <h2>Review Queue</h2>
+        <p>Notes that need stronger links, status cleanup, or better context.</p>
+      </div>
+      <div class="review-list">
+        ${(state.dashboard.review_queue.length ? state.dashboard.review_queue : [{ title: "No review items", type: "project", slug: "00-start/overview", reasons: ["context is healthy"] }]).map((item) => `
+          <a class="review-item type-${item.type}" href="#/${item.slug}">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${item.reasons.map(escapeHtml).join(" · ")}</span>
+          </a>
+        `).join("")}
+      </div>
+    </section>
+    <section class="dashboard-section dashboard-columns">
+      <div>
+        <div class="dashboard-heading">
+          <h2>Recently Changed</h2>
+          <p>Fresh context that can be extended or linked.</p>
+        </div>
+        <div class="dashboard-cards">
+          ${state.dashboard.recent_notes.map((item) => dashboardCard(item, `<em>${escapeHtml(item.updated || "unknown")}</em>`)).join("")}
+        </div>
+      </div>
+      <div>
+        <div class="dashboard-heading">
+          <h2>Hub Notes</h2>
+          <p>Current centers of gravity in the graph.</p>
+        </div>
+        <div class="dashboard-cards compact">
+          ${state.dashboard.hub_notes.map((item) => dashboardCard(item, `<em>${item.connection_count} connections</em>`)).join("")}
+        </div>
+      </div>
+    </section>
+  `;
+  renderBacklinks(null);
+  renderOutgoing(null);
+  renderContextHealth(null);
+  els.outline.innerHTML = `
+    <a href="#/dashboard">Dashboard</a>
+    <a href="#/40-projects/system-interface-map">System map</a>
+    <a href="#/30-workflows/operating-routine">Operating routine</a>
+    <a href="#/30-workflows/reviewable-ai-workflows">Review workflow</a>
+  `;
+  renderTree();
+  state.graphMode = "all";
+  renderGraph();
+  document.title = "Context Dashboard · AI Context as Code";
 }
 
 function runSearch(query) {
@@ -319,6 +462,7 @@ function renderGraph() {
 
 function renderEditorState() {
   const note = state.currentNote;
+  if (!note) return;
   els.editorTitle.textContent = `Edit ${note.title}`;
   const draft = localStorage.getItem(draftKey(note));
   els.editorText.value = draft ?? note.body;
@@ -395,6 +539,7 @@ function closeCommandPalette() {
 function renderCommandResults(query) {
   const value = query.trim().toLowerCase();
   const commands = [
+    { title: "Open dashboard", action: () => { location.hash = "#/dashboard"; } },
     { title: "Toggle editor", action: () => toggleEditor() },
     { title: "Toggle theme", action: () => toggleTheme() },
     { title: "Show full graph", action: () => { state.graphMode = "all"; renderGraph(); } },
@@ -447,12 +592,13 @@ function hideHoverPreview() {
 
 async function init() {
   document.documentElement.dataset.theme = state.theme;
-  const [notes, tree, stats, graph, report] = await Promise.all([
+  const [notes, tree, stats, graph, report, dashboard] = await Promise.all([
     loadJson("./_build/notes.json"),
     loadJson("./_build/tree.json"),
     loadJson("./_build/stats.json"),
     loadJson("./_build/graph.json"),
     loadJson("./_build/report.json"),
+    loadJson("./_build/dashboard.json"),
   ]);
 
   state.notes = notes;
@@ -460,6 +606,7 @@ async function init() {
   state.stats = stats;
   state.graph = graph;
   state.report = report;
+  state.dashboard = dashboard;
   for (const note of notes) {
     state.notesBySlug.set(note.slug, note);
     state.notesBySlug.set(note.slug.split("/").pop(), note);

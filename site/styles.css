@@ -535,6 +535,181 @@ details div {
   font-size: 14px;
 }
 
+.link-list a small {
+  display: block;
+  margin-top: 2px;
+  color: var(--soft);
+  font-size: 11px;
+}
+
+.health-list {
+  display: grid;
+  gap: 7px;
+}
+
+.health-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-2) 54%, transparent);
+  padding: 7px 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.health-row strong {
+  color: var(--text);
+}
+
+.dashboard-link {
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.dashboard-hero {
+  max-width: 860px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(circle at 92% 10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 34%),
+    linear-gradient(135deg, color-mix(in srgb, var(--surface-2) 94%, transparent), color-mix(in srgb, var(--surface) 88%, transparent));
+  padding: 24px;
+  margin-bottom: 18px;
+}
+
+.dashboard-hero .eyebrow {
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 740;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dashboard-hero h1 {
+  margin-bottom: 12px;
+}
+
+.dashboard-hero p:last-child {
+  max-width: 660px;
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 860px;
+  margin: 0 0 28px;
+}
+
+.health-grid div {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-2) 70%, transparent);
+  padding: 13px;
+}
+
+.health-grid span,
+.dashboard-card span,
+.review-item span,
+.dashboard-card em {
+  display: block;
+  color: var(--soft);
+  font-size: 12px;
+  font-style: normal;
+}
+
+.health-grid strong {
+  display: block;
+  margin-top: 6px;
+  color: var(--text);
+  font-size: 26px;
+  line-height: 1;
+}
+
+.dashboard-section {
+  max-width: 920px;
+  margin-top: 30px;
+}
+
+.dashboard-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.dashboard-heading h2 {
+  margin: 0;
+}
+
+.dashboard-heading p {
+  max-width: 360px;
+  margin: 0;
+  color: var(--soft);
+  font-size: 13px;
+  text-align: right;
+}
+
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+  gap: 18px;
+}
+
+.dashboard-cards,
+.review-list {
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-card,
+.review-item {
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--surface-2) 68%, transparent);
+  padding: 13px;
+  text-decoration: none;
+}
+
+.dashboard-card:hover,
+.review-item:hover {
+  border-color: color-mix(in srgb, var(--accent) 46%, var(--line));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-2));
+}
+
+.dashboard-card strong,
+.review-item strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--text);
+  font-size: 15px;
+}
+
+.dashboard-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.dashboard-card em {
+  margin-top: 8px;
+  color: var(--accent);
+}
+
+.review-item span {
+  margin-top: 5px;
+  color: var(--warning);
+}
+
 .stats {
   display: grid;
   gap: 8px;
@@ -920,6 +1095,24 @@ textarea {
 
   .editor-grid {
     display: block;
+  }
+
+  .dashboard-hero {
+    padding: 18px;
+  }
+
+  .health-grid,
+  .dashboard-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-heading {
+    display: block;
+  }
+
+  .dashboard-heading p {
+    margin-top: 6px;
+    text-align: left;
   }
 
   .mermaid-block {
