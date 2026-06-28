@@ -69,7 +69,7 @@ Line-height는 본문 1.7 안팎, UI text 1.45 안팎으로 둬요.
 간격은 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48px scale을 써요.
 반복 item은 촘촘하게, reader header와 dashboard module 사이는 넉넉하게 둬요.
 
-- Sidebar row: 30px 이상 높이를 유지해요.
+- Sidebar row: 26px 안팎으로 촘촘하게 유지하고, chevron 칸과 depth padding은 제목 폭을 침범하지 않게 최소화해요.
 - Metadata pill: 24px 이상 높이를 유지해요.
 - Dashboard module: 16-20px 안쪽 여백을 기본으로 해요.
 - Reader page padding: desktop에서는 40px 이상, mobile에서는 16-20px로 줄여요.
@@ -155,7 +155,7 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 
 ### Loading, Empty, Missing
 
-- Loading은 skeleton line으로 짧게 보여줘요.
+- Loading은 실제 reader body와 같은 width, 같은 시작점에서 skeleton line으로 짧게 보여줘요.
 - Missing note는 route와 home/search entry를 보여줘요.
 - Empty trove는 public notes가 거의 없다는 사실과 source boundary를 보여줘요.
 - Fatal build output state는 generated JSON을 읽지 못했음을 분명히 말해요.

@@ -1356,9 +1356,16 @@ function renderFatalError(error) {
 
 function renderLoading(label) {
   main.innerHTML = `
-    <div class="reader-inner">
+    <div class="reader-inner narrow">
       <section class="loading-state" aria-live="polite">
-        <p class="eyebrow">${escapeHtml(label)}</p>
+        <p class="sr-only">${escapeHtml(label)}</p>
+        <div class="loading-line loading-breadcrumb"></div>
+        <div class="loading-pill-row" aria-hidden="true">
+          <div class="loading-line loading-pill short"></div>
+          <div class="loading-line loading-pill"></div>
+          <div class="loading-line loading-pill short"></div>
+        </div>
+        <div class="loading-line loading-title"></div>
         <div class="loading-line medium"></div>
         <div class="loading-line"></div>
         <div class="loading-line short"></div>

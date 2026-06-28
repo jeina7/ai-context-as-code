@@ -272,11 +272,11 @@ button {
 }
 
 .tree {
-  padding: var(--space-6) var(--space-4) var(--space-9);
+  padding: var(--space-5) var(--space-3) var(--space-8);
 }
 
 .tree-section {
-  margin-top: var(--space-7);
+  margin-top: var(--space-6);
 }
 
 .tree-section:first-child {
@@ -284,7 +284,7 @@ button {
 }
 
 .tree-section-title {
-  margin: 0 var(--space-3) var(--space-3);
+  margin: 0 var(--space-2) var(--space-2);
   color: var(--color-faint);
   font-size: var(--text-xxs);
   font-weight: 800;
@@ -294,7 +294,7 @@ button {
 
 .tree-divider {
   height: 1px;
-  margin: var(--space-7) var(--space-3);
+  margin: var(--space-6) var(--space-2);
   background: var(--color-line);
 }
 
@@ -309,13 +309,13 @@ button {
 }
 
 .tree-list .tree-list {
-  margin-left: var(--space-4);
-  padding-left: var(--space-2);
+  margin-left: var(--space-3);
+  padding-left: var(--space-1);
   border-left: 1px solid var(--color-line);
 }
 
 .tree-item {
-  margin: 1px 0;
+  margin: 0;
 }
 
 .tree-link,
@@ -325,8 +325,8 @@ button {
   align-items: center;
   gap: 0;
   width: 100%;
-  min-height: 29px;
-  padding: var(--space-2) var(--space-2);
+  min-height: 26px;
+  padding: 2px var(--space-1);
   border: 0;
   border-radius: var(--radius-sm);
   background: transparent;
@@ -345,7 +345,7 @@ button {
 
 .tree-folder-row {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-columns: 16px minmax(0, 1fr);
   align-items: center;
   gap: 0;
 }
@@ -378,8 +378,8 @@ button {
 .tree-spacer {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 29px;
+  width: 16px;
+  height: 26px;
 }
 
 .tree-toggle {
@@ -395,8 +395,8 @@ button {
 }
 
 .tree-chevron {
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-right: 1.5px solid currentColor;
   border-bottom: 1.5px solid currentColor;
   transform: rotate(-45deg);
@@ -521,7 +521,7 @@ button {
 }
 
 .note-header .meta-strip {
-  margin-bottom: var(--space-5);
+  margin-bottom: var(--space-7);
 }
 
 .eyebrow {
@@ -1010,7 +1010,7 @@ button {
 
 .loading-state {
   width: 100%;
-  padding-top: 12vh;
+  padding-top: 0;
 }
 
 .loading-line {
@@ -1020,6 +1020,40 @@ button {
   background: linear-gradient(90deg, var(--color-line), var(--color-surface), var(--color-line));
   background-size: 200% 100%;
   animation: shimmer 1200ms ease-in-out infinite;
+}
+
+.loading-line:first-of-type {
+  margin-top: 0;
+}
+
+.loading-breadcrumb {
+  width: 46%;
+  height: 18px;
+  margin-bottom: var(--space-8);
+}
+
+.loading-pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-7);
+}
+
+.loading-pill {
+  width: 112px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.loading-pill.short {
+  width: 76px;
+}
+
+.loading-title {
+  width: min(560px, 74%);
+  height: 48px;
+  margin-bottom: var(--space-7);
+  border-radius: var(--radius-sm);
 }
 
 .loading-line.short {
