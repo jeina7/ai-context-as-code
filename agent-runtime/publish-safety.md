@@ -1,1 +1,0 @@
-../conventions/publish-safety.md
