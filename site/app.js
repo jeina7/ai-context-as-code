@@ -6,6 +6,8 @@ const state = {
   graph: { nodes: [], edges: [] },
   report: null,
   dashboard: null,
+  searchIndex: [],
+  searchBySlug: new Map(),
   currentNote: null,
   lang: new URLSearchParams(location.search).get("lang") || localStorage.getItem("acc-lang") || "ko",
   graphMode: "local",
@@ -648,10 +650,67 @@ function graphInsight(label, value, detail = "") {
   `;
 }
 
+function noteOutgoingSlugs(note) {
+  return new Set((note.links || []).filter((link) => link.resolved_slug).map((link) => link.resolved_slug));
+}
+
+function noteBacklinkSlugs(note) {
+  return new Set((note.backlinks || []).map((link) => link.slug));
+}
+
+function relationReason(source, target) {
+  const outgoing = noteOutgoingSlugs(source);
+  const targetOutgoing = noteOutgoingSlugs(target);
+  const incoming = noteBacklinkSlugs(source);
+  const targetTitle = localizedTitle(target);
+  if (outgoing.has(target.slug) && targetOutgoing.has(source.slug)) {
+    return state.lang === "ko"
+      ? `${targetTitle}와 서로 링크로 이어져 있어요.`
+      : `Mutual links with ${targetTitle}.`;
+  }
+  if (outgoing.has(target.slug)) {
+    return state.lang === "ko"
+      ? `${targetTitle}를 직접 참조해요.`
+      : `This note directly references ${targetTitle}.`;
+  }
+  if (incoming.has(target.slug)) {
+    return state.lang === "ko"
+      ? `${targetTitle}가 이 노트를 참조해요.`
+      : `${targetTitle} points back to this note.`;
+  }
+  const sharedTargets = [...outgoing].filter((slug) => targetOutgoing.has(slug));
+  if (sharedTargets.length) {
+    const sharedTitle = localizedTitle(state.notesBySlug.get(sharedTargets[0]) || { title: sharedTargets[0] });
+    return state.lang === "ko"
+      ? `${sharedTitle}를 함께 참조해요.`
+      : `Both notes reference ${sharedTitle}.`;
+  }
+  const degree = (target.link_count || target.links?.filter((link) => link.resolved_slug).length || 0) + (target.backlink_count || target.backlinks?.length || 0);
+  return state.lang === "ko"
+    ? `${targetTitle}는 연결 ${degree}개를 가진 중심 노트예요.`
+    : `${targetTitle} is a hub with ${degree} connections.`;
+}
+
+function strongestRelatedNote(note, local) {
+  const outgoing = noteOutgoingSlugs(note);
+  const incoming = noteBacklinkSlugs(note);
+  return local.nodes
+    .filter((node) => node.id !== note.slug)
+    .map((node) => {
+      const target = state.notesBySlug.get(node.id) || node;
+      let score = (node.link_count || 0) + (node.backlink_count || 0);
+      if (outgoing.has(node.id)) score += 20;
+      if (incoming.has(node.id)) score += 16;
+      return { target, score };
+    })
+    .sort((a, b) => b.score - a.score)[0]?.target;
+}
+
 function renderGraphInsights(note, activeGraph) {
   const local = relatedGraph(note, "local");
   const incoming = note.backlinks || [];
   const outgoing = (note.links || []).filter((link) => link.resolved_slug);
+  const strongest = strongestRelatedNote(note, local);
   const hubs = state.dashboard.hub_notes
     .slice(0, 3)
     .map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item))
@@ -664,6 +723,7 @@ function renderGraphInsights(note, activeGraph) {
   const connected = local.nodes.length > 1
     ? local.nodes.filter((node) => node.id !== note.slug).map((node) => localizedTitle(state.notesBySlug.get(node.id) || node)).slice(0, 3).join(", ")
     : t("noDirectNeighbors");
+  const relatedDetail = strongest ? relationReason(note, strongest) : connected;
 
   els.graphInsights.innerHTML = [
     graphInsight(t("current"), activeTitle, typeLabel(note.type)),
@@ -671,7 +731,7 @@ function renderGraphInsights(note, activeGraph) {
     graphInsight(t("outgoing"), `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
     state.graphMode === "all"
       ? graphInsight(t("mapSignal"), `${activeGraph.nodes.length} ${t("notesUnit")}`, hubs || review || (state.lang === "ko" ? "아직 연결 신호가 약해요" : "No graph signal yet"))
-      : graphInsight(t("related"), `${Math.max(0, local.nodes.length - 1)} ${t("notesUnit")}`, connected),
+      : graphInsight(t("related"), `${Math.max(0, local.nodes.length - 1)} ${t("notesUnit")}`, relatedDetail),
   ].join("");
 }
 
@@ -724,14 +784,82 @@ function discardDraft() {
   renderEditorState();
 }
 
+function markdownSections(markdown) {
+  const lines = markdown.split("\n");
+  const sections = [];
+  let current = { heading: "Document start", startLine: 1, lines: [] };
+  lines.forEach((line, index) => {
+    if (/^#{1,6}\s+/.test(line) && current.lines.length) {
+      current.endLine = index;
+      sections.push(current);
+      current = { heading: line.replace(/^#{1,6}\s+/, "").trim(), startLine: index + 1, lines: [line] };
+      return;
+    }
+    if (/^#{1,6}\s+/.test(line) && !current.lines.length) {
+      current.heading = line.replace(/^#{1,6}\s+/, "").trim();
+    }
+    current.lines.push(line);
+  });
+  current.endLine = lines.length;
+  sections.push(current);
+  return sections.map((section, index) => ({
+    ...section,
+    key: `${section.heading.toLowerCase()}::${index}`,
+    text: section.lines.join("\n"),
+  }));
+}
+
+function changedMarkdownSections(original, updated) {
+  const originalSections = markdownSections(original);
+  const updatedSections = markdownSections(updated);
+  const originalByKey = new Map(originalSections.map((section) => [section.key, section]));
+  const updatedByKey = new Map(updatedSections.map((section) => [section.key, section]));
+  const keys = [...new Set([...originalByKey.keys(), ...updatedByKey.keys()])];
+  return keys
+    .map((key) => {
+      const before = originalByKey.get(key);
+      const after = updatedByKey.get(key);
+      if (before?.text === after?.text) return null;
+      return {
+        heading: after?.heading || before?.heading || "Document start",
+        status: before && after ? "changed" : before ? "removed" : "added",
+        before,
+        after,
+      };
+    })
+    .filter(Boolean);
+}
+
 function exportPatch() {
   const note = state.currentNote;
   const original = note.body;
   const updated = els.editorText.value;
+  const sectionChanges = changedMarkdownSections(original, updated);
   const patch = [
     `# Patch export for ${note.path}`,
     "",
     "This patch is generated in the browser. Review it locally before committing.",
+    "",
+    "## Changed Sections",
+    "",
+    sectionChanges.length
+      ? sectionChanges.map((change) => `- ${change.status}: ${change.heading}`).join("\n")
+      : "- No section changes detected.",
+    "",
+    "## Section Review",
+    "",
+    ...sectionChanges.flatMap((change) => [
+      `### ${change.status}: ${change.heading}`,
+      "",
+      change.before ? `Original lines ${change.before.startLine}-${change.before.endLine}` : "Original: not present",
+      change.after ? `Updated lines ${change.after.startLine}-${change.after.endLine}` : "Updated: removed",
+      "",
+      "```markdown",
+      change.after?.text || "",
+      "```",
+      "",
+    ]),
+    "## Full File Diff",
     "",
     "```diff",
     `--- a/notes/${note.path}`,
@@ -775,7 +903,9 @@ function commandText(command) {
 }
 
 function snippetFor(note, query) {
-  const body = localizedBody(note).replace(/^# .*\n?/, "").replace(/\s+/g, " ").trim();
+  const record = state.searchBySlug.get(note.slug);
+  const indexedSummary = record?.translations?.[state.lang]?.summary || record?.summary;
+  const body = (localizedBody(note) || indexedSummary || "").replace(/^# .*\n?/, "").replace(/\s+/g, " ").trim();
   if (!query) return summaryFromMarkdown(localizedBody(note), 110);
   const index = body.toLowerCase().indexOf(query.toLowerCase());
   if (index < 0) return summaryFromMarkdown(localizedBody(note), 110);
@@ -791,11 +921,15 @@ function daysSince(dateValue) {
 }
 
 function noteSearchScore(note, query) {
-  const title = localizedTitle(note).toLowerCase();
-  const slug = note.slug.toLowerCase();
-  const type = note.type.toLowerCase();
-  const body = localizedBody(note).toLowerCase();
+  const record = state.searchBySlug.get(note.slug);
+  const indexedTranslation = record?.translations?.[state.lang];
+  const title = `${record?.title || ""} ${indexedTranslation?.title || ""} ${localizedTitle(note)}`.toLowerCase();
+  const slug = `${note.slug} ${record?.path || ""}`.toLowerCase();
+  const type = `${note.type} ${record?.type || ""}`.toLowerCase();
+  const headings = (record?.headings || []).join(" ").toLowerCase();
+  const body = `${record?.text || ""} ${indexedTranslation?.text || ""} ${localizedBody(note)}`.toLowerCase();
   const q = query.toLowerCase();
+  const terms = q.split(/\s+/).filter(Boolean);
   let score = 0;
   if (!q) score += 12;
   if (title === q) score += 320;
@@ -803,8 +937,16 @@ function noteSearchScore(note, query) {
   if (title.includes(q)) score += 160;
   if (slug.includes(q)) score += 80;
   if (type.includes(q)) score += 48;
+  if (headings.includes(q)) score += 42;
   if (body.includes(q)) score += 28;
-  score += Math.min(32, (note.backlinks?.length || 0) * 4);
+  for (const term of terms) {
+    if (title.includes(term)) score += 36;
+    if (slug.includes(term)) score += 18;
+    if (headings.includes(term)) score += 14;
+    if (body.includes(term)) score += 8;
+  }
+  score += Math.min(32, (record?.backlink_count ?? note.backlinks?.length ?? 0) * 4);
+  score += Math.min(12, (record?.link_count ?? 0) * 2);
   score += Math.max(0, 24 - daysSince(note.updated));
   if (state.dashboard.review_queue.some((item) => item.slug === note.slug)) score += 20;
   return score;
@@ -952,13 +1094,14 @@ async function navigateHash() {
 async function init() {
   document.documentElement.dataset.theme = state.theme;
   document.documentElement.lang = state.lang;
-  const [notes, tree, stats, graph, report, dashboard] = await Promise.all([
+  const [notes, tree, stats, graph, report, dashboard, searchIndex] = await Promise.all([
     loadJson("./_build/notes.json"),
     loadJson("./_build/tree.json"),
     loadJson("./_build/stats.json"),
     loadJson("./_build/graph.json"),
     loadJson("./_build/report.json"),
     loadJson("./_build/dashboard.json"),
+    loadJson("./_build/search-index.json"),
   ]);
 
   state.notes = notes;
@@ -967,6 +1110,8 @@ async function init() {
   state.graph = graph;
   state.report = report;
   state.dashboard = dashboard;
+  state.searchIndex = searchIndex;
+  state.searchBySlug = new Map(searchIndex.map((item) => [item.slug, item]));
   for (const note of notes) {
     state.notesBySlug.set(note.slug, note);
     state.notesBySlug.set(note.slug.split("/").pop(), note);

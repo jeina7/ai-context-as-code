@@ -28,6 +28,10 @@ ROUTE_RULES = [
 ]
 
 
+HIGH_RISK_LABELS = {"token_like", "internal_company_term", "email"}
+MEDIUM_RISK_LABELS = {"local_path", "daily_private_context"}
+
+
 def classify(text):
     for note_type, pattern, destination in ROUTE_RULES:
         if pattern.search(text):
@@ -48,19 +52,67 @@ def summarize_text(text):
     return " ".join(lines[:3])[:500]
 
 
+def candidate_title(path, text):
+    heading = re.search(r"^#\s+(.+)$", text, flags=re.MULTILINE)
+    if heading:
+        return heading.group(1).strip()
+    return path.stem.replace("-", " ").replace("_", " ").title()
+
+
+def risk_level(risks):
+    if any(label in HIGH_RISK_LABELS for label in risks):
+        return "high"
+    if any(label in MEDIUM_RISK_LABELS for label in risks):
+        return "medium"
+    return "low"
+
+
+def recommendation_for(risks):
+    level = risk_level(risks)
+    if level == "high":
+        return "rewrite-from-scratch"
+    if level == "medium":
+        return "extract-and-redact"
+    return "rewrite-for-standalone-context"
+
+
+def rewrite_checklist(risks):
+    checklist = [
+        "write a standalone note that does not depend on the private source file",
+        "keep only durable context, decisions, or reusable procedures",
+        "add wikilinks to existing notes after the rewritten note exists",
+    ]
+    if "internal_company_term" in risks:
+        checklist.append("remove company, team, project, and role-specific details")
+    if "daily_private_context" in risks:
+        checklist.append("remove personal journal, finance, health, family, or strategy context")
+    if "email" in risks or "token_like" in risks or "local_path" in risks:
+        checklist.append("remove identifiers, credentials, local paths, and account-specific strings")
+    return checklist
+
+
 def analyze_file(path):
     text = path.read_text(encoding="utf-8")
     note_type, destination = classify(f"{path.name}\n{text[:4000]}")
     risks = risk_findings(text)
+    title = candidate_title(path, text)
     return {
         "source_path": str(path),
         "file_name": path.name,
+        "candidate_title": title,
         "note_type": note_type,
         "recommended_destination": destination,
         "risk_findings": risks,
+        "risk_level": risk_level(risks),
+        "recommendation": recommendation_for(risks),
+        "rewrite_checklist": rewrite_checklist(risks),
         "requires_rewrite": True,
         "eligible_for_direct_import": False,
         "summary_hint": summarize_text(text),
+        "rewrite_prompt": (
+            f"Rewrite `{title}` as a standalone {note_type} note under `{destination}`. "
+            "Do not copy private wording. Keep only the reusable idea, decision, or workflow."
+        ),
     }
 
 
@@ -78,14 +130,30 @@ def write_reports(results):
         "",
         "This report is generated from private source material. Do not publish it directly.",
         "",
-        "| Source | Type | Destination | Risks | Direct Import |",
+        "| Source | Type | Destination | Risk | Recommendation |",
         "|---|---|---|---|---|",
     ]
     for item in results:
         risks = ", ".join(item["risk_findings"]) if item["risk_findings"] else "none detected"
         lines.append(
-            f"| `{item['file_name']}` | {item['note_type']} | `{item['recommended_destination']}` | {risks} | no |"
+            f"| `{item['file_name']}` | {item['note_type']} | `{item['recommended_destination']}` | {item['risk_level']}: {risks} | {item['recommendation']} |"
         )
+    lines.append("")
+    lines.append("## Candidate Notes")
+    lines.append("")
+    for item in results:
+        lines.extend([
+            f"### {item['candidate_title']}",
+            "",
+            f"- Source: `{item['file_name']}`",
+            f"- Destination: `{item['recommended_destination']}`",
+            f"- Recommendation: {item['recommendation']}",
+            f"- Summary hint: {item['summary_hint'] or 'none'}",
+            f"- Rewrite prompt: {item['rewrite_prompt']}",
+            "- Rewrite checklist:",
+        ])
+        lines.extend([f"  - {entry}" for entry in item["rewrite_checklist"]])
+        lines.append("")
     lines.append("")
     lines.append("## Rule")
     lines.append("")

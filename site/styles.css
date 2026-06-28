@@ -1427,28 +1427,51 @@ textarea {
   }
 
   .reader,
-  .editor,
+  .editor {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+
   .graph-header,
   .graph-insights,
   .graph-large {
-    width: calc(100vw - (var(--app-inset) * 2));
-    max-width: calc(100vw - (var(--app-inset) * 2));
+    width: 100%;
+    max-width: 100%;
     margin-left: 0;
     margin-right: 0;
   }
 
   .note {
-    font-size: 16px;
+    font-size: 15.5px;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .note h1 {
     font-size: 32px;
     line-height: 1.08;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .note h2,
   .note h3 {
     scroll-margin-top: 122px;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .note p,
+  .note li {
+    width: 100%;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .editor-toolbar,

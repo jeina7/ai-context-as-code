@@ -186,18 +186,49 @@ def sort_tree(node):
 
 
 def build_search_index(notes):
-    return [
-        {
+    index = []
+    for note in notes:
+        resolved_links = [link for link in note["links"] if link["resolved_slug"]]
+        translations = {}
+        for lang, translation in note.get("translations", {}).items():
+            translations[lang] = {
+                "title": translation.get("title") or note["title"],
+                "text": f"{translation.get('title') or note['title']} {translation.get('body', '')[:3000]}",
+                "summary": summary_from_text(translation.get("body", ""), 220),
+            }
+        index.append({
             "id": note["id"],
             "slug": note["slug"],
+            "path": note["path"],
             "title": note["title"],
             "type": note["type"],
             "status": note["status"],
             "updated": note["updated"],
-            "text": f"{note['title']} {note['body'][:2000]}",
-        }
-        for note in notes
-    ]
+            "summary": note_summary(note, 260),
+            "text": f"{note['title']} {note['path']} {note['type']} {note['status']} {note['body'][:5000]}",
+            "headings": extract_heading_text(note["body"]),
+            "link_count": len(resolved_links),
+            "backlink_count": len(note["backlinks"]),
+            "translations": translations,
+        })
+    return index
+
+
+def extract_heading_text(markdown):
+    headings = []
+    for line in markdown.splitlines():
+        match = re.match(r"^#{1,4}\s+(.+)$", line)
+        if match:
+            headings.append(match.group(1).strip())
+    return headings
+
+
+def summary_from_text(markdown, limit=220):
+    body = re.sub(r"^# .*\n?", "", markdown).strip()
+    body = re.sub(r"^#{2,6}\s+.*$", "", body, flags=re.MULTILINE)
+    body = re.sub(r"\[\[([^\]|]+)\|?([^\]]*)\]\]", lambda match: match.group(2) or match.group(1), body)
+    body = re.sub(r"\s+", " ", body)
+    return body.strip()[:limit]
 
 
 def build_graph(notes):

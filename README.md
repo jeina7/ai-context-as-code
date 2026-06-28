@@ -27,14 +27,16 @@ That corpus is not a private life vault. It is the reviewed example dataset that
 - Static GitHub Pages workspace.
 - Three-pane reading layout with search, filters, outline, backlinks, and status.
 - Compact navbar search trigger with a command/search modal.
+- Generated search index used by the command/search modal.
 - Wikilink hover previews.
 - Mermaid diagram rendering.
-- Local and full knowledge graph views.
+- Context map with relationship reasons, not only node links.
 - Browser draft editing with localStorage.
-- Patch export for reviewing browser edits locally before committing.
+- Section-aware patch export for reviewing browser edits locally before committing.
 - Light and dark themes.
 - Korean and English reading modes.
 - Generated reports for broken links, orphan notes, and hub notes.
+- Viewport QA script for desktop and mobile screenshots.
 
 ## Non-Goals
 
@@ -69,10 +71,12 @@ python3 scripts/check_publish_safety.py
 python3 scripts/validate_notes.py
 python3 scripts/build_meta.py
 python3 scripts/review_context.py
+python3 scripts/qa_viewports.py
 python3 -m http.server 8000 --directory site
 ```
 
 The site expects generated JSON under `site/_build/`. `build_meta.py` writes there automatically for local preview.
+The viewport QA script writes screenshots and a JSON report under ignored `private-staging/qa/`.
 
 ## Language Model
 
@@ -89,3 +93,4 @@ python3 scripts/import_from_obsidian.py /path/to/candidate.md
 ```
 
 The importer writes a dry-run report under `private-staging/`. It never writes directly into `notes/`.
+The report includes risk level, recommended destination, rewrite checklist, and a standalone rewrite prompt.

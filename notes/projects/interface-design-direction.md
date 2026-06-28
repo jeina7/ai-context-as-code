@@ -48,12 +48,18 @@ The modal owns the real interaction.
 
 The modal should support:
 
-- note title, path, type, and body search
+- generated index search across note title, path, type, headings, and body
+- localized Korean text search for human reading
 - command actions
 - keyboard navigation
 - visible note snippets
 - ranking by title match, path, type, body, backlinks, recency, and review state
 - empty state feedback when nothing matches
+
+## QA Direction
+
+Every layout change should keep desktop and mobile insets aligned.
+When possible, use `scripts/qa_viewports.py` to capture dashboard and note screens before publishing.
 
 ## Non-Goals
 

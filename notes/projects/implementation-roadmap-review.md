@@ -11,7 +11,7 @@ updated: 2026-06-28
 
 ## Summary
 
-The current product now has a working static context workspace, Korean reading mode, graph views, browser draft editing, modal search, and recognizable agent config surfaces.
+The current product now has a working static context workspace, Korean reading mode, graph views, browser draft editing, modal search, generated search metadata, and recognizable agent config surfaces.
 
 The biggest finished gap was the agent configuration shape.
 `AGENTS.md`, `CLAUDE.md`, `skills/`, and `memory/` now exist as real repository surfaces, while `agent-runtime/` remains only a compatibility index.
@@ -26,15 +26,19 @@ The biggest finished gap was the agent configuration shape.
 - Improved search modal with grouped commands, note snippets, keyboard navigation, empty state, and ranking.
 - Added `Interface Design Direction`.
 - Reframed agent runtime documentation as agent configuration documentation.
+- Connected the command/search modal to generated search metadata.
+- Improved browser patch export with section-level review blocks.
+- Added graph insight copy that explains the strongest relationship.
+- Improved Obsidian import reports with risk level, destination, rewrite checklist, and rewrite prompt.
+- Added a viewport QA script for desktop and mobile screenshots.
 
 ## Still Worth Building
 
 - Content structure migration from the current topic folders into a clearer product, method, corpus, research, and operations split.
-- Search ranking backed by a generated index instead of only browser-side scoring.
-- Browser editing that can produce structured local patches per note section.
-- Graph insights that explain why a connection matters, not just that it exists.
-- More systematic mobile QA with real viewport measurements.
-- Better import review reports for Obsidian candidates.
+- Safe alias and redirect support before moving existing note slugs.
+- Semantic search or embedding-backed search once the static index is no longer enough.
+- A richer review queue that groups notes by missing links, stale wording, and translation drift.
+- Import reports that can compare several Obsidian candidates and suggest one rewritten note outline.
 
 ## Deferred Because It Changes Product Boundaries
 
