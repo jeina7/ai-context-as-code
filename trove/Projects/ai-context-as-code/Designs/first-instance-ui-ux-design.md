@@ -6,7 +6,7 @@ type: design
 status: active
 date: 2026-06-28
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: z1hXOfY1w6
 
@@ -381,6 +381,11 @@ UI/UX 첫 구현은 아래가 되면 통과예요.
 - search로 문서를 찾을 수 있어요.
 - mobile에서 navigation, reader, context panel이 서로 겹치지 않아요.
 - UI가 “문서 사이트”가 아니라 “context를 이어받는 작업 도구”처럼 느껴져요.
+
+## 구현 디자인 시스템
+
+구체적인 토큰, 컴포넌트 규칙, responsive 기준은 [[first-instance-reader-design-system]]에 둬요.
+이 문서는 제품 경험과 정보 구조를 설명하고, 디자인 시스템 문서는 `site/` 구현이 따라야 하는 세부 규칙을 설명해요.
 
 ## 비목표
 

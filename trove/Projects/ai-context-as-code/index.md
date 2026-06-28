@@ -38,6 +38,7 @@ The first implementation keeps the structure small, validates markdown source, b
 - [[first-instance-architecture]]
 - [[first-implementation-plan]]
 - [[first-instance-ui-ux-design]]
+- [[first-instance-reader-design-system]]
 
 ## References
 

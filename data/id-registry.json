@@ -90,6 +90,16 @@
       "updated": "2026-06-28",
       "visibility": "public"
     },
+    "ReaderDS01": {
+      "created": "2026-06-29",
+      "currentPath": "Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md",
+      "previousPaths": [],
+      "route": "/trove/ReaderDS01",
+      "title": "첫 번째 인스턴스 Reader 디자인 시스템",
+      "type": "design",
+      "updated": "2026-06-29",
+      "visibility": "public"
+    },
     "UzbYw-l2kg": {
       "created": "2026-06-28",
       "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-28.md",
@@ -167,7 +177,7 @@
       "route": "/trove/z1hXOfY1w6",
       "title": "첫 번째 인스턴스 UI/UX 설계",
       "type": "design",
-      "updated": "2026-06-28",
+      "updated": "2026-06-29",
       "visibility": "public"
     },
     "zxhIW0jU5O": {
@@ -199,6 +209,7 @@
     "Projects/ai-context-as-code/Designs/first-implementation-plan.md": "zxhIW0jU5O",
     "Projects/ai-context-as-code/Designs/first-instance-architecture.md": "0PVpQI6H0g",
     "Projects/ai-context-as-code/Designs/first-instance-frame.md": "N_TyCBWLFT",
+    "Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md": "ReaderDS01",
     "Projects/ai-context-as-code/Designs/first-instance-ui-ux-design.md": "z1hXOfY1w6",
     "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md": "F0lcG8SXxc",
     "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md": "CfwAsset01",

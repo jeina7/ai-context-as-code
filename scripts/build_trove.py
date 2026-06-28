@@ -301,19 +301,61 @@ def build_search_index(notes: list[validate_trove.Note]) -> list[dict[str, Any]]
     return index
 
 
+def latest_item(items: list[dict[str, Any]], predicate) -> dict[str, Any] | None:
+    candidates = [item for item in items if predicate(item)]
+    if not candidates:
+        return None
+    return sorted(
+        candidates,
+        key=lambda item: (item.get("updated", ""), item.get("path", "")),
+        reverse=True,
+    )[0]
+
+
+def compact_items(items: list[dict[str, Any] | None]) -> list[dict[str, Any]]:
+    result: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for item in items:
+        if not item:
+            continue
+        item_id = item.get("id", "")
+        if not item_id or item_id in seen:
+            continue
+        seen.add(item_id)
+        result.append(item)
+    return result
+
+
 def build_home(notes: list[validate_trove.Note]) -> dict[str, Any]:
     note_items = [note_item(note) for note in notes]
     by_path = {item["path"]: item for item in note_items}
     readme = (ROOT / "README.md").read_text(encoding="utf-8") if (ROOT / "README.md").exists() else ""
+    latest_daily = latest_item(note_items, lambda item: item["path"].startswith("Daily/"))
+    latest_design = latest_item(
+        note_items,
+        lambda item: item["path"].startswith("Projects/ai-context-as-code/Designs/")
+        and item["type"] in {"design", "context-design"},
+    )
+    latest_decision = latest_item(
+        note_items,
+        lambda item: item["path"].startswith("Projects/ai-context-as-code/Decisions/")
+        and item["type"] == "decision",
+    )
+    latest_worklog = latest_item(
+        note_items,
+        lambda item: item["path"].startswith("Projects/ai-context-as-code/Worklog/")
+        and item["type"] == "worklog",
+    )
 
-    start_paths = [
-        "Projects/ai-context-as-code/index.md",
-        "Daily/2026-06/2026-06-28.md",
-        "_config/index.md",
-        "_config/Memory/MEMORY.md",
-        "_config/Agents/agent.md",
-    ]
-    start_here = [by_path[path] for path in start_paths if path in by_path]
+    start_here = compact_items(
+        [
+            by_path.get("Projects/ai-context-as-code/index.md"),
+            latest_daily,
+            latest_design,
+            by_path.get("_config/index.md"),
+            by_path.get("_config/Memory/MEMORY.md"),
+        ]
+    )
 
     return {
         "title": "AI Context as Code",
@@ -321,7 +363,11 @@ def build_home(notes: list[validate_trove.Note]) -> dict[str, Any]:
         "readme": readme,
         "startHere": start_here,
         "currentProject": by_path.get("Projects/ai-context-as-code/index.md"),
-        "today": by_path.get("Daily/2026-06/2026-06-28.md"),
+        "today": latest_daily,
+        "recentDaily": latest_daily,
+        "latestDesign": latest_design,
+        "latestDecision": latest_decision,
+        "latestWorklog": latest_worklog,
         "specialContents": [
             by_path[path]
             for path in ["_config/index.md", "_config/Memory/MEMORY.md"]

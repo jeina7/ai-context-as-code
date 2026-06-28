@@ -36,7 +36,16 @@
             <label class="search-label" for="global-search">Search trove</label>
             <div class="search-box">
               <span aria-hidden="true">⌕</span>
-              <input id="global-search" name="q" type="search" autocomplete="off" />
+              <input
+                id="global-search"
+                name="q"
+                type="search"
+                autocomplete="off"
+                placeholder="Search title, path, or context"
+              />
+              <button class="search-submit" type="submit" aria-label="Run search">
+                <span aria-hidden="true">↵</span>
+              </button>
             </div>
           </form>
         </header>
