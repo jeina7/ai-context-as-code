@@ -401,6 +401,7 @@ details div {
 .dashboard-mode .sidebar,
 .dashboard-mode .context-panel,
 .dashboard-mode .graph-dock,
+.dashboard-mode .language-toggle,
 .dashboard-mode #edit-toggle,
 .dashboard-mode .breadcrumbs,
 .dashboard-mode .note-meta {
@@ -1360,6 +1361,10 @@ textarea {
     padding: 2px;
   }
 
+  .language-toggle .tool-button.active {
+    display: none;
+  }
+
   .language-toggle .tool-button {
     min-width: 34px;
     height: 30px;
@@ -1453,9 +1458,10 @@ textarea {
   }
 
   .note h1 {
-    font-size: 32px;
+    max-width: 100%;
+    font-size: 29px;
     line-height: 1.08;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
     word-break: break-word;
   }
 

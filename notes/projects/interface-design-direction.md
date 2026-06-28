@@ -22,6 +22,8 @@ The target is a quiet, precise surface for reading, searching, reviewing, and ed
 - Repeated surfaces should share one spacing scale.
 - Search should be modal-first, not a long navbar input.
 - The dashboard should show operational state, not behave like a note.
+- The dashboard and workspace chrome should stay English by default.
+- Korean and English switching should belong to individual note reading, not the whole app.
 - Document pages should keep a focused reading column with useful side context.
 - Graphs should summarize relationships, not decorate the page.
 

@@ -34,7 +34,7 @@ That corpus is not a private life vault. It is the reviewed example dataset that
 - Browser draft editing with localStorage.
 - Section-aware patch export for reviewing browser edits locally before committing.
 - Light and dark themes.
-- Korean and English reading modes.
+- English-first interface with per-note Korean and English reading modes.
 - Generated reports for broken links, orphan notes, and hub notes.
 - Viewport QA script for desktop and mobile screenshots.
 
@@ -82,7 +82,8 @@ The viewport QA script writes screenshots and a JSON report under ignored `priva
 
 `notes/` is the canonical English source for AI agents and automation.
 Korean reading copies live under `i18n/ko/notes/` with the same slug.
-The site defaults to Korean for human reading, while generated metadata keeps the English source body available for AI-facing use.
+The site defaults to English.
+The dashboard and workspace chrome stay English, while each note can switch between the canonical English source and its Korean reading copy.
 
 ## Import Dry Run
 

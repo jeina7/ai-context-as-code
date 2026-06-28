@@ -9,7 +9,7 @@ const state = {
   searchIndex: [],
   searchBySlug: new Map(),
   currentNote: null,
-  lang: new URLSearchParams(location.search).get("lang") || localStorage.getItem("acc-lang") || "ko",
+  lang: normalizeLang(new URLSearchParams(location.search).get("lang") || localStorage.getItem("acc-note-lang") || "en"),
   graphMode: "local",
   theme: localStorage.getItem("acc-theme") || "dark",
 };
@@ -61,46 +61,19 @@ const typeLabels = {
   reference: "Reference",
 };
 
-const typeLabelsKo = {
-  principle: "원칙",
-  pattern: "패턴",
-  research: "리서치",
-  decision: "결정",
-  project: "프로젝트",
-  worklog: "작업 기록",
-  reference: "참고",
-};
+function normalizeLang(value) {
+  return value === "ko" ? "ko" : "en";
+}
 
-const reasonLabelsKo = {
-  "no backlinks": "이 노트를 가리키는 링크가 없어요",
-  "no outgoing links": "다른 노트로 이어지는 링크가 없어요",
-  "needs stronger context": "연결을 더 보강하면 좋아요",
-  "recently changed": "최근 바뀌었어요",
-  "context is healthy": "상태가 좋아요",
-};
-
-const folderLabelsKo = {
-  start: "시작",
-  principles: "원칙",
-  concepts: "개념",
-  workflows: "워크플로",
-  projects: "프로젝트",
-  decisions: "결정",
-  research: "리서치",
-  worklog: "작업 기록",
-};
+function activeContentLang() {
+  return currentSlug() === "dashboard" ? "en" : state.lang;
+}
 
 function typeLabel(type) {
-  return state.lang === "ko" ? (typeLabelsKo[type] || typeLabels[type] || type) : (typeLabels[type] || type);
+  return typeLabels[type] || type;
 }
 
 function reasonLabel(reason) {
-  if (state.lang !== "ko") return reason;
-  if (reasonLabelsKo[reason]) return reasonLabelsKo[reason];
-  const graphMatch = reason.match(/^(\d+) graph connections$/);
-  if (graphMatch) return `연결 ${graphMatch[1]}개`;
-  const statusMatch = reason.match(/^status: (.+)$/);
-  if (statusMatch) return `상태: ${statusMatch[1]}`;
   return reason;
 }
 
@@ -140,41 +113,6 @@ const uiText = {
     notesGroup: "Notes",
     noSearchResults: "No matching notes or commands.",
   },
-  ko: {
-    dashboard: "작업 현황",
-    dashboardSubtitle: "검토할 노트, 최근 변경, 연결 상태를 한 화면에서 봐요.",
-    reviewQueue: "확인할 노트",
-    reviewQueueDescription: "최근 바뀌었거나 연결을 더 보강하면 좋은 노트예요.",
-    recentlyChanged: "최근 변경",
-    recentlyChangedDescription: "다음 작업 전에 한 번 보면 좋은 노트예요.",
-    hubNotes: "중심 노트",
-    hubNotesDescription: "다른 노트가 자주 기대는 노트예요.",
-    editorOriginal: "편집기는 영어 원본 기준이에요. 한국어 번역은 브라우저에서 읽기 전용으로 보여줘요.",
-    notes: "노트",
-    brokenLinks: "깨진 링크",
-    orphans: "고립 노트",
-    generated: "생성 시각",
-    backlinks: "받는 링크",
-    outgoing: "내보내는 링크",
-    status: "상태",
-    current: "현재 노트",
-    incoming: "받는 링크",
-    mapSignal: "전체 연결",
-    related: "연결된 노트",
-    noOutgoing: "아직 이어지는 링크가 없어요.",
-    noHeadings: "아직 제목 구조가 없어요.",
-    draftSaved: "임시 저장됨",
-    updated: "수정",
-    noDirectNeighbors: "아직 직접 연결된 노트가 없어요",
-    notesUnit: "노트",
-    linksUnit: "링크",
-    searchNotes: "노트 검색",
-    searchPrompt: "노트 검색 또는 명령 실행",
-    command: "명령",
-    commands: "명령",
-    notesGroup: "노트",
-    noSearchResults: "맞는 노트나 명령이 없어요.",
-  },
 };
 
 const folderLabels = {
@@ -207,15 +145,15 @@ function slugKey(value) {
 }
 
 function t(key) {
-  return uiText[state.lang]?.[key] || uiText.en[key] || key;
+  return uiText.en[key] || key;
 }
 
 function folderLabel(folder) {
-  return state.lang === "ko" ? (folderLabelsKo[folder] || folderLabels[folder] || folder) : (folderLabels[folder] || folder);
+  return folderLabels[folder] || folder;
 }
 
 function localizedNote(note) {
-  const translation = note?.translations?.[state.lang];
+  const translation = note?.translations?.[activeContentLang()];
   return {
     ...note,
     displayTitle: translation?.title || note.title,
@@ -230,6 +168,16 @@ function localizedTitle(note) {
 
 function localizedBody(note) {
   return localizedNote(note).displayBody;
+}
+
+function sourceTitle(note) {
+  return note?.title || note?.resolved_title || note?.slug || "";
+}
+
+function syncLanguageControls() {
+  document.documentElement.lang = activeContentLang();
+  els.langKo.classList.toggle("active", activeContentLang() === "ko");
+  els.langEn.classList.toggle("active", activeContentLang() === "en");
 }
 
 function summaryFromMarkdown(markdown, limit = 180) {
@@ -327,7 +275,7 @@ function addHeadingAnchors(container) {
 function renderTreeNode(node) {
   if (node.type === "note") {
     const note = state.notesBySlug.get(node.slug);
-    const title = note ? localizedTitle(note) : node.title;
+    const title = note ? sourceTitle(note) : node.title;
     const active = currentSlug() !== "dashboard" && state.currentNote?.slug === node.slug ? " active" : "";
     return `<a class="tree-note${active}" href="#/${node.slug}">${escapeHtml(title)}</a>`;
   }
@@ -352,22 +300,22 @@ function renderTypeFilters() {
 
 function renderBacklinks(note) {
   if (!note) {
-    els.backlinks.innerHTML = `<p class="muted">${state.lang === "ko" ? "대시보드는 문서가 아니라서 받는 링크를 표시하지 않아요." : "Dashboard has no backlinks."}</p>`;
+    els.backlinks.innerHTML = `<p class="muted">Dashboard has no backlinks.</p>`;
     return;
   }
   if (!note.backlinks.length) {
-    els.backlinks.innerHTML = `<p class="muted">${state.lang === "ko" ? "아직 이 노트를 가리키는 링크가 없어요." : "No backlinks yet."}</p>`;
+    els.backlinks.innerHTML = `<p class="muted">No backlinks yet.</p>`;
     return;
   }
   els.backlinks.innerHTML = note.backlinks
-    .map((link) => `<a href="#/${link.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(link.slug) || link))}</a>`)
+    .map((link) => `<a href="#/${link.slug}">${escapeHtml(sourceTitle(state.notesBySlug.get(link.slug) || link))}</a>`)
     .join("");
 }
 
 function renderOutgoing(note) {
   if (!note) {
     els.outgoing.innerHTML = state.dashboard.hub_notes
-      .map((item) => `<a href="#/${item.slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}<small>${item.connection_count} ${escapeHtml(t("linksUnit"))}</small></a>`)
+      .map((item) => `<a href="#/${item.slug}">${escapeHtml(sourceTitle(state.notesBySlug.get(item.slug) || item))}<small>${item.connection_count} ${escapeHtml(t("linksUnit"))}</small></a>`)
       .join("");
     return;
   }
@@ -377,7 +325,7 @@ function renderOutgoing(note) {
     return;
   }
   els.outgoing.innerHTML = links
-    .map((link) => `<a href="#/${link.resolved_slug}">${escapeHtml(localizedTitle(state.notesBySlug.get(link.resolved_slug) || { title: link.resolved_title }))}</a>`)
+    .map((link) => `<a href="#/${link.resolved_slug}">${escapeHtml(sourceTitle(state.notesBySlug.get(link.resolved_slug) || { title: link.resolved_title }))}</a>`)
     .join("");
 }
 
@@ -440,8 +388,8 @@ function currentSlug() {
 
 function dashboardCard(item, extra = "") {
   const note = state.notesBySlug.get(item.slug);
-  const title = note ? localizedTitle(note) : item.title;
-  const summary = note ? summaryFromMarkdown(localizedBody(note)) : item.summary;
+  const title = note ? sourceTitle(note) : item.title;
+  const summary = note ? summaryFromMarkdown(note.body) : item.summary;
   return `
     <a class="dashboard-card type-${item.type}" href="#/${item.slug}">
       <span>${escapeHtml(typeLabel(item.type))}</span>
@@ -456,6 +404,7 @@ function renderDashboard() {
   const overview = state.notesBySlug.get("start/overview") || state.notes[0];
   state.currentNote = overview;
   document.querySelector(".app-shell").classList.add("dashboard-mode");
+  syncLanguageControls();
   const health = state.dashboard.context_health;
   const queue = state.dashboard.review_queue.length
     ? state.dashboard.review_queue
@@ -474,13 +423,13 @@ function renderDashboard() {
           <p>${escapeHtml(t("dashboardSubtitle"))}</p>
         </div>
         <div class="dashboard-status">
-          <span>${state.lang === "ko" ? "배포 상태" : "Publish status"}</span>
-          <strong>${health.broken_links === 0 ? (state.lang === "ko" ? "정상" : "Clean") : `${health.broken_links} ${t("brokenLinks")}`}</strong>
+          <span>Publish status</span>
+          <strong>${health.broken_links === 0 ? "Clean" : `${health.broken_links} ${t("brokenLinks")}`}</strong>
         </div>
       </div>
       <div class="health-grid">
         <div><span>${escapeHtml(t("notes"))}</span><strong>${health.notes}</strong></div>
-        <div><span>${state.lang === "ko" ? "확인할 것" : "Review"}</span><strong>${health.review_items}</strong></div>
+        <div><span>Review</span><strong>${health.review_items}</strong></div>
         <div><span>${escapeHtml(t("orphans"))}</span><strong>${health.orphans}</strong></div>
         <div><span>${escapeHtml(t("brokenLinks"))}</span><strong>${health.broken_links}</strong></div>
       </div>
@@ -497,7 +446,7 @@ function renderDashboard() {
           ${queue.map((item) => `
             <a class="review-item type-${item.type}" href="#/${item.slug}">
               <span>${escapeHtml(typeLabel(item.type))}</span>
-              <strong>${escapeHtml(localizedTitle(state.notesBySlug.get(item.slug) || item))}</strong>
+              <strong>${escapeHtml(sourceTitle(state.notesBySlug.get(item.slug) || item))}</strong>
               <em>${item.reasons.map(reasonLabel).map(escapeHtml).join(" · ")}</em>
             </a>
           `).join("")}
@@ -530,10 +479,10 @@ function renderDashboard() {
     </section>
     <section class="dashboard-section runtime-strip">
       <div>
-        <span>${state.lang === "ko" ? "에이전트 설정" : "Agent config"}</span>
-        <strong>${state.lang === "ko" ? "AGENTS.md, CLAUDE.md, skill, memory, command 같은 익숙한 설정 표면을 기준으로 삼아요." : "Use familiar surfaces such as AGENTS.md, CLAUDE.md, skills, memory, and commands."}</strong>
+        <span>Agent config</span>
+        <strong>Use familiar surfaces such as AGENTS.md, CLAUDE.md, skills, memory, and commands.</strong>
       </div>
-      <a class="tool-button primary" href="#/projects/agent-runtime-references">${state.lang === "ko" ? "설정 보기" : "Open config plan"}</a>
+      <a class="tool-button primary" href="#/projects/agent-runtime-references">Open config plan</a>
     </section>
   `;
   els.outline.innerHTML = "";
@@ -550,6 +499,7 @@ async function renderNote() {
     return;
   }
   document.querySelector(".app-shell").classList.remove("dashboard-mode");
+  syncLanguageControls();
   const note = state.notesBySlug.get(currentSlug()) || state.notesBySlug.get("start/overview");
   state.currentNote = note;
   els.note.innerHTML = renderMarkdown(localizedBody(note));
@@ -579,9 +529,15 @@ function runSearch(query) {
     renderTree();
     return;
   }
-  const matches = state.notes.filter((note) => `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value));
+  const matches = state.notes.filter((note) => {
+    const record = state.searchBySlug.get(note.slug);
+    const translationText = Object.values(record?.translations || {})
+      .map((translation) => `${translation.title || ""} ${translation.text || ""}`)
+      .join(" ");
+    return `${note.title} ${note.type} ${note.body} ${translationText}`.toLowerCase().includes(value);
+  });
   els.tree.innerHTML = matches
-    .map((note) => `<a class="tree-note" href="#/${note.slug}"><span>${escapeHtml(localizedTitle(note))}</span><small>${escapeHtml(note.type)}</small></a>`)
+    .map((note) => `<a class="tree-note" href="#/${note.slug}"><span>${escapeHtml(sourceTitle(note))}</span><small>${escapeHtml(note.type)}</small></a>`)
     .join("") || `<p class="muted empty">No matches.</p>`;
 }
 
@@ -632,7 +588,7 @@ function graphSvg(graph, note, compact = false) {
       return `
         <a href="#/${node.id}" class="graph-node-link">
           <circle class="graph-node type-${node.type}${active}" cx="${node.x}" cy="${node.y}" r="${r}"></circle>
-          <text x="${node.x}" y="${node.y + r + 13}">${escapeHtml(localizedTitle(state.notesBySlug.get(node.id) || node).slice(0, compact ? 18 : 28))}</text>
+          <text x="${node.x}" y="${node.y + r + 13}">${escapeHtml(sourceTitle(state.notesBySlug.get(node.id) || node).slice(0, compact ? 18 : 28))}</text>
         </a>
       `;
     })
@@ -662,33 +618,23 @@ function relationReason(source, target) {
   const outgoing = noteOutgoingSlugs(source);
   const targetOutgoing = noteOutgoingSlugs(target);
   const incoming = noteBacklinkSlugs(source);
-  const targetTitle = localizedTitle(target);
+  const targetTitle = sourceTitle(target);
   if (outgoing.has(target.slug) && targetOutgoing.has(source.slug)) {
-    return state.lang === "ko"
-      ? `${targetTitle}와 서로 링크로 이어져 있어요.`
-      : `Mutual links with ${targetTitle}.`;
+    return `Mutual links with ${targetTitle}.`;
   }
   if (outgoing.has(target.slug)) {
-    return state.lang === "ko"
-      ? `${targetTitle}를 직접 참조해요.`
-      : `This note directly references ${targetTitle}.`;
+    return `This note directly references ${targetTitle}.`;
   }
   if (incoming.has(target.slug)) {
-    return state.lang === "ko"
-      ? `${targetTitle}가 이 노트를 참조해요.`
-      : `${targetTitle} points back to this note.`;
+    return `${targetTitle} points back to this note.`;
   }
   const sharedTargets = [...outgoing].filter((slug) => targetOutgoing.has(slug));
   if (sharedTargets.length) {
-    const sharedTitle = localizedTitle(state.notesBySlug.get(sharedTargets[0]) || { title: sharedTargets[0] });
-    return state.lang === "ko"
-      ? `${sharedTitle}를 함께 참조해요.`
-      : `Both notes reference ${sharedTitle}.`;
+    const sharedTitle = sourceTitle(state.notesBySlug.get(sharedTargets[0]) || { title: sharedTargets[0] });
+    return `Both notes reference ${sharedTitle}.`;
   }
   const degree = (target.link_count || target.links?.filter((link) => link.resolved_slug).length || 0) + (target.backlink_count || target.backlinks?.length || 0);
-  return state.lang === "ko"
-    ? `${targetTitle}는 연결 ${degree}개를 가진 중심 노트예요.`
-    : `${targetTitle} is a hub with ${degree} connections.`;
+  return `${targetTitle} is a hub with ${degree} connections.`;
 }
 
 function strongestRelatedNote(note, local) {
@@ -713,24 +659,24 @@ function renderGraphInsights(note, activeGraph) {
   const strongest = strongestRelatedNote(note, local);
   const hubs = state.dashboard.hub_notes
     .slice(0, 3)
-    .map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item))
+    .map((item) => sourceTitle(state.notesBySlug.get(item.slug) || item))
     .join(", ");
   const review = state.dashboard.review_queue
     .slice(0, 3)
-    .map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item))
+    .map((item) => sourceTitle(state.notesBySlug.get(item.slug) || item))
     .join(", ");
-  const activeTitle = localizedTitle(note);
+  const activeTitle = sourceTitle(note);
   const connected = local.nodes.length > 1
-    ? local.nodes.filter((node) => node.id !== note.slug).map((node) => localizedTitle(state.notesBySlug.get(node.id) || node)).slice(0, 3).join(", ")
+    ? local.nodes.filter((node) => node.id !== note.slug).map((node) => sourceTitle(state.notesBySlug.get(node.id) || node)).slice(0, 3).join(", ")
     : t("noDirectNeighbors");
   const relatedDetail = strongest ? relationReason(note, strongest) : connected;
 
   els.graphInsights.innerHTML = [
     graphInsight(t("current"), activeTitle, typeLabel(note.type)),
-    graphInsight(t("incoming"), `${incoming.length}`, incoming.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
-    graphInsight(t("outgoing"), `${outgoing.length}`, outgoing.slice(0, 2).map((item) => localizedTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
+    graphInsight(t("incoming"), `${incoming.length}`, incoming.slice(0, 2).map((item) => sourceTitle(state.notesBySlug.get(item.slug) || item)).join(", ")),
+    graphInsight(t("outgoing"), `${outgoing.length}`, outgoing.slice(0, 2).map((item) => sourceTitle(state.notesBySlug.get(item.resolved_slug) || item)).join(", ")),
     state.graphMode === "all"
-      ? graphInsight(t("mapSignal"), `${activeGraph.nodes.length} ${t("notesUnit")}`, hubs || review || (state.lang === "ko" ? "아직 연결 신호가 약해요" : "No graph signal yet"))
+      ? graphInsight(t("mapSignal"), `${activeGraph.nodes.length} ${t("notesUnit")}`, hubs || review || "No graph signal yet")
       : graphInsight(t("related"), `${Math.max(0, local.nodes.length - 1)} ${t("notesUnit")}`, relatedDetail),
   ].join("");
 }
@@ -751,7 +697,7 @@ function renderEditorState() {
   els.editorTitle.textContent = `Edit ${note.title}`;
   const draft = localStorage.getItem(draftKey(note));
   els.editorText.value = draft ?? note.body;
-  els.draftStatus.textContent = draft ? (state.lang === "ko" ? "이 브라우저에 저장된 임시 글을 불러왔어요." : "Saved draft loaded from this browser.") : t("editorOriginal");
+  els.draftStatus.textContent = draft ? "Saved draft loaded from this browser." : t("editorOriginal");
   if (!els.editor.classList.contains("hidden")) updateEditorPreview();
 }
 
@@ -892,20 +838,18 @@ function closeCommandPalette() {
 }
 
 function commandText(command) {
-  if (state.lang !== "ko") return command.title;
-  const labels = {
-    "Open dashboard": "대시보드 열기",
-    "Toggle editor": "편집기 전환",
-    "Toggle theme": "테마 전환",
-    "Show full context map": "전체 context map 보기",
-  };
-  return labels[command.title] || command.title;
+  return command.title;
 }
 
 function snippetFor(note, query) {
   const record = state.searchBySlug.get(note.slug);
   const indexedSummary = record?.translations?.[state.lang]?.summary || record?.summary;
-  const body = (localizedBody(note) || indexedSummary || "").replace(/^# .*\n?/, "").replace(/\s+/g, " ").trim();
+  const translatedBodies = Object.values(record?.translations || {}).map((translation) => translation.text || "");
+  const candidates = [localizedBody(note), note.body, ...translatedBodies, indexedSummary].filter(Boolean);
+  const matchCandidate = query
+    ? candidates.find((candidate) => candidate.toLowerCase().includes(query.toLowerCase()))
+    : candidates[0];
+  const body = (matchCandidate || "").replace(/^# .*\n?/, "").replace(/\s+/g, " ").trim();
   if (!query) return summaryFromMarkdown(localizedBody(note), 110);
   const index = body.toLowerCase().indexOf(query.toLowerCase());
   if (index < 0) return summaryFromMarkdown(localizedBody(note), 110);
@@ -922,12 +866,14 @@ function daysSince(dateValue) {
 
 function noteSearchScore(note, query) {
   const record = state.searchBySlug.get(note.slug);
-  const indexedTranslation = record?.translations?.[state.lang];
-  const title = `${record?.title || ""} ${indexedTranslation?.title || ""} ${localizedTitle(note)}`.toLowerCase();
+  const indexedTranslations = Object.values(record?.translations || {});
+  const translatedTitles = indexedTranslations.map((translation) => translation.title || "").join(" ");
+  const translatedText = indexedTranslations.map((translation) => translation.text || "").join(" ");
+  const title = `${record?.title || ""} ${translatedTitles} ${note.title}`.toLowerCase();
   const slug = `${note.slug} ${record?.path || ""}`.toLowerCase();
   const type = `${note.type} ${record?.type || ""}`.toLowerCase();
   const headings = (record?.headings || []).join(" ").toLowerCase();
-  const body = `${record?.text || ""} ${indexedTranslation?.text || ""} ${localizedBody(note)}`.toLowerCase();
+  const body = `${record?.text || ""} ${translatedText} ${note.body}`.toLowerCase();
   const q = query.toLowerCase();
   const terms = q.split(/\s+/).filter(Boolean);
   let score = 0;
@@ -984,7 +930,7 @@ function renderCommandResults(query) {
     .slice(0, 8)
     .map((note) => ({
       kind: "note",
-      title: localizedTitle(note),
+      title: sourceTitle(note),
       subtitle: `${typeLabel(note.type)} · ${note.path}`,
       detail: snippetFor(note, value),
       action: () => { location.hash = `#/${note.slug}`; },
@@ -1051,16 +997,11 @@ function toggleTheme() {
 }
 
 function setLanguage(lang) {
-  state.lang = lang;
-  localStorage.setItem("acc-lang", lang);
-  document.documentElement.lang = lang;
+  state.lang = normalizeLang(lang);
+  localStorage.setItem("acc-note-lang", state.lang);
   els.search.placeholder = t("searchNotes");
   els.commandInput.placeholder = t("searchPrompt");
-  els.langKo.classList.toggle("active", lang === "ko");
-  els.langEn.classList.toggle("active", lang === "en");
-  renderTree();
-  renderTypeFilters();
-  renderStats();
+  syncLanguageControls();
   renderNote();
 }
 
@@ -1093,7 +1034,7 @@ async function navigateHash() {
 
 async function init() {
   document.documentElement.dataset.theme = state.theme;
-  document.documentElement.lang = state.lang;
+  document.documentElement.lang = activeContentLang();
   const [notes, tree, stats, graph, report, dashboard, searchIndex] = await Promise.all([
     loadJson("./_build/notes.json"),
     loadJson("./_build/tree.json"),
@@ -1121,8 +1062,7 @@ async function init() {
   renderStats();
   els.search.placeholder = t("searchNotes");
   els.commandInput.placeholder = t("searchPrompt");
-  els.langKo.classList.toggle("active", state.lang === "ko");
-  els.langEn.classList.toggle("active", state.lang === "en");
+  syncLanguageControls();
   await renderNote();
 }
 
@@ -1141,7 +1081,7 @@ document.querySelector("#save-draft").addEventListener("click", saveDraft);
 document.querySelector("#discard-draft").addEventListener("click", discardDraft);
 document.querySelector("#export-patch").addEventListener("click", exportPatch);
 els.editorText.addEventListener("input", () => {
-  els.draftStatus.textContent = state.lang === "ko" ? "아직 저장하지 않은 브라우저 임시 글이에요." : "Unsaved browser draft.";
+  els.draftStatus.textContent = "Unsaved browser draft.";
   updateEditorPreview();
 });
 els.commandInput.addEventListener("input", (event) => {
