@@ -856,8 +856,11 @@ function renderSearchResult(item, query) {
 
 function openSearchPalette(initialQuery = searchInput?.value || "") {
   if (!searchPalette || !paletteInput || !paletteResults) return;
+  const wasOpen = state.searchPalette.open;
   state.searchPalette.open = true;
-  state.searchPalette.lastFocusedElement = document.activeElement;
+  if (!wasOpen) {
+    state.searchPalette.lastFocusedElement = document.activeElement;
+  }
   state.searchPalette.query = initialQuery.trim();
   state.searchPalette.selectedIndex = 0;
   document.body.classList.remove("nav-open");
@@ -1577,13 +1580,13 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
-  if (isSearchShortcut(event)) {
-    event.preventDefault();
-    openSearchPalette(currentSearchQuery());
-    return;
-  }
-
   if (state.searchPalette.open) {
+    if (isSearchShortcut(event)) {
+      event.preventDefault();
+      paletteInput?.focus({ preventScroll: true });
+      paletteInput?.select();
+      return;
+    }
     if (event.key === "Escape") {
       event.preventDefault();
       closeSearchPalette();
@@ -1608,6 +1611,12 @@ document.addEventListener("keydown", (event) => {
       trapPaletteFocus(event);
       return;
     }
+  }
+
+  if (isSearchShortcut(event)) {
+    event.preventDefault();
+    openSearchPalette(currentSearchQuery());
+    return;
   }
 
   if (event.key === "Escape") {

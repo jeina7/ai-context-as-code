@@ -135,6 +135,12 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 ### Search
 
 - Search는 `/search?q=<query>` route를 써요.
+- Header search trigger와 mobile search button은 quick navigation palette를 열어요.
+- Desktop shortcut은 macOS에서 `Cmd+K`, Windows/Linux에서 `Ctrl+K`예요.
+- Palette는 `role="dialog"` 기반 modal로 열고, input이 첫 focus를 가져요.
+- Palette 결과 목록은 fixed-height scroll 영역을 쓰고, `ArrowDown`/`ArrowUp`/`Enter`/`Esc` keyboard flow를 지원해요.
+- Input이 비어 있으면 recent 또는 suggested public notes를 보여줘요.
+- Palette에서 focused result가 없을 때 `Enter`를 누르면 `/search?q=<query>` full results view로 이동해요.
 - 결과는 title, path, summary, type/status/layer label을 보여줘요.
 - `_config/`와 `_archived/` 결과에는 layer label을 붙여요.
 - `_assets/`는 검색 결과에 나오면 안 돼요.

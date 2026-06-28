@@ -181,11 +181,11 @@ Reader 기준:
 Search는 첫 구현의 핵심 기능이에요.
 ACAC는 folder를 탐색하는 도구이면서, 오래된 context를 다시 찾는 도구이기 때문이에요.
 
-초기 search modal:
+초기 search surface:
 
 | 요소 | 기준 |
 |---|---|
-| 입력창 | 화면 상단 modal 또는 command style overlay |
+| 입력창 | `/search?q=` full page와 `Cmd+K` / `Ctrl+K` command style palette를 함께 둬요. |
 | 결과 ranking | title, filename, description, summary, body snippet 순서 |
 | 필터 | type, folder, status, visibility |
 | 결과 표시 | title, path, summary 1-2줄 |
@@ -195,6 +195,10 @@ Search UX 기준:
 - `_assets/` 파일은 직접 검색 결과로 보여주지 않아요.
 - `_config/`와 `_archived/`는 검색에 포함하되, 결과에서 layer label을 붙여요.
 - 검색 결과는 folder tree보다 빨라야 해요.
+- Header search trigger와 mobile search button은 quick navigation palette를 열어요.
+- Desktop에서는 `Cmd+K` 또는 `Ctrl+K`로 palette를 열고, `Esc`로 닫아요.
+- Palette는 read-only navigation surface라서 새 문서 만들기, rename, move, delete를 보여주지 않아요.
+- Palette에서 결과가 선택된 상태로 `Enter`를 누르면 `/trove/<id>`로 이동하고, 선택 결과가 없으면 `/search?q=<query>` full results view로 이동해요.
 - 없는 결과에서는 “새 문서 만들기”를 보여주지 않아요. 첫 구현은 read-only예요.
 - 검색 결과 item의 primary link는 `/trove/<id>`예요.
 - 검색 결과에는 title, source path, summary를 함께 보여줘요.
