@@ -16,7 +16,7 @@
         <span aria-hidden="true">☰</span>
       </button>
       <a class="mobile-brand" href="/" data-route="/">ACAC</a>
-      <button class="icon-button" type="button" data-action="focus-search" aria-label="Focus search">
+      <button class="icon-button" type="button" data-action="open-search-palette" aria-label="Open search">
         <span aria-hidden="true">⌕</span>
       </button>
     </div>
@@ -39,16 +39,20 @@
           </div>
           <form class="search-form" role="search">
             <label class="search-label" for="global-search">Search trove</label>
-            <div class="search-box">
+            <div class="search-box" data-action="open-search-palette">
               <span aria-hidden="true">⌕</span>
               <input
                 id="global-search"
                 name="q"
                 type="search"
                 autocomplete="off"
+                readonly
+                data-action="open-search-palette"
+                aria-haspopup="dialog"
                 placeholder="Search title, path, or context"
               />
-              <button class="search-submit" type="submit" aria-label="Run search">
+              <span class="shortcut-hint" data-shortcut-hint aria-hidden="true">⌘K</span>
+              <button class="search-submit" type="button" data-action="open-search-palette" aria-label="Open search palette">
                 <span aria-hidden="true">↵</span>
               </button>
             </div>
@@ -66,6 +70,38 @@
       </main>
 
       <aside id="context" class="context-panel" aria-label="Current context"></aside>
+    </div>
+
+    <div id="search-palette" class="search-palette" aria-hidden="true" hidden>
+      <div class="palette-backdrop" data-action="close-search-palette" aria-hidden="true"></div>
+      <section class="palette-dialog" role="dialog" aria-modal="true" aria-label="Search public trove">
+        <div class="palette-input-row">
+          <span class="palette-search-icon" aria-hidden="true">⌕</span>
+          <label class="sr-only" for="palette-search-input">Search public trove</label>
+          <input
+            id="palette-search-input"
+            type="search"
+            autocomplete="off"
+            spellcheck="false"
+            role="combobox"
+            aria-autocomplete="list"
+            aria-controls="palette-results"
+            aria-expanded="true"
+            placeholder="Search title, path, or context"
+          />
+          <button class="palette-close" type="button" data-action="close-search-palette" aria-label="Close search">
+            <span aria-hidden="true">×</span>
+          </button>
+        </div>
+        <div class="palette-status" id="palette-status" aria-live="polite"></div>
+        <div id="palette-results" class="palette-results" role="listbox" aria-label="Search results"></div>
+        <div class="palette-footer">
+          <span><kbd>↑</kbd><kbd>↓</kbd> move</span>
+          <span><kbd>Enter</kbd> open</span>
+          <span><kbd>Esc</kbd> close</span>
+          <span><kbd data-shortcut-hint>⌘K</kbd> search</span>
+        </div>
+      </section>
     </div>
 
     <script type="module" src="/assets/app.js"></script>

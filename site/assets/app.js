@@ -8,7 +8,15 @@ const state = {
   graph: null,
   build: null,
   searchIndex: [],
+  searchIndexById: new Map(),
   openFolders: new Set(),
+  searchPalette: {
+    open: false,
+    query: "",
+    selectedIndex: -1,
+    results: [],
+    lastFocusedElement: null,
+  },
 };
 
 const main = document.querySelector("#main");
@@ -16,6 +24,11 @@ const contextPanel = document.querySelector("#context");
 const treeRoot = document.querySelector("#tree");
 const searchForm = document.querySelector(".search-form");
 const searchInput = document.querySelector("#global-search");
+const searchPalette = document.querySelector("#search-palette");
+const paletteDialog = document.querySelector(".palette-dialog");
+const paletteInput = document.querySelector("#palette-search-input");
+const paletteResults = document.querySelector("#palette-results");
+const paletteStatus = document.querySelector("#palette-status");
 const TREE_STATE_KEY = "acac:open-folders";
 
 async function fetchJson(path) {
@@ -28,6 +41,7 @@ async function fetchJson(path) {
 
 async function init() {
   renderLoading("Loading ACAC context");
+  updateShortcutHints();
   state.openFolders = loadOpenFolders();
 
   try {
@@ -47,7 +61,8 @@ async function init() {
     state.backlinks = backlinks;
     state.graph = graph;
     state.build = build;
-    state.searchIndex = searchIndex;
+    state.searchIndex = searchIndex.filter(isPublicSearchItem);
+    state.searchIndexById = new Map(state.searchIndex.map((item) => [item.id, item]));
     state.notesById = new Map(notes.map((note) => [note.id, note]));
     state.linkLookup = buildLinkLookup(notes);
 
@@ -71,9 +86,10 @@ function buildLinkLookup(notes) {
 }
 
 function navigate(path) {
+  document.body.classList.remove("nav-open");
+  closeSearchPalette({ restoreFocus: false });
   if (path === window.location.pathname + window.location.search) return;
   window.history.pushState({}, "", path);
-  document.body.classList.remove("nav-open");
   renderRoute();
 }
 
@@ -137,7 +153,6 @@ function renderTreeNode(node, group, depth) {
     return `
       <li class="tree-item">
         <a class="tree-link tree-note-link${layerClass}" href="${node.route}" data-route="${node.route}">
-          <span class="${treeIconClass(node)}" aria-hidden="true"></span>
           <span class="tree-title">${escapeHtml(node.title)}</span>
         </a>
       </li>
@@ -165,13 +180,11 @@ function renderTreeNode(node, group, depth) {
 
   const folderLabel = node.route
     ? `<a class="tree-link tree-folder-link${layerClass}" href="${node.route}" data-route="${node.route}">
-        <span class="${treeIconClass(node)}" aria-hidden="true"></span>
         <span class="tree-title">${escapeHtml(label)}</span>
       </a>`
     : `<button class="tree-folder-label${layerClass}" type="button" data-action="toggle-folder" data-folder-path="${escapeAttribute(
         node.path,
       )}">
-        <span class="${treeIconClass(node)}" aria-hidden="true"></span>
         <span class="tree-title">${escapeHtml(label)}</span>
       </button>`;
 
@@ -260,33 +273,6 @@ function displayTreeLabel(node) {
   if (node.path === "_archived") return "Archive";
   if (node.path === "_config/Agents") return "Agent entries";
   return node.title || node.name || "Untitled";
-}
-
-function treeIconClass(node) {
-  if (node.kind === "folder") {
-    if (node.layer === "operating" || String(node.path || "").startsWith("_config")) {
-      return "tree-icon tree-icon-system";
-    }
-    if (node.layer === "archive" || String(node.path || "").startsWith("_archived")) {
-      return "tree-icon tree-icon-archive";
-    }
-    return "tree-icon tree-icon-folder";
-  }
-
-  const typeIcons = {
-    "agent-entry": "tree-icon-system",
-    command: "tree-icon-system",
-    daily: "tree-icon-daily",
-    decision: "tree-icon-decision",
-    design: "tree-icon-design",
-    index: "tree-icon-note",
-    memory: "tree-icon-system",
-    project: "tree-icon-folder",
-    reference: "tree-icon-reference",
-    skill: "tree-icon-system",
-    worklog: "tree-icon-worklog",
-  };
-  return `tree-icon ${typeIcons[node.type] || "tree-icon-note"}`;
 }
 
 function stableDomId(value) {
@@ -792,27 +778,59 @@ function renderSearchContext(query, results) {
 }
 
 function search(query) {
-  const q = query.trim().toLowerCase();
+  const q = normalizeSearchText(query);
   if (!q) return [];
 
   return state.searchIndex
     .map((item) => {
-      const title = (item.title || "").toLowerCase();
-      const path = (item.path || "").toLowerCase();
-      const description = (item.description || "").toLowerCase();
-      const summary = (item.summary || "").toLowerCase();
-      const body = (item.body || "").toLowerCase();
-      let score = 0;
-      if (title.includes(q)) score += 100;
-      if (path.includes(q)) score += 60;
-      if (description.includes(q)) score += 40;
-      if (summary.includes(q)) score += 30;
-      if (body.includes(q)) score += 10;
-      if (isSpecialPath(item.path)) score -= 4;
-      return { ...item, score };
+      return { ...item, score: rankSearchItem(item, q), tieBreak: searchTieBreak(item) };
     })
     .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+    .sort((a, b) => b.score - a.score || b.tieBreak - a.tieBreak || a.title.localeCompare(b.title));
+}
+
+function rankSearchItem(item, query) {
+  const title = normalizeSearchText(item.title);
+  const path = normalizeSearchText(item.path);
+  const filename = normalizeSearchText(item.filename);
+  const description = normalizeSearchText(item.description);
+  const summary = normalizeSearchText(item.summary);
+  const snippet = normalizeSearchText(item.snippet);
+  const body = normalizeSearchText(item.body);
+  const terms = query.split(/\s+/).filter(Boolean);
+  let score = 0;
+
+  if (title === query) score += 1200;
+  if (title.startsWith(query)) score += 950;
+  if (filename === query) score += 820;
+  if (title.includes(query)) score += 720;
+  if (description.includes(query)) score += 520;
+  if (summary.includes(query)) score += 460;
+  if (path.includes(query)) score += 360;
+  if (snippet.includes(query)) score += 180;
+  if (body.includes(query)) score += 120;
+
+  for (const term of terms) {
+    if (term === query) continue;
+    if (title.startsWith(term)) score += 120;
+    else if (title.includes(term)) score += 90;
+    if (description.includes(term)) score += 60;
+    if (summary.includes(term)) score += 50;
+    if (path.includes(term)) score += 35;
+    if (body.includes(term)) score += 12;
+  }
+
+  if (isSpecialPath(item.path)) score -= 4;
+  return score;
+}
+
+function searchTieBreak(item) {
+  let value = 0;
+  if (item.status === "active") value += 6;
+  if (item.type === "design" && item.status === "active") value += 8;
+  const updated = Date.parse(item.updated || "");
+  if (!Number.isNaN(updated)) value += updated / 10 ** 14;
+  return value;
 }
 
 function renderSearchResult(item, query) {
@@ -824,7 +842,7 @@ function renderSearchResult(item, query) {
             ${highlight(item.title, query)}
           </a>
           <div class="result-path">${escapeHtml(item.path)}</div>
-          <p class="result-summary">${highlight(firstUsefulText(item), query)}</p>
+          <p class="result-summary">${highlight(resultSnippet(item, query), query)}</p>
         </div>
         <div class="status-row">
           <span class="pill">${escapeHtml(item.type || "note")}</span>
@@ -834,6 +852,161 @@ function renderSearchResult(item, query) {
       </div>
     </li>
   `;
+}
+
+function openSearchPalette(initialQuery = searchInput?.value || "") {
+  if (!searchPalette || !paletteInput || !paletteResults) return;
+  state.searchPalette.open = true;
+  state.searchPalette.lastFocusedElement = document.activeElement;
+  state.searchPalette.query = initialQuery.trim();
+  state.searchPalette.selectedIndex = 0;
+  document.body.classList.remove("nav-open");
+  document.body.classList.add("search-open");
+  searchPalette.hidden = false;
+  searchPalette.setAttribute("aria-hidden", "false");
+  paletteInput.value = state.searchPalette.query;
+  renderSearchPalette();
+  window.setTimeout(() => {
+    paletteInput.focus({ preventScroll: true });
+    paletteInput.select();
+  }, 0);
+}
+
+function closeSearchPalette(options = {}) {
+  if (!state.searchPalette.open || !searchPalette) return;
+  state.searchPalette.open = false;
+  document.body.classList.remove("search-open");
+  searchPalette.hidden = true;
+  searchPalette.setAttribute("aria-hidden", "true");
+  paletteInput?.removeAttribute("aria-activedescendant");
+  if (options.restoreFocus !== false) {
+    const target = state.searchPalette.lastFocusedElement;
+    if (target && typeof target.focus === "function" && document.contains(target)) {
+      target.focus({ preventScroll: true });
+    }
+  }
+}
+
+function renderSearchPalette() {
+  if (!paletteResults || !paletteStatus || !paletteInput) return;
+  const query = state.searchPalette.query;
+  const results = query ? search(query).slice(0, 12) : suggestedSearchItems();
+  state.searchPalette.results = results;
+  if (!results.length) {
+    state.searchPalette.selectedIndex = -1;
+  } else if (state.searchPalette.selectedIndex < 0) {
+    state.searchPalette.selectedIndex = 0;
+  } else if (state.searchPalette.selectedIndex >= results.length) {
+    state.searchPalette.selectedIndex = results.length - 1;
+  }
+
+  const selectedId =
+    state.searchPalette.selectedIndex >= 0 ? `palette-result-${state.searchPalette.selectedIndex}` : "";
+  if (selectedId) {
+    paletteInput.setAttribute("aria-activedescendant", selectedId);
+  } else {
+    paletteInput.removeAttribute("aria-activedescendant");
+  }
+
+  paletteStatus.textContent = query
+    ? `${results.length} result${results.length === 1 ? "" : "s"} for "${query}"`
+    : "Suggested notes from the public trove";
+
+  if (!results.length) {
+    paletteResults.innerHTML = `
+      <div class="palette-empty" role="status">
+        <strong>No matching context</strong>
+        <span>Press Enter to open the full search page for this query.</span>
+      </div>
+    `;
+    return;
+  }
+
+  paletteResults.innerHTML = results
+    .map((item, index) => renderPaletteResult(item, query, index === state.searchPalette.selectedIndex, index))
+    .join("");
+  scrollSelectedPaletteResultIntoView();
+}
+
+function renderPaletteResult(item, query, selected, index) {
+  return `
+    <a
+      id="palette-result-${index}"
+      class="palette-result${selected ? " selected" : ""}"
+      href="${item.route}"
+      data-route="${item.route}"
+      data-palette-index="${index}"
+      role="option"
+      aria-selected="${String(selected)}"
+    >
+      <span class="palette-result-main">
+        <strong>${highlight(item.title, query)}</strong>
+        <span class="palette-path">${escapeHtml(item.path)}</span>
+        <span class="palette-snippet">${highlight(resultSnippet(item, query), query)}</span>
+      </span>
+      <span class="palette-meta" aria-label="Document metadata">
+        <span>${escapeHtml(item.type || "note")}</span>
+        ${item.status ? `<span>${escapeHtml(item.status)}</span>` : ""}
+        <span>${escapeHtml(layerLabelForSearchItem(item))}</span>
+      </span>
+    </a>
+  `;
+}
+
+function suggestedSearchItems() {
+  const fromHome = compactNotes([
+    state.home?.currentProject,
+    state.home?.latestDesign,
+    state.home?.latestDecision,
+    state.home?.latestWorklog,
+    state.home?.today,
+    state.home?.recentDaily,
+    ...(state.home?.startHere || []),
+  ])
+    .map((item) => state.searchIndexById.get(item.id))
+    .filter(Boolean);
+
+  const activeRecent = [...state.searchIndex]
+    .filter((item) => item.status === "active")
+    .sort((a, b) => searchTieBreak(b) - searchTieBreak(a) || a.title.localeCompare(b.title));
+
+  return compactSearchItems([...fromHome, ...activeRecent]).slice(0, 8);
+}
+
+function compactSearchItems(items) {
+  const seen = new Set();
+  return items.filter((item) => {
+    if (!item?.id || seen.has(item.id) || !isPublicSearchItem(item)) return false;
+    seen.add(item.id);
+    return true;
+  });
+}
+
+function layerLabelForSearchItem(item) {
+  if (isSpecialPath(item.path)) return layerLabelForPath(item.path);
+  return item.layerLabel || item.layer || "Public note";
+}
+
+function movePaletteSelection(delta) {
+  const count = state.searchPalette.results.length;
+  if (!count) return;
+  state.searchPalette.selectedIndex = (state.searchPalette.selectedIndex + delta + count) % count;
+  renderSearchPalette();
+}
+
+function choosePaletteSelection() {
+  const query = state.searchPalette.query.trim();
+  const selected = state.searchPalette.results[state.searchPalette.selectedIndex];
+  if (selected?.route) {
+    navigate(selected.route);
+    return;
+  }
+  navigate(`/search${query ? `?q=${encodeURIComponent(query)}` : ""}`);
+}
+
+function scrollSelectedPaletteResultIntoView() {
+  const selected = paletteResults?.querySelector(".palette-result.selected");
+  selected?.scrollIntoView({ block: "nearest" });
 }
 
 function renderDocList(items, options = {}) {
@@ -1232,6 +1405,28 @@ function firstUsefulText(item) {
   return firstLine(item.summary) || item.description || item.snippet || "";
 }
 
+function resultSnippet(item, query) {
+  const q = normalizeSearchText(query);
+  if (!q) return firstUsefulText(item);
+  const fields = [item.summary, item.description, item.snippet, item.body, item.path];
+  for (const value of fields) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    const index = normalizeSearchText(text).indexOf(q);
+    if (index >= 0) return clippedSnippet(text, index, q.length);
+  }
+  return firstUsefulText(item);
+}
+
+function clippedSnippet(text, index, queryLength) {
+  const radius = 92;
+  const start = Math.max(0, index - radius);
+  const end = Math.min(text.length, index + queryLength + radius);
+  const prefix = start > 0 ? "..." : "";
+  const suffix = end < text.length ? "..." : "";
+  return `${prefix}${text.slice(start, end).trim()}${suffix}`;
+}
+
 function firstLine(value) {
   return splitLines(value)[0] || "";
 }
@@ -1253,6 +1448,17 @@ function specialClass(note) {
   return "";
 }
 
+function isPublicSearchItem(item) {
+  return item?.visibility === "public" && !String(item.path || "").split("/").includes("_assets");
+}
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/\s+/g, " ");
+}
+
 function formatBuildTime(value) {
   if (!value) return "Not built yet";
   const date = new Date(value);
@@ -1269,8 +1475,13 @@ function formatBuildTime(value) {
 function highlight(text, query) {
   const escaped = escapeHtml(text || "");
   if (!query) return escaped;
-  const safeQuery = escapeRegExp(escapeHtml(query));
-  return escaped.replace(new RegExp(`(${safeQuery})`, "ig"), "<mark>$1</mark>");
+  const terms = normalizeSearchText(query)
+    .split(/\s+/)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+  if (!terms.length) return escaped;
+  const pattern = terms.map((term) => escapeRegExp(escapeHtml(term))).join("|");
+  return escaped.replace(new RegExp(`(${pattern})`, "ig"), "<mark>$1</mark>");
 }
 
 function escapeHtml(value) {
