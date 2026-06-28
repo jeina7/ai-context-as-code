@@ -11,9 +11,12 @@ from __future__ import annotations
 import argparse
 import difflib
 import json
+import secrets
+import string
 import subprocess
 import sys
 from dataclasses import asdict, dataclass, field
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -25,6 +28,9 @@ TROVE_DIR = ROOT / "trove"
 
 KNOWN_TROVE_ROOTS = {"Daily", "Projects", "_config", "_archived", "_assets"}
 FORBIDDEN_TROVE_PARTS = {"_assets"}
+ALLOWED_LIFECYCLE_ROOTS = {"Daily", "Projects", "_config", "_archived"}
+ID_ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase + "_-"
+HARD_DELETE_CONFIRMATION = "HARD_DELETE_UNCOMMITTED_LOCAL_NOTE"
 DEFAULT_VALIDATION_COMMANDS = [
     [sys.executable, "scripts/validate_trove.py"],
     [sys.executable, "scripts/build_trove.py"],
@@ -142,6 +148,160 @@ def safe_source_path(path_value: str | Path, *, must_exist: bool = False) -> Pat
     return path
 
 
+def require_lifecycle_path(path: Path) -> None:
+    rel_to_trove = path.relative_to(TROVE_DIR)
+    if not rel_to_trove.parts or rel_to_trove.parts[0] not in ALLOWED_LIFECYCLE_ROOTS:
+        allowed = ", ".join(sorted(ALLOWED_LIFECYCLE_ROOTS))
+        raise SourceWriteError(f"source lifecycle writes must target one of: {allowed}")
+
+
+def require_existing_parent(path: Path) -> None:
+    if not path.parent.is_dir():
+        raise SourceWriteError(f"target parent folder does not exist: {repo_relative(path.parent)}")
+
+
+def require_available_target(path: Path) -> None:
+    if path.exists():
+        raise SourceWriteError(f"target path already exists: {repo_relative(path)}")
+
+
+def normalize_markdown_filename(file_name: str) -> str:
+    if "/" in file_name or "\\" in file_name:
+        raise SourceWriteError("file name rename cannot contain path separators")
+    path = Path(file_name)
+    return path.name if path.suffix == ".md" else f"{path.name}.md"
+
+
+def markdown_path_for_target(path_value: str | Path) -> Path:
+    path = resolve_candidate_path(path_value)
+    if path.suffix != ".md":
+        path = path.with_suffix(".md")
+    path = safe_source_path(path, must_exist=False)
+    require_lifecycle_path(path)
+    require_existing_parent(path)
+    return path
+
+
+def existing_note_path(path_value: str | Path) -> Path:
+    path = safe_source_path(path_value, must_exist=True)
+    require_lifecycle_path(path)
+    return path
+
+
+def collect_used_ids() -> set[str]:
+    used: set[str] = set()
+    for path in validate_trove.iter_markdown_files():
+        note, _ = validate_trove.parse_markdown(path)
+        if note and note.frontmatter.get("id"):
+            used.add(note.frontmatter["id"])
+
+    registry_path = ROOT / "data" / "id-registry.json"
+    if registry_path.is_file():
+        try:
+            registry = json.loads(registry_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            registry = {}
+        used.update(registry.get("ids", {}).keys())
+    return used
+
+
+def generate_note_id(used: set[str] | None = None) -> str:
+    used = set(used or collect_used_ids())
+    while True:
+        note_id = "".join(secrets.choice(ID_ALPHABET) for _ in range(10))
+        if note_id not in used:
+            return note_id
+
+
+def quote_frontmatter_value(value: str) -> str:
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def frontmatter_line(key: str, value: str) -> str:
+    if key == "id":
+        return f"{key}: {value}"
+    return f"{key}: {quote_frontmatter_value(value)}"
+
+
+def replace_frontmatter_value(text: str, key: str, value: str) -> str:
+    if not text.startswith("---\n"):
+        raise SourceWriteError("frontmatter is missing")
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        raise SourceWriteError("frontmatter closing marker is missing")
+
+    raw_frontmatter = text[4:end]
+    replacement = frontmatter_line(key, value)
+    pattern = validate_trove.re.compile(rf"^{validate_trove.re.escape(key)}:\s*.*$", flags=validate_trove.re.MULTILINE)
+    if pattern.search(raw_frontmatter):
+        raw_frontmatter = pattern.sub(replacement, raw_frontmatter, count=1)
+    else:
+        raw_frontmatter = raw_frontmatter.rstrip() + f"\n{replacement}"
+    return f"---\n{raw_frontmatter}{text[end:]}"
+
+
+def replace_first_h1(text: str, title: str) -> str:
+    replacement = f"# {title}"
+    if validate_trove.re.search(r"^#\s+.+$", text, flags=validate_trove.re.MULTILINE):
+        return validate_trove.re.sub(
+            r"^#\s+.+$",
+            replacement,
+            text,
+            count=1,
+            flags=validate_trove.re.MULTILINE,
+        )
+    return text.rstrip() + f"\n\n{replacement}\n"
+
+
+def compose_note_markdown(
+    *,
+    title: str,
+    description: str,
+    note_type: str,
+    status: str = "draft",
+    visibility: str = "private",
+    note_id: str | None = None,
+    created: str | None = None,
+    updated: str | None = None,
+    summary_lines: list[str] | None = None,
+) -> str:
+    if note_type not in validate_trove.ALLOWED_TYPES:
+        raise SourceWriteError(f"unsupported type: {note_type}")
+    if status not in validate_trove.ALLOWED_STATUS:
+        raise SourceWriteError(f"unsupported status: {status}")
+    if visibility not in validate_trove.ALLOWED_VISIBILITY:
+        raise SourceWriteError(f"unsupported visibility: {visibility}")
+    if not title.strip():
+        raise SourceWriteError("title is required")
+
+    note_id = note_id or generate_note_id()
+    if not validate_trove.ID_PATTERN.match(note_id):
+        raise SourceWriteError("id must be 10 URL-safe characters")
+
+    today = date.today().isoformat()
+    summary = summary_lines or [
+        "Write the first durable summary line here.",
+        "Write the second durable summary line here.",
+        "Write the third durable summary line here.",
+    ]
+    if not (3 <= len(summary) <= 5):
+        raise SourceWriteError("summary must contain 3-5 lines")
+
+    fields = [
+        ("type", note_type),
+        ("title", title),
+        ("description", description),
+        ("status", status),
+        ("created", created or today),
+        ("updated", updated or today),
+        ("visibility", visibility),
+        ("id", note_id),
+    ]
+    frontmatter = "\n".join(frontmatter_line(key, value) for key, value in fields)
+    body = "\n".join(line.strip() for line in summary)
+    return f"---\n{frontmatter}\n---\n\n# {title}\n\n{body}\n"
+
+
 def parse_markdown_note(text: str, source_path: str = "") -> MarkdownNote:
     errors: list[str] = []
     warnings: list[str] = []
@@ -220,11 +380,7 @@ def note_summary(note: MarkdownNote) -> dict[str, Any]:
 def route_impact(before_note: MarkdownNote, after_note: MarkdownNote) -> RouteImpact:
     before_route = f"/trove/{before_note.note_id}" if before_note.note_id else None
     after_route = f"/trove/{after_note.note_id}" if after_note.note_id else None
-    public_surface_changed = (
-        before_note.visibility == "public"
-        or after_note.visibility == "public"
-        or before_route != after_route
-    )
+    public_surface_changed = before_note.visibility == "public" or after_note.visibility == "public"
     return RouteImpact(
         before_route=before_route,
         after_route=after_route,
@@ -236,13 +392,19 @@ def route_impact(before_note: MarkdownNote, after_note: MarkdownNote) -> RouteIm
 def unified_diff_for_change(change: FileChange) -> str:
     before_lines = change.before.splitlines(keepends=True)
     after_lines = change.after.splitlines(keepends=True)
+    fromfile = f"a/{change.path}"
+    tofile = f"b/{change.path}"
+    if change.change_type == "create":
+        fromfile = "/dev/null"
+    elif change.change_type == "delete":
+        tofile = "/dev/null"
     return "".join(
         difflib.unified_diff(
             before_lines,
             after_lines,
-            fromfile=f"a/{change.path}",
-            tofile=f"b/{change.path}",
-            lineterm="",
+            fromfile=fromfile,
+            tofile=tofile,
+            lineterm="\n",
         )
     )
 
@@ -253,14 +415,25 @@ def build_preview_diff(
     *,
     errors: list[str] | None = None,
     warnings: list[str] | None = None,
+    before_note: MarkdownNote | None = None,
+    after_note: MarkdownNote | None = None,
 ) -> DiffPreview:
     errors = list(errors or [])
     warnings = list(warnings or [])
     changed_files = [change.path for change in changes if change.before != change.after]
     diff = "\n".join(unified_diff_for_change(change) for change in changes if change.before != change.after)
 
-    before_note = parse_markdown_note(changes[0].before, changes[0].path) if changes else empty_note()
-    after_note = parse_markdown_note(changes[0].after, changes[0].path) if changes else empty_note()
+    first_change = changes[0] if changes else None
+    if before_note is None:
+        if first_change and first_change.before:
+            before_note = parse_markdown_note(first_change.before, first_change.path)
+        else:
+            before_note = empty_note()
+    if after_note is None:
+        if first_change and first_change.after:
+            after_note = parse_markdown_note(first_change.after, first_change.path)
+        else:
+            after_note = empty_note()
     errors.extend(before_note.errors)
     errors.extend(after_note.errors)
     warnings.extend(before_note.warnings)
@@ -337,40 +510,215 @@ def run_validation(commands: list[list[str]] | None = None) -> ValidationResult:
     return ValidationResult(ok=all(result.returncode == 0 for result in results), commands=results)
 
 
-def unsupported_lifecycle_preview(operation: str) -> DiffPreview:
-    return DiffPreview(
-        ok=False,
-        operation=operation,
-        mode="dry-run",
-        changed_files=[],
-        blocked_files=[],
-        before_summary={},
-        after_summary={},
-        route_impact=RouteImpact(None, None, True, False),
-        validation_commands=DEFAULT_VALIDATION_COMMANDS,
-        diff="",
-        errors=[f"{operation} is not implemented in the skeleton yet"],
+def create_note(
+    *,
+    source_path: str | Path,
+    title: str,
+    description: str,
+    note_type: str,
+    status: str = "draft",
+    visibility: str = "private",
+    note_id: str | None = None,
+    created: str | None = None,
+    updated: str | None = None,
+    summary_lines: list[str] | None = None,
+) -> DiffPreview:
+    path = markdown_path_for_target(source_path)
+    require_available_target(path)
+    rel_path = repo_relative(path)
+    markdown = compose_note_markdown(
+        title=title,
+        description=description,
+        note_type=note_type,
+        status=status,
+        visibility=visibility,
+        note_id=note_id,
+        created=created,
+        updated=updated,
+        summary_lines=summary_lines,
+    )
+    after_note = parse_markdown_note(markdown, rel_path)
+    return build_preview_diff(
+        "create_note",
+        [FileChange(rel_path, "", markdown, "create")],
+        before_note=empty_note(),
+        after_note=after_note,
     )
 
 
-def create_note(*_: Any, **__: Any) -> DiffPreview:
-    return unsupported_lifecycle_preview("create_note")
+def rename_note(
+    *,
+    source_path: str | Path,
+    note_id: str | None = None,
+    new_title: str | None = None,
+    new_file_name: str | None = None,
+    target_path: str | Path | None = None,
+) -> DiffPreview:
+    if bool(new_title) == bool(new_file_name or target_path):
+        raise SourceWriteError("provide exactly one rename target: new_title or new_file_name/target_path")
+
+    path = existing_note_path(source_path)
+    rel_path = repo_relative(path)
+    before = path.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, rel_path)
+    errors = note_id_errors(before_note, note_id)
+
+    if new_title:
+        after = replace_frontmatter_value(before, "title", new_title)
+        after = replace_first_h1(after, new_title)
+        after_note = parse_markdown_note(after, rel_path)
+        return build_preview_diff(
+            "rename_title",
+            [FileChange(rel_path, before, after)],
+            errors=errors,
+            before_note=before_note,
+            after_note=after_note,
+        )
+
+    target = markdown_path_for_target(target_path) if target_path else path.with_name(normalize_markdown_filename(new_file_name or ""))
+    target = safe_source_path(target, must_exist=False)
+    require_lifecycle_path(target)
+    require_existing_parent(target)
+    require_available_target(target)
+    target_rel_path = repo_relative(target)
+    after_note = parse_markdown_note(before, target_rel_path)
+    return build_preview_diff(
+        "rename_path",
+        [
+            FileChange(rel_path, before, "", "delete"),
+            FileChange(target_rel_path, "", before, "create"),
+        ],
+        errors=errors,
+        before_note=before_note,
+        after_note=after_note,
+    )
 
 
-def rename_note(*_: Any, **__: Any) -> DiffPreview:
-    return unsupported_lifecycle_preview("rename_note")
+def move_note(
+    *,
+    source_path: str | Path,
+    target_path: str | Path | None = None,
+    target_folder: str | Path | None = None,
+    note_id: str | None = None,
+) -> DiffPreview:
+    if bool(target_path) == bool(target_folder):
+        raise SourceWriteError("provide exactly one move target: target_path or target_folder")
+
+    path = existing_note_path(source_path)
+    rel_path = repo_relative(path)
+    before = path.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, rel_path)
+    errors = note_id_errors(before_note, note_id)
+
+    if target_folder:
+        folder = resolve_candidate_path(target_folder)
+        try:
+            folder.relative_to(ROOT)
+            rel_to_trove = folder.relative_to(TROVE_DIR)
+        except ValueError as exc:
+            raise SourceWriteError(f"target folder must stay under trove/: {target_folder}") from exc
+        if not rel_to_trove.parts or rel_to_trove.parts[0] not in ALLOWED_LIFECYCLE_ROOTS:
+            raise SourceWriteError("target folder is not an allowed lifecycle folder")
+        if any(part in FORBIDDEN_TROVE_PARTS for part in rel_to_trove.parts):
+            raise SourceWriteError("target folder cannot be under trove/_assets/")
+        if not folder.is_dir():
+            raise SourceWriteError(f"target folder does not exist: {repo_relative(folder)}")
+        target = folder / path.name
+    else:
+        target = markdown_path_for_target(target_path or "")
+
+    target = safe_source_path(target, must_exist=False)
+    require_lifecycle_path(target)
+    require_existing_parent(target)
+    require_available_target(target)
+    target_rel_path = repo_relative(target)
+    after_note = parse_markdown_note(before, target_rel_path)
+    return build_preview_diff(
+        "move_note",
+        [
+            FileChange(rel_path, before, "", "delete"),
+            FileChange(target_rel_path, "", before, "create"),
+        ],
+        errors=errors,
+        before_note=before_note,
+        after_note=after_note,
+    )
 
 
-def move_note(*_: Any, **__: Any) -> DiffPreview:
-    return unsupported_lifecycle_preview("move_note")
+def archive_note(
+    *,
+    source_path: str | Path,
+    note_id: str | None = None,
+    archive_root: str | Path = "_archived",
+) -> DiffPreview:
+    path = existing_note_path(source_path)
+    rel_path = repo_relative(path)
+    rel_to_trove = path.relative_to(TROVE_DIR)
+    if rel_to_trove.parts and rel_to_trove.parts[0] == "_archived":
+        raise SourceWriteError("note is already under _archived/")
+
+    before = path.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, rel_path)
+    errors = note_id_errors(before_note, note_id)
+
+    archive_base = resolve_candidate_path(archive_root)
+    try:
+        archive_rel = archive_base.relative_to(TROVE_DIR)
+    except ValueError as exc:
+        raise SourceWriteError("archive root must stay under trove/") from exc
+    if not archive_rel.parts or archive_rel.parts[0] != "_archived":
+        raise SourceWriteError("archive root must be under trove/_archived/")
+    if not archive_base.is_dir():
+        raise SourceWriteError(f"archive root does not exist: {repo_relative(archive_base)}")
+
+    target = archive_base / rel_to_trove
+    target = safe_source_path(target, must_exist=False)
+    require_lifecycle_path(target)
+    require_available_target(target)
+    target_rel_path = repo_relative(target)
+    after = replace_frontmatter_value(before, "status", "archived")
+    after_note = parse_markdown_note(after, target_rel_path)
+    return build_preview_diff(
+        "archive_note",
+        [
+            FileChange(rel_path, before, "", "delete"),
+            FileChange(target_rel_path, "", after, "create"),
+        ],
+        errors=errors,
+        before_note=before_note,
+        after_note=after_note,
+        warnings=["archive preview moves the note under trove/_archived/ and keeps its id"],
+    )
 
 
-def archive_note(*_: Any, **__: Any) -> DiffPreview:
-    return unsupported_lifecycle_preview("archive_note")
+def hard_delete_note(
+    *,
+    source_path: str | Path,
+    confirmation_token: str | None = None,
+    note_id: str | None = None,
+) -> DiffPreview:
+    path = existing_note_path(source_path)
+    rel_path = repo_relative(path)
+    before = path.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, rel_path)
+    errors = note_id_errors(before_note, note_id)
+    if confirmation_token != HARD_DELETE_CONFIRMATION:
+        errors.append(f"hard delete requires confirmation token: {HARD_DELETE_CONFIRMATION}")
+
+    return build_preview_diff(
+        "hard_delete_note",
+        [FileChange(rel_path, before, "", "delete")],
+        errors=errors,
+        before_note=before_note,
+        after_note=empty_note(),
+        warnings=["hard delete preview does not remove git history or deployed cache"],
+    )
 
 
-def hard_delete_note(*_: Any, **__: Any) -> DiffPreview:
-    return unsupported_lifecycle_preview("hard_delete_note")
+def note_id_errors(note: MarkdownNote, expected_note_id: str | None) -> list[str]:
+    if expected_note_id and note.note_id and note.note_id != expected_note_id:
+        return [f"note id mismatch: expected {expected_note_id}, found {note.note_id}"]
+    return []
 
 
 createNote = create_note
@@ -395,6 +743,42 @@ def main(argv: list[str] | None = None) -> int:
     preview_parser.add_argument("--new-markdown-file", required=True)
     preview_parser.add_argument("--note-id")
 
+    create_parser = subparsers.add_parser("preview-create", help="Preview creating a note")
+    create_parser.add_argument("--source-path", required=True)
+    create_parser.add_argument("--title", required=True)
+    create_parser.add_argument("--description", required=True)
+    create_parser.add_argument("--type", required=True, dest="note_type")
+    create_parser.add_argument("--status", default="draft")
+    create_parser.add_argument("--visibility", default="private")
+    create_parser.add_argument("--note-id")
+    create_parser.add_argument("--summary-line", action="append", dest="summary_lines")
+
+    rename_title_parser = subparsers.add_parser("preview-rename-title", help="Preview title rename")
+    rename_title_parser.add_argument("--source-path", required=True)
+    rename_title_parser.add_argument("--new-title", required=True)
+    rename_title_parser.add_argument("--note-id")
+
+    rename_path_parser = subparsers.add_parser("preview-rename-path", help="Preview file path rename")
+    rename_path_parser.add_argument("--source-path", required=True)
+    rename_path_parser.add_argument("--new-file-name")
+    rename_path_parser.add_argument("--target-path")
+    rename_path_parser.add_argument("--note-id")
+
+    move_parser = subparsers.add_parser("preview-move", help="Preview moving a note")
+    move_parser.add_argument("--source-path", required=True)
+    move_parser.add_argument("--target-path")
+    move_parser.add_argument("--target-folder")
+    move_parser.add_argument("--note-id")
+
+    archive_parser = subparsers.add_parser("preview-archive", help="Preview archiving a note")
+    archive_parser.add_argument("--source-path", required=True)
+    archive_parser.add_argument("--note-id")
+
+    hard_delete_parser = subparsers.add_parser("preview-hard-delete", help="Preview hard delete guard")
+    hard_delete_parser.add_argument("--source-path", required=True)
+    hard_delete_parser.add_argument("--confirmation-token")
+    hard_delete_parser.add_argument("--note-id")
+
     validate_parser = subparsers.add_parser("run-validation", help="Run ACAC validation/build commands")
     validate_parser.add_argument("--skip-build", action="store_true")
 
@@ -406,6 +790,63 @@ def main(argv: list[str] | None = None) -> int:
             preview = preview_edit_note(
                 source_path=args.source_path,
                 new_markdown=new_markdown,
+                note_id=args.note_id,
+            )
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-create":
+            preview = create_note(
+                source_path=args.source_path,
+                title=args.title,
+                description=args.description,
+                note_type=args.note_type,
+                status=args.status,
+                visibility=args.visibility,
+                note_id=args.note_id,
+                summary_lines=args.summary_lines,
+            )
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-rename-title":
+            preview = rename_note(
+                source_path=args.source_path,
+                new_title=args.new_title,
+                note_id=args.note_id,
+            )
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-rename-path":
+            preview = rename_note(
+                source_path=args.source_path,
+                new_file_name=args.new_file_name,
+                target_path=args.target_path,
+                note_id=args.note_id,
+            )
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-move":
+            preview = move_note(
+                source_path=args.source_path,
+                target_path=args.target_path,
+                target_folder=args.target_folder,
+                note_id=args.note_id,
+            )
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-archive":
+            preview = archive_note(source_path=args.source_path, note_id=args.note_id)
+            print_json(preview.to_dict())
+            return 0 if preview.ok else 1
+
+        if args.command == "preview-hard-delete":
+            preview = hard_delete_note(
+                source_path=args.source_path,
+                confirmation_token=args.confirmation_token,
                 note_id=args.note_id,
             )
             print_json(preview.to_dict())
