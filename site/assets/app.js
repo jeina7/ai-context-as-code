@@ -5,8 +5,10 @@ const state = {
   tree: null,
   home: null,
   backlinks: {},
+  graph: null,
   build: null,
   searchIndex: [],
+  openFolders: new Set(),
 };
 
 const main = document.querySelector("#main");
@@ -14,6 +16,7 @@ const contextPanel = document.querySelector("#context");
 const treeRoot = document.querySelector("#tree");
 const searchForm = document.querySelector(".search-form");
 const searchInput = document.querySelector("#global-search");
+const TREE_STATE_KEY = "acac:open-folders";
 
 async function fetchJson(path) {
   const response = await fetch(path);
@@ -25,13 +28,15 @@ async function fetchJson(path) {
 
 async function init() {
   renderLoading("Loading ACAC context");
+  state.openFolders = loadOpenFolders();
 
   try {
-    const [notes, tree, home, backlinks, build, searchIndex] = await Promise.all([
+    const [notes, tree, home, backlinks, graph, build, searchIndex] = await Promise.all([
       fetchJson("/data/notes.json"),
       fetchJson("/data/tree.json"),
       fetchJson("/data/home.json"),
       fetchJson("/data/backlinks.json"),
+      fetchJson("/data/graph.json"),
       fetchJson("/data/build.json"),
       fetchJson("/data/search-index.json"),
     ]);
@@ -40,12 +45,12 @@ async function init() {
     state.tree = tree;
     state.home = home;
     state.backlinks = backlinks;
+    state.graph = graph;
     state.build = build;
     state.searchIndex = searchIndex;
     state.notesById = new Map(notes.map((note) => [note.id, note]));
     state.linkLookup = buildLinkLookup(notes);
 
-    renderTree();
     await renderRoute();
   } catch (error) {
     renderFatalError(error);
@@ -75,7 +80,7 @@ function navigate(path) {
 async function renderRoute() {
   const { pathname, search } = window.location;
   setSearchValue(new URLSearchParams(search).get("q") || "");
-  syncActiveTree();
+  renderTree();
 
   if (pathname === "/") {
     renderHome();
@@ -105,48 +110,80 @@ function setSearchValue(value) {
 function renderTree() {
   if (!state.tree) return;
   const mainNodes = state.tree.nodes?.main || [];
-  const specialNodes = state.tree.nodes?.special || [];
+  const systemNodes = state.tree.nodes?.system || state.tree.nodes?.special || [];
   treeRoot.innerHTML = `
     <section class="tree-section">
-      <h2 class="tree-section-title">Main context</h2>
+      <h2 class="tree-section-title">Working context</h2>
       ${renderTreeList(mainNodes, "main")}
     </section>
     <div class="tree-divider" aria-hidden="true"></div>
     <section class="tree-section">
-      <h2 class="tree-section-title">Special contents</h2>
-      ${renderTreeList(specialNodes, "special")}
+      <h2 class="tree-section-title">Trove layers</h2>
+      ${renderTreeList(systemNodes, "system")}
     </section>
   `;
   syncActiveTree();
 }
 
-function renderTreeList(nodes, group) {
+function renderTreeList(nodes, group, depth = 0) {
   if (!nodes.length) return '<p class="muted">No documents yet.</p>';
-  return `<ul class="tree-list">${nodes.map((node) => renderTreeNode(node, group)).join("")}</ul>`;
+  return `<ul class="tree-list">${nodes.map((node) => renderTreeNode(node, group, depth)).join("")}</ul>`;
 }
 
-function renderTreeNode(node, group) {
-  const children = node.children?.length ? renderTreeList(node.children, group) : "";
-  const tokenClass = group === "special" ? " special" : "";
+function renderTreeNode(node, group, depth) {
+  const layerClass = group === "system" ? " is-system" : "";
 
   if (node.kind === "note") {
     return `
       <li class="tree-item">
-        <a class="tree-link" href="${node.route}" data-route="${node.route}">
-          <span class="tree-token${tokenClass}">${escapeHtml(shortType(node.type || "note"))}</span>
-          <span>${escapeHtml(node.title)}</span>
+        <a class="tree-link tree-note-link${layerClass}" href="${node.route}" data-route="${node.route}">
+          <span class="${treeIconClass(node)}" aria-hidden="true"></span>
+          <span class="tree-title">${escapeHtml(node.title)}</span>
         </a>
       </li>
     `;
   }
 
-  const label = node.route
-    ? `<a class="tree-link" href="${node.route}" data-route="${node.route}">
-        <span class="tree-token${tokenClass}">dir</span><span>${escapeHtml(node.name)}</span>
-      </a>`
-    : `<div class="tree-folder"><span class="tree-token${tokenClass}">dir</span><span>${escapeHtml(node.name)}</span></div>`;
+  const folderId = `tree-folder-${stableDomId(node.path || node.name)}`;
+  const hasChildren = Boolean(node.children?.length);
+  const isOpen = hasChildren && isFolderOpen(node, group, depth);
+  const label = displayTreeLabel(node);
+  const children = hasChildren
+    ? `<div id="${folderId}" class="tree-children" ${isOpen ? "" : "hidden"}>
+        ${renderTreeList(node.children, group, depth + 1)}
+      </div>`
+    : "";
+  const toggle = hasChildren
+    ? `<button class="tree-toggle" type="button" data-action="toggle-folder" data-folder-path="${escapeAttribute(
+        node.path,
+      )}" aria-label="${isOpen ? "Collapse" : "Expand"} ${escapeAttribute(label)}" aria-expanded="${String(
+        isOpen,
+      )}" aria-controls="${folderId}">
+        <span class="tree-chevron${isOpen ? " open" : ""}" aria-hidden="true"></span>
+      </button>`
+    : '<span class="tree-spacer" aria-hidden="true"></span>';
 
-  return `<li class="tree-item">${label}${children}</li>`;
+  const folderLabel = node.route
+    ? `<a class="tree-link tree-folder-link${layerClass}" href="${node.route}" data-route="${node.route}">
+        <span class="${treeIconClass(node)}" aria-hidden="true"></span>
+        <span class="tree-title">${escapeHtml(label)}</span>
+      </a>`
+    : `<button class="tree-folder-label${layerClass}" type="button" data-action="toggle-folder" data-folder-path="${escapeAttribute(
+        node.path,
+      )}">
+        <span class="${treeIconClass(node)}" aria-hidden="true"></span>
+        <span class="tree-title">${escapeHtml(label)}</span>
+      </button>`;
+
+  return `
+    <li class="tree-item" data-folder-path="${escapeAttribute(node.path || "")}">
+      <div class="tree-folder-row${isOpen ? " open" : ""}">
+        ${toggle}
+        ${folderLabel}
+      </div>
+      ${children}
+    </li>
+  `;
 }
 
 function syncActiveTree() {
@@ -163,9 +200,102 @@ function syncActiveTree() {
   }
 }
 
+function loadOpenFolders() {
+  try {
+    return new Set(JSON.parse(sessionStorage.getItem(TREE_STATE_KEY) || "[]"));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveOpenFolders() {
+  try {
+    sessionStorage.setItem(TREE_STATE_KEY, JSON.stringify([...state.openFolders]));
+  } catch {
+    // Session persistence is a convenience, not a reader dependency.
+  }
+}
+
+function toggleFolder(path) {
+  if (!path) return;
+  if (state.openFolders.has(path)) {
+    state.openFolders.delete(path);
+  } else {
+    state.openFolders.add(path);
+  }
+  saveOpenFolders();
+  renderTree();
+}
+
+function isFolderOpen(node, group, depth) {
+  const activePaths = activeFolderPaths();
+  if (activePaths.has(node.path)) return true;
+  if (state.openFolders.has(node.path)) return true;
+  if (group === "main" && depth === 0) return true;
+  return false;
+}
+
+function activeFolderPaths() {
+  const note = currentRouteNote();
+  if (!note) return new Set();
+  const parts = note.path.split("/");
+  parts.pop();
+  const paths = new Set();
+  for (let index = 1; index <= parts.length; index += 1) {
+    paths.add(parts.slice(0, index).join("/"));
+  }
+  return paths;
+}
+
+function currentRouteNote() {
+  const pathname = window.location.pathname;
+  if (!pathname.startsWith("/trove/")) return null;
+  const id = decodeURIComponent(pathname.replace("/trove/", ""));
+  return state.notesById.get(id) || null;
+}
+
+function displayTreeLabel(node) {
+  if (node.displayName) return node.displayName;
+  if (node.path === "_config") return "Operating layer";
+  if (node.path === "_archived") return "Archive";
+  if (node.path === "_config/Agents") return "Agent entries";
+  return node.title || node.name || "Untitled";
+}
+
+function treeIconClass(node) {
+  if (node.kind === "folder") {
+    if (node.layer === "operating" || String(node.path || "").startsWith("_config")) {
+      return "tree-icon tree-icon-system";
+    }
+    if (node.layer === "archive" || String(node.path || "").startsWith("_archived")) {
+      return "tree-icon tree-icon-archive";
+    }
+    return "tree-icon tree-icon-folder";
+  }
+
+  const typeIcons = {
+    "agent-entry": "tree-icon-system",
+    command: "tree-icon-system",
+    daily: "tree-icon-daily",
+    decision: "tree-icon-decision",
+    design: "tree-icon-design",
+    index: "tree-icon-note",
+    memory: "tree-icon-system",
+    project: "tree-icon-folder",
+    reference: "tree-icon-reference",
+    skill: "tree-icon-system",
+    worklog: "tree-icon-worklog",
+  };
+  return `tree-icon ${typeIcons[node.type] || "tree-icon-note"}`;
+}
+
+function stableDomId(value) {
+  return String(value || "node").replace(/[^a-z0-9_-]/gi, "-");
+}
+
 function renderHome() {
   const startHere = state.home.startHere || [];
-  const specialContents = state.home.specialContents || [];
+  const troveLayers = state.home.troveLayers || [];
   const recentDaily = compactNotes([state.home.today, state.home.recentDaily]);
   const projectDocs = compactNotes([
     state.home.currentProject,
@@ -198,8 +328,8 @@ function renderHome() {
           <section class="module">
             <div class="module-header">
               <div>
-                <h2>Context map</h2>
-                <p class="module-description">The public reader separates working context from agent-facing special contents.</p>
+                <h2>Trove map</h2>
+                <p class="module-description">The public reader separates working context from operating and archived trove layers.</p>
               </div>
             </div>
             ${renderStructureGrid()}
@@ -252,11 +382,11 @@ function renderHome() {
           <section class="module compact">
             <div class="module-header">
               <div>
-                <h2>Special contents</h2>
-                <p class="module-description">Agent-facing markdown, shown as managed content rather than hidden runtime config.</p>
+                <h2>Trove layers</h2>
+                <p class="module-description">Agent-facing and archived markdown, shown as managed source rather than runtime config.</p>
               </div>
             </div>
-            ${renderDocList(specialContents, { showSummary: false })}
+            ${renderDocList(troveLayers, { showSummary: false })}
           </section>
 
           <section class="module compact">
@@ -291,12 +421,12 @@ function renderStructureGrid() {
       body: "Durable project context: designs, decisions, references, and worklogs.",
     },
     {
-      name: "_config/",
+      name: "Operating layer",
       count: counts._config || 0,
       body: "Agent-facing memory, skills, commands, and entry sources.",
     },
     {
-      name: "_archived/",
+      name: "Archive",
       count: counts._archived || 0,
       body: "Retired public-safe context, separated from the active surface.",
     },
@@ -377,7 +507,7 @@ function renderHomeContext() {
     </section>
     <section class="context-section">
       <h2>Search scope</h2>
-      <p class="context-meta">Daily, Projects, _config, and _archived are searchable. _assets stays hidden.</p>
+      <p class="context-meta">Working context, Operating layer, and Archive are searchable. _assets stays hidden.</p>
     </section>
   `;
 }
@@ -458,6 +588,10 @@ function renderNoteContext(note, markdown) {
       </div>
     </section>
     <section class="context-section">
+      <h2>Relation map</h2>
+      ${renderRelationMap(note)}
+    </section>
+    <section class="context-section">
       <h2>Backlinks</h2>
       ${renderBacklinkList(links.backlinks)}
     </section>
@@ -472,13 +606,73 @@ function renderNoteContext(note, markdown) {
   `;
 }
 
+function renderRelationMap(note) {
+  const relations = relationPreview(note);
+  if (!relations.length) {
+    return '<p class="muted">No 1-hop graph relations yet.</p>';
+  }
+
+  return `
+    <div class="relation-map">
+      <div class="relation-center">
+        <span>${escapeHtml(note.title)}</span>
+      </div>
+      <ul class="relation-list">
+        ${relations
+          .map(
+            (relation) => `
+              <li>
+                <span class="relation-kind">${escapeHtml(relation.label)}</span>
+                <a href="${relation.note.route}" data-route="${relation.note.route}">${escapeHtml(relation.note.title)}</a>
+              </li>
+            `,
+          )
+          .join("")}
+      </ul>
+    </div>
+  `;
+}
+
+function relationPreview(note) {
+  const graph = state.graph || {};
+  const edges = graph.edges || [];
+  const related = [];
+  const seen = new Set();
+  const labelByKind = {
+    backlink: "links here",
+    folder: "same folder",
+    project: "same project",
+    wikilink: "links out",
+  };
+
+  for (const edge of edges) {
+    if (edge.kind === "backlink") continue;
+    let targetId = null;
+    let kind = edge.kind;
+    if (edge.sourceId === note.id) {
+      targetId = edge.targetId;
+    } else if (edge.targetId === note.id) {
+      targetId = edge.sourceId;
+      kind = edge.kind === "wikilink" ? "backlink" : edge.kind;
+    }
+    if (!targetId || targetId === note.id || seen.has(targetId)) continue;
+    const target = state.notesById.get(targetId);
+    if (!target) continue;
+    seen.add(targetId);
+    related.push({ kind, label: labelByKind[kind] || kind, note: target });
+  }
+
+  const order = { backlink: 0, wikilink: 1, project: 2, folder: 3 };
+  return related.sort((a, b) => (order[a.kind] ?? 9) - (order[b.kind] ?? 9)).slice(0, 6);
+}
+
 function renderNotePills(note) {
   return `
     <span class="pill">${escapeHtml(note.type || "note")}</span>
     <span class="pill${note.status === "active" ? " success" : ""}">${escapeHtml(note.status || "unknown")}</span>
     <span class="pill${specialClass(note)}">${escapeHtml(note.visibility || "unknown")}</span>
     ${note.updated ? `<span class="pill">updated ${escapeHtml(note.updated)}</span>` : ""}
-    ${isSpecialPath(note.path) ? '<span class="pill special">special contents</span>' : ""}
+    ${isSpecialPath(note.path) ? `<span class="pill special">${escapeHtml(layerLabelForPath(note.path))}</span>` : ""}
   `;
 }
 
@@ -558,7 +752,7 @@ function renderSearch() {
           <span class="pill">title</span>
           <span class="pill">path</span>
           <span class="pill">summary</span>
-          <span class="pill special">special contents included</span>
+          <span class="pill special">trove layers included</span>
           <span class="pill">_assets hidden</span>
         </div>
       </header>
@@ -584,14 +778,14 @@ function renderSearchContext(query, results) {
   contextPanel.innerHTML = `
     <section class="context-section">
       <h2>Search scope</h2>
-      <p class="context-meta">Public notes from Daily, Projects, _config, and _archived. _assets is hidden.</p>
+      <p class="context-meta">Public notes from working context, Operating layer, and Archive. _assets is hidden.</p>
     </section>
     <section class="context-section">
       <h2>Current query</h2>
       <p class="context-value">${escapeHtml(query || "No query yet")}</p>
       <div class="status-row">
         <span class="pill">${escapeHtml(String(results.length))} results</span>
-        <span class="pill special">${escapeHtml(String(specialCount))} special</span>
+        <span class="pill special">${escapeHtml(String(specialCount))} layer results</span>
       </div>
     </section>
   `;
@@ -634,7 +828,7 @@ function renderSearchResult(item, query) {
         </div>
         <div class="status-row">
           <span class="pill">${escapeHtml(item.type || "note")}</span>
-          ${isSpecialPath(item.path) ? '<span class="pill special">special</span>' : ""}
+          ${isSpecialPath(item.path) ? `<span class="pill special">${escapeHtml(layerLabelForPath(item.path))}</span>` : ""}
           ${item.status ? `<span class="pill${item.status === "active" ? " success" : ""}">${escapeHtml(item.status)}</span>` : ""}
         </div>
       </div>
@@ -660,7 +854,7 @@ function renderDocList(items, options = {}) {
                 </div>
                 <div class="status-row">
                   ${item.status ? `<span class="pill${item.status === "active" ? " success" : ""}">${escapeHtml(item.status)}</span>` : ""}
-                  ${isSpecialPath(item.path) ? '<span class="pill special">special</span>' : ""}
+                  ${isSpecialPath(item.path) ? `<span class="pill special">${escapeHtml(layerLabelForPath(item.path))}</span>` : ""}
                 </div>
               </div>
             </li>
@@ -986,12 +1180,14 @@ function renderFatalError(error) {
 
 function renderLoading(label) {
   main.innerHTML = `
-    <section class="loading-state" aria-live="polite">
-      <p class="eyebrow">${escapeHtml(label)}</p>
-      <div class="loading-line medium"></div>
-      <div class="loading-line"></div>
-      <div class="loading-line short"></div>
-    </section>
+    <div class="reader-inner">
+      <section class="loading-state" aria-live="polite">
+        <p class="eyebrow">${escapeHtml(label)}</p>
+        <div class="loading-line medium"></div>
+        <div class="loading-line"></div>
+        <div class="loading-line short"></div>
+      </section>
+    </div>
   `;
 }
 
@@ -1032,27 +1228,6 @@ function compactNotes(items) {
   });
 }
 
-function shortType(type) {
-  const map = {
-    "agent-entry": "agt",
-    "context-design": "ctx",
-    command: "cmd",
-    convention: "cnv",
-    daily: "day",
-    decision: "dec",
-    design: "des",
-    index: "idx",
-    memory: "mem",
-    principle: "prn",
-    project: "prj",
-    reference: "ref",
-    research: "rsr",
-    skill: "skl",
-    worklog: "log",
-  };
-  return map[type] || String(type || "note").slice(0, 4);
-}
-
 function firstUsefulText(item) {
   return firstLine(item.summary) || item.description || item.snippet || "";
 }
@@ -1063,6 +1238,12 @@ function firstLine(value) {
 
 function isSpecialPath(path) {
   return String(path || "").startsWith("_config/") || String(path || "").startsWith("_archived/");
+}
+
+function layerLabelForPath(path) {
+  if (String(path || "").startsWith("_config/")) return "Operating layer";
+  if (String(path || "").startsWith("_archived/")) return "Archive";
+  return "Trove layer";
 }
 
 function specialClass(note) {
@@ -1115,6 +1296,11 @@ function focusMain() {
 
 document.addEventListener("click", (event) => {
   const action = event.target.closest("[data-action]")?.dataset.action;
+  if (action === "toggle-folder") {
+    const path = event.target.closest("[data-folder-path]")?.dataset.folderPath;
+    toggleFolder(path);
+    return;
+  }
   if (action === "toggle-nav") {
     document.body.classList.toggle("nav-open");
     return;

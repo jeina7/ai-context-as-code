@@ -150,10 +150,13 @@ def public_notes(notes: list[validate_trove.Note]) -> list[validate_trove.Note]:
 
 def note_item(note: validate_trove.Note) -> dict[str, Any]:
     note_id = note.frontmatter["id"]
+    layer = layer_for_path(note.rel_path)
     return {
         "id": note_id,
         "route": f"/trove/{note_id}",
         "path": note.rel_path,
+        "layer": layer["key"],
+        "layerLabel": layer["label"],
         "title": note.frontmatter.get("title", ""),
         "description": note.frontmatter.get("description", ""),
         "type": note.frontmatter.get("type", ""),
@@ -162,6 +165,34 @@ def note_item(note: validate_trove.Note) -> dict[str, Any]:
         "summary": note_summary(note),
         "updated": note.frontmatter.get("updated", ""),
     }
+
+
+def layer_for_path(path: str) -> dict[str, str]:
+    if path.startswith("Daily/"):
+        return {"key": "daily", "label": "Daily context"}
+    if path.startswith("Projects/"):
+        return {"key": "projects", "label": "Project context"}
+    if path.startswith("_config/"):
+        return {"key": "operating", "label": "Operating layer"}
+    if path.startswith("_archived/"):
+        return {"key": "archive", "label": "Archive"}
+    return {"key": "trove", "label": "Trove"}
+
+
+def display_folder_name(rel_path: str, raw_name: str) -> str:
+    names = {
+        "_config": "Operating layer",
+        "_archived": "Archive",
+        "_config/Agents": "Agent entries",
+        "_config/Commands": "Commands",
+        "_config/Memory": "Memory",
+        "_config/Skills": "Skills",
+    }
+    if rel_path in names:
+        return names[rel_path]
+    if raw_name.startswith("_"):
+        return raw_name.lstrip("_").replace("-", " ").replace("_", " ").title()
+    return raw_name
 
 
 def resolve_link_target(
@@ -232,8 +263,11 @@ def build_tree_node(path: Path, note_by_path: dict[str, dict[str, Any]]) -> dict
     rel = path.relative_to(TROVE_DIR).as_posix()
     node: dict[str, Any] = {
         "name": path.name,
+        "displayName": display_folder_name(rel, path.name),
         "path": rel,
         "kind": "folder",
+        "layer": layer_for_path(f"{rel}/")["key"],
+        "layerLabel": layer_for_path(f"{rel}/")["label"],
         "children": [],
     }
 
@@ -274,16 +308,134 @@ def build_tree_node(path: Path, note_by_path: dict[str, dict[str, Any]]) -> dict
 
 def build_tree(notes: list[validate_trove.Note]) -> dict[str, Any]:
     note_by_path = {note.rel_path: note_item(note) for note in notes}
-    groups = {"main": ["Daily", "Projects"], "special": ["_config", "_archived"], "hidden": ["_assets"]}
-    tree: dict[str, Any] = {**groups, "nodes": {"main": [], "special": []}}
+    groups = {"main": ["Daily", "Projects"], "system": ["_config", "_archived"], "hidden": ["_assets"]}
+    tree: dict[str, Any] = {**groups, "nodes": {"main": [], "system": []}}
 
-    for group in ("main", "special"):
+    for group in ("main", "system"):
         for name in groups[group]:
             path = TROVE_DIR / name
             if path.exists():
                 tree["nodes"][group].append(build_tree_node(path, note_by_path))
 
     return tree
+
+
+def project_key_for_path(path: str) -> str | None:
+    parts = path.split("/")
+    if len(parts) >= 2 and parts[0] == "Projects":
+        return parts[1]
+    return None
+
+
+def build_graph(notes: list[validate_trove.Note], backlinks: dict[str, Any]) -> dict[str, Any]:
+    items = [note_item(note) for note in notes]
+    by_id = {item["id"]: item for item in items}
+    by_path = {item["path"]: item for item in items}
+
+    nodes = [
+        {
+            "id": item["id"],
+            "title": item["title"],
+            "type": item["type"],
+            "status": item["status"],
+            "visibility": item["visibility"],
+            "path": item["path"],
+            "route": item["route"],
+            "layer": item["layer"],
+            "layerLabel": item["layerLabel"],
+            "project": project_key_for_path(item["path"]),
+        }
+        for item in items
+    ]
+
+    edges: list[dict[str, Any]] = []
+    seen_edges: set[tuple[str, str, str, str]] = set()
+
+    def add_edge(kind: str, source_id: str, target_id: str, **extra: Any) -> None:
+        if source_id == target_id or source_id not in by_id or target_id not in by_id:
+            return
+        edge_key = (kind, source_id, target_id, str(extra.get("raw", "")))
+        if edge_key in seen_edges:
+            return
+        seen_edges.add(edge_key)
+        edges.append(
+            {
+                "kind": kind,
+                "sourceId": source_id,
+                "targetId": target_id,
+                "sourcePath": by_id[source_id]["path"],
+                "targetPath": by_id[target_id]["path"],
+                **extra,
+            }
+        )
+
+    for source_id, links in backlinks.items():
+        for outgoing in links.get("outgoing", []):
+            target_id = outgoing.get("targetId")
+            if target_id:
+                add_edge("wikilink", source_id, target_id, raw=outgoing.get("raw", ""))
+                add_edge("backlink", target_id, source_id, derivedFrom="wikilink")
+
+    project_indexes = {
+        project_key_for_path(item["path"]): item["id"]
+        for item in items
+        if item["path"].startswith("Projects/") and item["path"].endswith("/index.md")
+    }
+    for item in items:
+        project = project_key_for_path(item["path"])
+        index_id = project_indexes.get(project)
+        if project and index_id and item["id"] != index_id:
+            add_edge("project", index_id, item["id"], project=project)
+
+    for item in items:
+        parent = str(Path(item["path"]).parent).replace(".", "")
+        while parent:
+            index = by_path.get(f"{parent}/index.md")
+            if index and index["id"] != item["id"]:
+                add_edge("folder", index["id"], item["id"], folderPath=parent)
+                break
+            next_parent = str(Path(parent).parent).replace(".", "")
+            if next_parent == parent:
+                break
+            parent = next_parent
+
+    layer_counts: dict[str, dict[str, Any]] = {}
+    folder_counts: dict[str, int] = {}
+    project_counts: dict[str, int] = {}
+    for item in items:
+        layer = item["layer"]
+        layer_counts.setdefault(
+            layer,
+            {"key": layer, "label": item["layerLabel"], "count": 0},
+        )["count"] += 1
+        folder = item["path"].split("/")[0]
+        folder_counts[folder] = folder_counts.get(folder, 0) + 1
+        project = project_key_for_path(item["path"])
+        if project:
+            project_counts[project] = project_counts.get(project, 0) + 1
+
+    return {
+        "version": 1,
+        "nodes": nodes,
+        "edges": edges,
+        "clusters": {
+            "layers": sorted(layer_counts.values(), key=lambda item: item["key"]),
+            "folders": [
+                {"path": path, "count": count}
+                for path, count in sorted(folder_counts.items())
+            ],
+            "projects": [
+                {"key": key, "count": count}
+                for key, count in sorted(project_counts.items())
+            ],
+        },
+        "contract": {
+            "summary": "Read-only static graph data for bounded ACAC relation previews.",
+            "nodeId": "Matches note id and /trove/<id> route.",
+            "edgeKinds": ["wikilink", "backlink", "folder", "project"],
+            "nonGoals": ["full interactive graph", "runtime sync", "live editor"],
+        },
+    }
 
 
 def build_search_index(notes: list[validate_trove.Note]) -> list[dict[str, Any]]:
@@ -368,7 +520,7 @@ def build_home(notes: list[validate_trove.Note]) -> dict[str, Any]:
         "latestDesign": latest_design,
         "latestDecision": latest_decision,
         "latestWorklog": latest_worklog,
-        "specialContents": [
+        "troveLayers": [
             by_path[path]
             for path in ["_config/index.md", "_config/Memory/MEMORY.md"]
             if path in by_path
@@ -438,12 +590,14 @@ def main() -> int:
     note_items = [note_item(note) for note in notes]
     analytics_token = os.environ.get(ANALYTICS_ENV)
     built_at = datetime.now(timezone.utc).isoformat()
+    backlinks = build_backlinks(notes)
 
     write_json(REGISTRY_PATH, registry)
     write_json(DATA_DIR / "notes.json", note_items)
     write_json(DATA_DIR / "tree.json", build_tree(notes))
     write_json(DATA_DIR / "search-index.json", build_search_index(notes))
-    write_json(DATA_DIR / "backlinks.json", build_backlinks(notes))
+    write_json(DATA_DIR / "backlinks.json", backlinks)
+    write_json(DATA_DIR / "graph.json", build_graph(notes, backlinks))
     write_json(DATA_DIR / "home.json", build_home(notes))
     write_json(
         DATA_DIR / "build.json",
