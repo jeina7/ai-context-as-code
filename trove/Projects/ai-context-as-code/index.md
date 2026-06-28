@@ -40,7 +40,6 @@ The first live deployment is now running on Cloudflare Workers static assets at 
 - [[first-implementation-plan]]
 - [[first-instance-ui-ux-design]]
 - [[first-instance-reader-design-system]]
-- [[reader-tree-and-relational-context-map-follow-up]]
 
 ## References
 
