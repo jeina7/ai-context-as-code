@@ -52,7 +52,8 @@ The modal should support:
 - command actions
 - keyboard navigation
 - visible note snippets
-- later ranking by backlinks, recency, and review state
+- ranking by title match, path, type, body, backlinks, recency, and review state
+- empty state feedback when nothing matches
 
 ## Non-Goals
 

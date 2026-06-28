@@ -188,7 +188,7 @@ a {
   background: color-mix(in srgb, var(--surface-2) 74%, transparent);
   color: var(--text);
   height: 34px;
-  padding: 6px 12px 6px 32px;
+  padding: 6px 54px 6px 32px;
   font-size: 14px;
   outline: 0;
   min-width: 0;
@@ -196,6 +196,20 @@ a {
 
 .global-search input {
   cursor: pointer;
+}
+
+.search-shortcut {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--surface) 74%, transparent);
+  padding: 1px 6px;
+  color: var(--soft);
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .global-search input:focus,
@@ -1110,7 +1124,7 @@ textarea {
   height: 42px;
   border-color: transparent;
   background: transparent;
-  padding-left: 14px;
+  padding: 8px 14px;
   font-size: 15px;
 }
 
@@ -1174,6 +1188,13 @@ textarea {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.45;
+}
+
+.command-empty {
+  padding: 26px 12px 30px;
+  color: var(--muted);
+  font-size: 13px;
+  text-align: center;
 }
 
 .command-kbd {
@@ -1315,6 +1336,10 @@ textarea {
     height: 34px;
     padding-top: 6px;
     padding-bottom: 6px;
+  }
+
+  .search-shortcut {
+    display: none;
   }
 
   .topbar-actions {

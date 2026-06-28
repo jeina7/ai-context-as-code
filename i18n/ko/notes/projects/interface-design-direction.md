@@ -46,7 +46,8 @@ modal은 이것을 지원해야 해요.
 - 명령 실행
 - 키보드 이동
 - 노트 snippet 표시
-- 나중에는 backlink, 최근 변경, review 상태를 반영한 ranking
+- 제목 일치, 경로, 타입, 본문, backlink, 최근 변경, review 상태를 반영한 ranking
+- 맞는 결과가 없을 때 보여주는 빈 상태
 
 ## 하지 않을 것
 

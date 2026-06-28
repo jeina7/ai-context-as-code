@@ -43,5 +43,6 @@ The corpus is not a full mirror of a private vault. It only contains reviewed an
 
 - [[why-build-ai-context-as-code]]
 - [[agent-runtime-references]]
+- [[implementation-roadmap-review]]
 - [[publishable-private-context-split]]
 - [[context-engineering]]

@@ -26,6 +26,7 @@ That corpus is not a private life vault. It is the reviewed example dataset that
 
 - Static GitHub Pages workspace.
 - Three-pane reading layout with search, filters, outline, backlinks, and status.
+- Compact navbar search trigger with a command/search modal.
 - Wikilink hover previews.
 - Mermaid diagram rendering.
 - Local and full knowledge graph views.
@@ -48,8 +49,13 @@ That corpus is not a private life vault. It is the reviewed example dataset that
 notes/                 canonical English context corpus
 i18n/                  localized reading copies; notes/ remains canonical English
 private-staging/       ignored local staging area for private source material
+AGENTS.md              general agent entry instructions
+CLAUDE.md              Claude-specific entry instructions
 conventions/           note, safety, and agent rules
 agents/                command procedures for AI-assisted work
+skills/                reusable agent procedures
+memory/                compact pointers into durable context
+agent-runtime/         compatibility index for agent-readable config
 scripts/               build and validation scripts
 site/                  static GitHub Pages app
 data/                  persistent registries

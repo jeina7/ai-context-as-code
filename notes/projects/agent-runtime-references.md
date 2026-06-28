@@ -28,8 +28,15 @@ This follows the same pattern as an Obsidian-backed agent setup exposing skills,
 
 ## Current References
 
-The first config references are:
+The current config references are:
 
+- `AGENTS.md`
+- `CLAUDE.md`
+- `agents/commands/`
+- `agents/shared/`
+- `skills/`
+- `memory/`
+- `conventions/`
 - `agent-runtime/agent-rules.md`
 - `agent-runtime/note-format.md`
 - `agent-runtime/review-rules.md`
@@ -37,12 +44,12 @@ The first config references are:
 - `agent-runtime/context-rules.md`
 - `agent-runtime/commands/`
 
-These are symlinks into `conventions/` and `agents/`.
-Agents can read `agent-runtime/` as an index, while humans can still edit the source folders.
+The `agent-runtime/` entries are compatibility symlinks into `conventions/` and `agents/`.
+Agents can read `AGENTS.md` or `CLAUDE.md` first, then follow the command, skill, memory, or convention file required by the task.
 
-## Future Shape
+## Current Shape
 
-The long-term shape should use familiar names:
+The repository now uses familiar names:
 
 ```text
 AGENTS.md
@@ -53,11 +60,12 @@ agents/
 skills/
 memory/
 conventions/
+agent-runtime/
 ```
 
 `skills/` should hold reusable agent procedures.
 `memory/` should hold compact pointers into durable notes, not full private context.
-`AGENTS.md` or `CLAUDE.md` should be generated or linked from the same source rules when this repository needs tool-specific entry files.
+`agent-runtime/` remains only an index for tools that benefit from one folder of references.
 
 ## Non-Goals
 

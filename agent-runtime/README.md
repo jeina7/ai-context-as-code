@@ -9,17 +9,15 @@ Files in this folder can be symlinks when another directory is the canonical edi
 
 Current references:
 
+- `../AGENTS.md`
+- `../CLAUDE.md`
+- `../skills/`
+- `../memory/`
 - `agent-rules.md` -> `conventions/agent-rules.md`
 - `note-format.md` -> `conventions/note-format.md`
 - `review-rules.md` -> `conventions/review-rules.md`
 - `publish-safety.md` -> `conventions/publish-safety.md`
 - `context-rules.md` -> `agents/shared/context-rules.md`
 - `commands/` -> `agents/commands/`
-
-Future references should use familiar names:
-
-- `skills/` for reusable agent procedures
-- `memory/` for compact, agent-readable pointers into durable notes
-- `AGENTS.md` or `CLAUDE.md` for tool-specific entry instructions when needed
 
 The goal is simple: if an agent needs to know how to operate this repository, it can start here without learning a custom structure.

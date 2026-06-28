@@ -136,6 +136,7 @@ const uiText = {
     command: "Command",
     commands: "Commands",
     notesGroup: "Notes",
+    noSearchResults: "No matching notes or commands.",
   },
   ko: {
     dashboard: "작업 현황",
@@ -170,6 +171,7 @@ const uiText = {
     command: "명령",
     commands: "명령",
     notesGroup: "노트",
+    noSearchResults: "맞는 노트나 명령이 없어요.",
   },
 };
 
@@ -782,6 +784,45 @@ function snippetFor(note, query) {
   return `${start > 0 ? "..." : ""}${body.slice(start, end)}${end < body.length ? "..." : ""}`;
 }
 
+function daysSince(dateValue) {
+  const time = Date.parse(dateValue || "");
+  if (Number.isNaN(time)) return 999;
+  return Math.max(0, Math.floor((Date.now() - time) / 86400000));
+}
+
+function noteSearchScore(note, query) {
+  const title = localizedTitle(note).toLowerCase();
+  const slug = note.slug.toLowerCase();
+  const type = note.type.toLowerCase();
+  const body = localizedBody(note).toLowerCase();
+  const q = query.toLowerCase();
+  let score = 0;
+  if (!q) score += 12;
+  if (title === q) score += 320;
+  if (title.startsWith(q)) score += 240;
+  if (title.includes(q)) score += 160;
+  if (slug.includes(q)) score += 80;
+  if (type.includes(q)) score += 48;
+  if (body.includes(q)) score += 28;
+  score += Math.min(32, (note.backlinks?.length || 0) * 4);
+  score += Math.max(0, 24 - daysSince(note.updated));
+  if (state.dashboard.review_queue.some((item) => item.slug === note.slug)) score += 20;
+  return score;
+}
+
+function defaultSearchNotes() {
+  const ordered = [
+    ...state.dashboard.review_queue.map((item) => item.slug),
+    ...state.dashboard.recent_notes.map((item) => item.slug),
+    ...state.dashboard.hub_notes.map((item) => item.slug),
+  ];
+  const seen = new Set();
+  return ordered
+    .map((slug) => state.notesBySlug.get(slug))
+    .filter((note) => note && !seen.has(note.slug) && seen.add(note.slug))
+    .slice(0, 8);
+}
+
 function renderCommandResults(query) {
   const value = query.trim().toLowerCase();
   const commands = [
@@ -790,8 +831,14 @@ function renderCommandResults(query) {
     { title: "Toggle theme", action: () => toggleTheme() },
     { title: "Show full context map", action: () => { state.graphMode = "all"; renderGraph(); } },
   ];
-  const noteResults = state.notes
-    .filter((note) => !value || `${note.title} ${localizedTitle(note)} ${note.type} ${note.body} ${localizedBody(note)}`.toLowerCase().includes(value))
+  const notePool = value
+    ? state.notes
+        .map((note) => ({ note, score: noteSearchScore(note, value) }))
+        .filter((item) => item.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map((item) => item.note)
+    : defaultSearchNotes();
+  const noteResults = notePool
     .slice(0, 8)
     .map((note) => ({
       kind: "note",
@@ -805,6 +852,10 @@ function renderCommandResults(query) {
     .map((command) => ({ ...command, kind: "command", title: commandText(command), subtitle: t("command") }));
   commandItems = [...commandResults, ...noteResults].slice(0, 10);
   commandSelectionIndex = Math.min(commandSelectionIndex, Math.max(0, commandItems.length - 1));
+  if (!commandItems.length) {
+    els.commandResults.innerHTML = `<div class="command-empty">${escapeHtml(t("noSearchResults"))}</div>`;
+    return;
+  }
   const grouped = [
     [t("commands"), commandItems.filter((item) => item.kind === "command")],
     [t("notesGroup"), commandItems.filter((item) => item.kind === "note")],
@@ -834,6 +885,7 @@ function renderCommandResults(query) {
       closeCommandPalette();
     });
   });
+  els.commandResults.querySelector("button.active")?.scrollIntoView({ block: "nearest" });
 }
 
 function moveCommandSelection(delta) {
