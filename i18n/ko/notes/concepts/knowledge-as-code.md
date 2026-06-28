@@ -25,4 +25,4 @@ markdown notes
 ## 관련
 
 - [[agent-maintained-notes]]
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]

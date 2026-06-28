@@ -4,14 +4,14 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Operating Routine
 
 ## Summary
 
-AI Context as Code needs a small repeatable routine to stay healthy.
+acac.sh needs a small repeatable routine to stay healthy.
 Every meaningful change should move through write, link, validate, build, and review.
 This keeps the context layer usable by both humans and agents.
 

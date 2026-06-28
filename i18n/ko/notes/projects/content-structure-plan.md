@@ -6,7 +6,7 @@ title: 콘텐츠 구조 계획
 
 ## 요약
 
-AI Context as Code에는 두 가지 역할이 있어요.
+acac.sh에는 두 가지 역할이 있어요.
 하나는 맥락을 코드처럼 관리하는 방식을 보여주는 제품이에요.
 다른 하나는 그 제품이 직접 관리하는 첫 번째 실제 맥락 문서 묶음이에요.
 
@@ -90,7 +90,7 @@ Obsidian 노트를 검토할 때는 이 기준을 써요.
 
 ## 관련
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[agent-runtime-references]]
 - [[obsidian-transition-plan]]
 - [[publishable-private-context-split]]

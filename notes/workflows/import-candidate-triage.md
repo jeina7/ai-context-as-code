@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Import Candidate Triage
@@ -28,7 +28,7 @@ The default should be skip or extract. Direct promotion should be rare.
 
 ## Application
 
-When scanning an Obsidian vault, AI Context as Code should not copy folders. It should produce a dry-run report, identify reusable patterns, and only write durable notes after rewriting them for the target context.
+When scanning an Obsidian vault, acac.sh should not copy folders. It should produce a dry-run report, identify reusable patterns, and only write durable notes after rewriting them for the target context.
 
 ## Related
 

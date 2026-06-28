@@ -11,7 +11,7 @@ updated: 2026-06-28
 
 ## Summary
 
-AI Context as Code has two jobs.
+acac.sh has two jobs.
 It is a product that demonstrates context as code.
 It is also the first real context corpus maintained by that product.
 
@@ -95,7 +95,7 @@ It gives the repo a shape that can support both an open source product and a rea
 
 ## Related
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[agent-runtime-references]]
 - [[obsidian-transition-plan]]
 - [[publishable-private-context-split]]

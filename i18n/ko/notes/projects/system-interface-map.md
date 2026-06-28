@@ -6,7 +6,7 @@ title: 시스템 인터페이스 맵
 
 ## 요약
 
-AI Context as Code에는 세 가지 작업면이 있어요.
+acac.sh에는 세 가지 작업면이 있어요.
 Markdown file이 원본예요.
 Build script는 원본을 브라우저가 읽을 수 있는 data로 바꿔요.
 Site는 사람과 AI 에이전트가 탐색하고, 검토하고, 변경 초안을 만들 수 있는 공간을 제공해요.

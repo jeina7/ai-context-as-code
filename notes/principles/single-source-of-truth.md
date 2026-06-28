@@ -4,7 +4,7 @@ type: principle
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Single Source of Truth
@@ -23,7 +23,7 @@ Memory files, summaries, and generated indexes can speed up lookup. They are not
 
 ## Application
 
-AI Context as Code treats `notes/`, `conventions/`, and `agents/` as durable source files. Generated JSON exists to serve the site and agents, but it can always be rebuilt from the source.
+acac.sh treats `notes/`, `conventions/`, and `agents/` as durable source files. Generated JSON exists to serve the site and agents, but it can always be rebuilt from the source.
 
 ## Related
 

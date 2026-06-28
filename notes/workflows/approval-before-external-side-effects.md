@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Approval Before External Side Effects
@@ -30,7 +30,7 @@ Require explicit approval before actions that affect the outside world:
 
 ## Application
 
-AI Context as Code can be fully built and reviewed locally. GitHub remote creation and Pages deployment stay approval-gated.
+acac.sh can be fully built and reviewed locally. GitHub remote creation and Pages deployment stay approval-gated.
 
 ## Related
 

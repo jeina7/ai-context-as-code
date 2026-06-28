@@ -23,4 +23,4 @@ AI 에이전트를 위한 맥락 층이 우연한 노출에 의존하면 안 돼
 ## 관련
 
 - [[publishable-private-context-split]]
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]

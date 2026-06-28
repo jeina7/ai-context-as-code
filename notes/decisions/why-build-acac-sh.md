@@ -1,13 +1,13 @@
 ---
-title: Why Build AI Context as Code
+title: Why Build acac.sh
 type: decision
 status: active
 visibility: publishable
 created: 2026-06-26
-updated: 2026-06-26
+updated: 2026-06-28
 ---
 
-# Why Build AI Context as Code
+# Why Build acac.sh
 
 ## Summary
 
@@ -17,13 +17,13 @@ This project keeps publishable knowledge in a system that agents can search, val
 
 ## Decision
 
-Build AI Context as Code instead of publishing a private Obsidian vault.
+Build `acac.sh` instead of publishing a private Obsidian vault.
 
 ## Why
 
 Private vaults mix durable ideas with sensitive context. Publishing them directly creates unnecessary risk.
 
-A separate AI Context as Code makes the boundary explicit. Only knowledge that has been reviewed, generalized, and marked publishable enters `notes/`.
+`acac.sh` makes the boundary explicit. Only knowledge that has been reviewed, generalized, and marked publishable enters `notes/`.
 
 ## Related
 

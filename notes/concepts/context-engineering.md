@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Context Engineering
@@ -28,7 +28,7 @@ An AI system needs context that is:
 
 ## Application
 
-AI Context as Code treats markdown notes and conventions as context infrastructure. The goal is to make useful context durable enough for agents to reuse without repeatedly rediscovering it.
+acac.sh treats markdown notes and conventions as context infrastructure. The goal is to make useful context durable enough for agents to reuse without repeatedly rediscovering it.
 
 ## Related
 

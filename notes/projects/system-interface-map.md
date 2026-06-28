@@ -4,14 +4,14 @@ type: project
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # System Interface Map
 
 ## Summary
 
-AI Context as Code has three working surfaces.
+acac.sh has three working surfaces.
 Markdown files are the source.
 Build scripts turn the source into browser-readable data.
 The site gives humans and AI agents a way to browse, inspect, and draft changes.

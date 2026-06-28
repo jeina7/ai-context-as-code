@@ -28,6 +28,6 @@ The next step is import dry-run and agent command structure.
 
 ## Related
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[why-markdown-git-github-pages]]
 

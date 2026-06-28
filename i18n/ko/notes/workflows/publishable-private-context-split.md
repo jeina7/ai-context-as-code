@@ -29,5 +29,5 @@ private source
 
 ## 관련
 
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]
 - [[agent-maintained-notes]]

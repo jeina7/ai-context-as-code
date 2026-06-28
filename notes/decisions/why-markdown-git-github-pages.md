@@ -4,7 +4,7 @@ type: decision
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Why Markdown Git and GitHub Pages
@@ -26,5 +26,5 @@ This stack keeps the core knowledge portable. It also makes the first safety bou
 ## Related
 
 - [[knowledge-as-code]]
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 

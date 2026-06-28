@@ -6,7 +6,7 @@ title: 운영 루틴
 
 ## 요약
 
-AI Context as Code가 건강하게 유지되려면 작고 반복 가능한 routine이 필요해요.
+acac.sh가 건강하게 유지되려면 작고 반복 가능한 routine이 필요해요.
 의미 있는 변경은 write, link, validate, build, 검토를 지나야 해요.
 그래야 맥락 층를 사람과 에이전트가 모두 쓸 수 있어요.
 

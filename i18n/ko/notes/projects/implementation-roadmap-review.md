@@ -46,7 +46,7 @@ title: 구현 로드맵 검토
 
 ## 관련
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[interface-design-direction]]
 - [[agent-runtime-references]]
 - [[content-structure-plan]]

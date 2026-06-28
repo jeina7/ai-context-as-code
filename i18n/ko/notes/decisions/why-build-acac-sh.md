@@ -1,8 +1,8 @@
 ---
-title: 왜 AI Context as Code를 만드는가
+title: 왜 acac.sh를 만드는가
 ---
 
-# 왜 AI Context as Code를 만드는가
+# 왜 acac.sh를 만드는가
 
 ## 요약
 
@@ -12,14 +12,14 @@ title: 왜 AI Context as Code를 만드는가
 
 ## 결정
 
-비공개 Obsidian 볼트를 그대로 공개하지 않고 AI Context as Code를 만들어요.
+비공개 Obsidian 볼트를 그대로 공개하지 않고 `acac.sh`를 만들어요.
 
 ## 이유
 
 비공개 볼트는 오래 남길 idea와 sensitive 맥락이 섞여 있어요.
 그것을 직접 드러내면 불필요한 risk가 생겨요.
 
-별도의 AI Context as Code는 경계를 명확하게 만들어요.
+`acac.sh`는 경계를 명확하게 만들어요.
 검토되고, 일반화되고, 노트로 남겨도 되는 지식만 `notes/`에 들어와요.
 
 ## 관련

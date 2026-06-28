@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Decision Records as Context
@@ -32,6 +32,6 @@ This repo uses `notes/decisions/` for durable project choices such as naming, lo
 
 ## Related
 
-- [[why-context-as-code]]
+- [[why-acac-sh]]
 - [[why-build-process-becomes-context]]
 - [[reviewable-ai-workflows]]

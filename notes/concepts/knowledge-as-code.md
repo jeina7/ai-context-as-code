@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-26
-updated: 2026-06-26
+updated: 2026-06-28
 ---
 
 # Knowledge as Code
@@ -30,4 +30,4 @@ markdown notes
 ## Related
 
 - [[agent-maintained-notes]]
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]

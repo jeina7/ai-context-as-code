@@ -11,7 +11,7 @@ updated: 2026-06-28
 
 ## Summary
 
-AI Context as Code needs a direct-read surface for agent configuration.
+acac.sh needs a direct-read surface for agent configuration.
 That surface should not become a custom agent framework.
 It should mirror common agent files and folders such as `AGENTS.md`, `CLAUDE.md`, skills, memory, and commands.
 
@@ -75,6 +75,6 @@ It does not invent a proprietary agent configuration standard.
 
 ## Related
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[content-structure-plan]]
 - [[agent-maintained-notes]]

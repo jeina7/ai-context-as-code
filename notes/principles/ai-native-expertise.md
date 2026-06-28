@@ -4,7 +4,7 @@ type: principle
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # AI-Native Expertise
@@ -30,7 +30,7 @@ Strong AI-native work strengthens at least one of these:
 
 ## Application
 
-[[ai-context-as-code-design]] exists to make durable context available to both humans and AI agents. It should not only increase note volume. It should make context easier to verify, reuse, and improve.
+[[acac-sh-design]] exists to make durable context available to both humans and AI agents. It should not only increase note volume. It should make context easier to verify, reuse, and improve.
 
 ## Related
 

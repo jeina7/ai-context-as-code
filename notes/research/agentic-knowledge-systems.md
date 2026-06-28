@@ -4,7 +4,7 @@ type: research
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Agentic Knowledge Systems
@@ -13,7 +13,7 @@ updated: 2026-06-27
 
 Agentic knowledge systems help AI agents work with durable context instead of starting from scratch each session.
 The current trend is moving from isolated prompts toward context engineering, codified context, and agent-maintained knowledge layers.
-AI Context as Code sits in that direction as a lightweight, markdown-first implementation.
+acac.sh sits in that direction as a lightweight, markdown-first implementation.
 
 ## Observations
 

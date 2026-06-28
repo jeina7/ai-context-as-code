@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Codified Context
@@ -28,7 +28,7 @@ Codified context usually includes:
 
 ## Application
 
-In AI Context as Code, `notes/` stores reusable context, `conventions/` stores operating rules, and `scripts/` verifies whether the context is ready to publish.
+In acac.sh, `notes/` stores reusable context, `conventions/` stores operating rules, and `scripts/` verifies whether the context is ready to publish.
 
 ## Related
 

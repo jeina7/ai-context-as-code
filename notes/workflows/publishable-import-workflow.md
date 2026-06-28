@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Publishable Import Workflow
@@ -38,5 +38,5 @@ private source
 
 - [[publishable-private-context-split]]
 - [[why-not-full-obsidian-migration]]
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 

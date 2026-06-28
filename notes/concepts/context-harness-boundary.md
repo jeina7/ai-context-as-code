@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Context Harness Boundary
@@ -17,7 +17,7 @@ The harness wraps an agent with tools, permissions, observations, verification, 
 
 ## Boundary
 
-AI Context as Code starts as a context layer.
+acac.sh starts as a context layer.
 
 It becomes a harness only when it also manages:
 
@@ -37,5 +37,5 @@ Do not add harness features before the context source is trustworthy. A weak con
 
 - [[context-engineering]]
 - [[agentic-context-engineering]]
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 

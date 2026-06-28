@@ -6,7 +6,7 @@ title: 에이전트 설정 참조
 
 ## 요약
 
-AI Context as Code에는 에이전트가 바로 읽을 수 있는 설정 표면이 필요해요.
+acac.sh에는 에이전트가 바로 읽을 수 있는 설정 표면이 필요해요.
 하지만 이것이 별도의 agent framework처럼 보이면 안 돼요.
 `AGENTS.md`, `CLAUDE.md`, skill, memory, command 같은 익숙한 구조를 그대로 활용해야 해요.
 
@@ -70,6 +70,6 @@ agent-runtime/
 
 ## 관련
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[content-structure-plan]]
 - [[agent-maintained-notes]]

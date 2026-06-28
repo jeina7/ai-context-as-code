@@ -33,4 +33,4 @@ private source
 
 - [[publishable-private-context-split]]
 - [[why-not-full-obsidian-migration]]
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]

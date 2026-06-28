@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Agentic Context Engineering
@@ -26,7 +26,7 @@ A self-improving context loop has four steps:
 
 ## Application
 
-AI Context as Code should make agent updates explicit and reviewable. The system should improve notes and conventions without silently copying private source material.
+acac.sh should make agent updates explicit and reviewable. The system should improve notes and conventions without silently copying private source material.
 
 ## Related
 

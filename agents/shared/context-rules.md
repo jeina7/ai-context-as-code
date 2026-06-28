@@ -1,6 +1,6 @@
 # Shared Context Rules
 
-Agents working in AI Context as Code must treat `notes/` as the publishable source of truth.
+Agents working in acac.sh must treat `notes/` as the publishable source of truth.
 
 ## Core Rules
 
@@ -29,4 +29,3 @@ python3 scripts/build_meta.py
 - implementation trace: `notes/worklog/`
 - recurring process rule: `conventions/`
 - deterministic check: `scripts/`
-

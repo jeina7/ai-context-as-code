@@ -4,7 +4,7 @@ type: decision
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Why Not Full Obsidian Migration
@@ -26,5 +26,5 @@ Raw notes often contain personal, financial, organizational, or relational conte
 ## Related
 
 - [[publishable-private-context-split]]
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]
 

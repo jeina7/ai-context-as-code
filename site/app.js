@@ -14,6 +14,8 @@ const state = {
   theme: localStorage.getItem("acc-theme") || "dark",
 };
 
+const PRODUCT_NAME = "acac.sh";
+
 const els = {
   note: document.querySelector("#note"),
   reader: document.querySelector("#reader"),
@@ -419,7 +421,7 @@ function renderDashboard() {
     <section class="dashboard-shell">
       <div class="dashboard-hero">
         <div>
-          <p class="eyebrow">AI Context as Code</p>
+          <p class="eyebrow">${PRODUCT_NAME}</p>
           <h1>${escapeHtml(t("dashboard"))}</h1>
           <p>${escapeHtml(t("dashboardSubtitle"))}</p>
         </div>
@@ -491,7 +493,7 @@ function renderDashboard() {
   renderOutgoing(null);
   renderContextHealth(null);
   renderTree();
-  document.title = `${t("dashboard")} · AI Context as Code`;
+  document.title = `${t("dashboard")} · ${PRODUCT_NAME}`;
 }
 
 async function renderNote() {
@@ -514,7 +516,7 @@ async function renderNote() {
   renderTree();
   renderGraph();
   renderEditorState();
-  document.title = `${localizedTitle(note)} · AI Context as Code`;
+  document.title = `${localizedTitle(note)} · ${PRODUCT_NAME}`;
   requestAnimationFrame(() => {
     const anchor = location.hash.split("#")[2];
     if (anchor) {

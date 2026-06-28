@@ -1,12 +1,13 @@
-# AI Context as Code
+# acac.sh
 
-Project name confirmed: `AI Context as Code`.
+Product name and public domain: `acac.sh`.
 
-AI Context as Code is a markdown-based context system for knowledge that is easy for humans to browse and structured enough for AI agents to read, review, and improve.
+acac.sh is a markdown-based context system for knowledge that is easy for humans to browse and structured enough for AI agents to read, review, and improve.
+It treats AI context as code: reviewed, versioned, linked, and checked before publishing.
 
 This repository has two roles:
 
-- the product code and design for AI Context as Code
+- the product code and design for acac.sh
 - the first context corpus that demonstrates the product on its own development history
 
 That corpus is not a private life vault. It is the reviewed example dataset that makes the product useful, inspectable, and resume-ready.
@@ -15,7 +16,7 @@ That corpus is not a private life vault. It is the reviewed example dataset that
 
 - Keep reviewed knowledge in plain markdown.
 - Support wikilinks, backlinks, search, and a folder tree.
-- Publish as a static GitHub Pages site.
+- Publish to `acac.sh` as a static GitHub Pages site.
 - Separate private staging from reviewed notes.
 - Add safety checks before anything is published.
 - Evolve toward agent-assisted note creation, review, and synthesis.

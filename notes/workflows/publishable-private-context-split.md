@@ -4,7 +4,7 @@ type: pattern
 status: active
 visibility: publishable
 created: 2026-06-26
-updated: 2026-06-26
+updated: 2026-06-28
 ---
 
 # Publishable Private Context Split
@@ -34,5 +34,5 @@ private source
 
 ## Related
 
-- [[why-build-ai-context-as-code]]
+- [[why-build-acac-sh]]
 - [[agent-maintained-notes]]

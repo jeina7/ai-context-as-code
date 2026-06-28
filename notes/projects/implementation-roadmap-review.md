@@ -50,7 +50,7 @@ The biggest finished gap was the agent configuration shape.
 
 ## Related
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[interface-design-direction]]
 - [[agent-runtime-references]]
 - [[content-structure-plan]]

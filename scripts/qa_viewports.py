@@ -95,7 +95,7 @@ def smoke_dom(chrome):
     checks = {
         "has_app_shell": "app-shell" in dom,
         "has_command_palette": "command-palette" in dom,
-        "has_dashboard": "AI Context as Code" in dom,
+        "has_dashboard": "acac.sh" in dom,
         "has_search": "Search notes" in dom or "노트 검색" in dom,
     }
     return {

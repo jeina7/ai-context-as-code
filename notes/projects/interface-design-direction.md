@@ -11,7 +11,7 @@ updated: 2026-06-28
 
 ## Summary
 
-AI Context as Code should feel closer to a polished developer tool than a generic document site.
+acac.sh should feel closer to a polished developer tool than a generic document site.
 The interface can borrow the clarity of Tailwind CSS documentation without copying its brand.
 
 The target is a quiet, precise surface for reading, searching, reviewing, and editing context.
@@ -72,6 +72,6 @@ It should not make graphs the main visual object unless the graph explains a dec
 
 ## Related
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[system-interface-map]]
 - [[agent-runtime-references]]

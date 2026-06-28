@@ -6,7 +6,7 @@ title: 인터페이스 디자인 방향
 
 ## 요약
 
-AI Context as Code는 일반 문서 사이트보다 잘 다듬어진 개발자 도구에 가까워야 해요.
+acac.sh는 일반 문서 사이트보다 잘 다듬어진 개발자 도구에 가까워야 해요.
 Tailwind CSS 문서의 선명함은 참고할 수 있지만, 브랜드 자체를 따라 하지는 않아요.
 
 목표는 맥락을 읽고, 찾고, 검토하고, 편집하기 좋은 조용하고 정확한 작업면이에요.
@@ -66,6 +66,6 @@ Tailwind CSS의 시각 정체성을 그대로 복사하지 않아요.
 
 ## 관련
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[system-interface-map]]
 - [[agent-runtime-references]]

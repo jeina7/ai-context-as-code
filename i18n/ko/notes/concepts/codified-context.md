@@ -23,7 +23,7 @@ title: 코드화된 컨텍스트
 
 ## 적용
 
-AI Context as Code에서 `notes/`는 재사용 가능한 맥락을 저장해요.
+acac.sh에서 `notes/`는 재사용 가능한 맥락을 저장해요.
 `conventions/`는 운영 규칙을 저장하고, `scripts/`는 이 맥락이 배포 가능한 상태인지 검증해요.
 
 ## 관련

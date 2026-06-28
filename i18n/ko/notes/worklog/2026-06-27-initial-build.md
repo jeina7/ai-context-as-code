@@ -23,5 +23,5 @@ title: 초기 구축 작업 기록
 
 ## 관련
 
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]
 - [[why-markdown-git-github-pages]]

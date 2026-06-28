@@ -4,14 +4,14 @@ type: project
 status: active
 visibility: publishable
 created: 2026-06-27
-updated: 2026-06-27
+updated: 2026-06-28
 ---
 
 # Obsidian Transition Plan
 
 ## Summary
 
-AI Context as Code does not replace a private Obsidian vault all at once.
+acac.sh does not replace a private Obsidian vault all at once.
 It first becomes the source of truth for publishable thinking.
 Private, personal, financial, and organizational material stays in the private vault.
 
@@ -21,7 +21,7 @@ Phase 1: private vault remains the main source.
 
 Phase 2: reusable ideas are imported through dry-run reports and rewritten into publishable notes.
 
-Phase 3: publishable project design, research, decisions, and context rules are written directly in AI Context as Code.
+Phase 3: publishable project design, research, decisions, and context rules are written directly in acac.sh.
 
 Phase 4: private Obsidian becomes the place for non-publishable life context and raw drafts.
 
@@ -50,4 +50,4 @@ Do not move:
 
 - [[why-not-full-obsidian-migration]]
 - [[publishable-import-workflow]]
-- [[ai-context-as-code-design]]
+- [[acac-sh-design]]

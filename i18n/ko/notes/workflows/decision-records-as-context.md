@@ -27,6 +27,6 @@ title: 결정 기록을 컨텍스트로 쓰기
 
 ## 관련
 
-- [[why-context-as-code]]
+- [[why-acac-sh]]
 - [[why-build-process-becomes-context]]
 - [[reviewable-ai-workflows]]

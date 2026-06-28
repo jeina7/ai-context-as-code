@@ -17,12 +17,12 @@
   "notes/workflows/reviewable-ai-workflows.md": "n-reviewable-ai-workflows",
   "notes/workflows/runtime-verification.md": "n-runtime-verification",
   "notes/workflows/self-evolving-context-loop.md": "n-self-evolving-context-loop",
-  "notes/projects/ai-context-as-code-design.md": "n-ai-context-as-code-design",
+  "notes/projects/acac-sh-design.md": "n-ai-context-as-code-design",
   "notes/projects/obsidian-transition-plan.md": "n-obsidian-transition-plan",
   "notes/projects/system-interface-map.md": "n-system-interface-map",
-  "notes/decisions/why-build-ai-context-as-code.md": "n-why-build-ai-context-as-code",
+  "notes/decisions/why-build-acac-sh.md": "n-why-build-ai-context-as-code",
   "notes/decisions/why-build-process-becomes-context.md": "n-why-build-process-becomes-context",
-  "notes/decisions/why-context-as-code.md": "n-why-context-as-code",
+  "notes/decisions/why-acac-sh.md": "n-why-context-as-code",
   "notes/decisions/why-markdown-git-github-pages.md": "n-why-markdown-git-github-pages",
   "notes/decisions/why-not-full-obsidian-migration.md": "n-why-not-full-obsidian-migration",
   "notes/research/agentic-knowledge-systems.md": "n-agentic-knowledge-systems",
@@ -31,5 +31,6 @@
   "notes/projects/content-structure-plan.md": "n-content-structure-plan",
   "notes/projects/agent-runtime-references.md": "n-agent-runtime-references",
   "notes/projects/interface-design-direction.md": "n-interface-design-direction",
-  "notes/projects/implementation-roadmap-review.md": "n-implementation-roadmap-review"
+  "notes/projects/implementation-roadmap-review.md": "n-implementation-roadmap-review",
+  "notes/worklog/2026-06-28-acac-sh-rebrand.md": "n-2026-06-28-acac-sh-rebrand"
 }

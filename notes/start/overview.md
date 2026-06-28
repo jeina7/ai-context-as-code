@@ -1,27 +1,27 @@
 ---
-title: AI Context as Code
+title: acac.sh
 type: project
 status: active
 visibility: publishable
 created: 2026-06-26
-updated: 2026-06-26
+updated: 2026-06-28
 ---
 
-# AI Context as Code
+# acac.sh
 
 ## Summary
 
-AI Context as Code is a publishable markdown knowledge system.
+`acac.sh` is a publishable markdown knowledge system.
 It keeps publishable thinking separate from private notes.
 It is designed for humans to browse and for AI agents to read, review, and improve.
 
 ## Start Here
 
-- [[why-build-ai-context-as-code]]
-- [[ai-context-as-code-design]]
+- [[why-build-acac-sh]]
+- [[acac-sh-design]]
 - [[ai-native-expertise]]
 - [[context-engineering]]
-- [[why-context-as-code]]
+- [[why-acac-sh]]
 - [[single-source-of-truth]]
 - [[reviewable-ai-workflows]]
 - [[approval-before-external-side-effects]]
