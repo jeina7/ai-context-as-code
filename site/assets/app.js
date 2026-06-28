@@ -881,7 +881,7 @@ function closeSearchPalette(options = {}) {
   paletteInput?.removeAttribute("aria-activedescendant");
   if (options.restoreFocus !== false) {
     const target = state.searchPalette.lastFocusedElement;
-    if (target && typeof target.focus === "function" && document.contains(target)) {
+    if (target && target !== searchInput && typeof target.focus === "function" && document.contains(target)) {
       target.focus({ preventScroll: true });
     }
   }
@@ -1505,6 +1505,48 @@ function focusMain() {
   main.focus({ preventScroll: true });
 }
 
+function currentSearchQuery() {
+  const routeQuery = new URLSearchParams(window.location.search).get("q") || "";
+  return (searchInput?.value || routeQuery).trim();
+}
+
+function isSearchShortcut(event) {
+  return (
+    (event.metaKey || event.ctrlKey) &&
+    !event.altKey &&
+    !event.shiftKey &&
+    event.key.toLowerCase() === "k"
+  );
+}
+
+function updateShortcutHints() {
+  const label = isApplePlatform() ? "⌘K" : "Ctrl K";
+  for (const element of document.querySelectorAll("[data-shortcut-hint]")) {
+    element.textContent = label;
+  }
+}
+
+function isApplePlatform() {
+  return /mac|iphone|ipad|ipod/i.test(navigator.platform || navigator.userAgent || "");
+}
+
+function trapPaletteFocus(event) {
+  if (!paletteDialog) return;
+  const focusable = [...paletteDialog.querySelectorAll('button, input, a[href], [tabindex]:not([tabindex="-1"])')].filter(
+    (element) => !element.disabled && element.offsetParent !== null,
+  );
+  if (!focusable.length) return;
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
+  }
+}
+
 document.addEventListener("click", (event) => {
   const action = event.target.closest("[data-action]")?.dataset.action;
   if (action === "toggle-folder") {
@@ -1516,9 +1558,14 @@ document.addEventListener("click", (event) => {
     document.body.classList.toggle("nav-open");
     return;
   }
-  if (action === "focus-search") {
-    document.body.classList.add("nav-open");
-    window.setTimeout(() => searchInput?.focus(), 80);
+  if (action === "open-search-palette") {
+    event.preventDefault();
+    openSearchPalette(currentSearchQuery());
+    return;
+  }
+  if (action === "close-search-palette") {
+    event.preventDefault();
+    closeSearchPalette();
     return;
   }
 
@@ -1530,6 +1577,39 @@ document.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (isSearchShortcut(event)) {
+    event.preventDefault();
+    openSearchPalette(currentSearchQuery());
+    return;
+  }
+
+  if (state.searchPalette.open) {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeSearchPalette();
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      movePaletteSelection(1);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      movePaletteSelection(-1);
+      return;
+    }
+    if (event.key === "Enter") {
+      event.preventDefault();
+      choosePaletteSelection();
+      return;
+    }
+    if (event.key === "Tab") {
+      trapPaletteFocus(event);
+      return;
+    }
+  }
+
   if (event.key === "Escape") {
     document.body.classList.remove("nav-open");
   }
@@ -1537,8 +1617,27 @@ document.addEventListener("keydown", (event) => {
 
 searchForm?.addEventListener("submit", (event) => {
   event.preventDefault();
-  const query = new FormData(searchForm).get("q")?.toString().trim() || "";
-  navigate(`/search${query ? `?q=${encodeURIComponent(query)}` : ""}`);
+  openSearchPalette(currentSearchQuery());
+});
+
+searchInput?.addEventListener("focus", () => {
+  openSearchPalette(currentSearchQuery());
+});
+
+paletteInput?.addEventListener("input", () => {
+  state.searchPalette.query = paletteInput.value.trim();
+  state.searchPalette.selectedIndex = 0;
+  renderSearchPalette();
+});
+
+paletteResults?.addEventListener("mousemove", (event) => {
+  const result = event.target.closest("[data-palette-index]");
+  if (!result) return;
+  const index = Number(result.dataset.paletteIndex);
+  if (!Number.isNaN(index) && index !== state.searchPalette.selectedIndex) {
+    state.searchPalette.selectedIndex = index;
+    renderSearchPalette();
+  }
 });
 
 window.addEventListener("popstate", renderRoute);
