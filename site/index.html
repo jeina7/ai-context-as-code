@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Context as Code</title>
+    <meta
+      name="description"
+      content="ACAC first instance reader built from trove markdown source."
+    />
+    <link rel="stylesheet" href="/assets/style.css" />
+  </head>
+  <body>
+    <div class="mobile-bar">
+      <button class="icon-button" type="button" data-action="toggle-nav" aria-label="Open navigation">
+        <span aria-hidden="true">☰</span>
+      </button>
+      <a class="mobile-brand" href="/" data-route="/">ACAC</a>
+      <button class="icon-button" type="button" data-action="focus-search" aria-label="Focus search">
+        <span aria-hidden="true">⌕</span>
+      </button>
+    </div>
+
+    <div class="shell">
+      <div class="nav-scrim" data-action="toggle-nav"></div>
+      <aside class="sidebar" aria-label="Trove navigation">
+        <header class="sidebar-header">
+          <a class="brand" href="/" data-route="/">
+            <span class="brand-mark" aria-hidden="true">A</span>
+            <span>
+              <strong>ACAC</strong>
+              <small>AI Context as Code</small>
+            </span>
+          </a>
+          <form class="search-form" role="search">
+            <label class="search-label" for="global-search">Search trove</label>
+            <div class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <input id="global-search" name="q" type="search" autocomplete="off" />
+            </div>
+          </form>
+        </header>
+        <nav id="tree" class="tree" aria-label="Source tree">
+          <p class="muted">Loading source tree...</p>
+        </nav>
+      </aside>
+
+      <main id="main" class="reader" tabindex="-1">
+        <section class="loading-state">
+          <p>Loading ACAC context...</p>
+        </section>
+      </main>
+
+      <aside id="context" class="context-panel" aria-label="Current context"></aside>
+    </div>
+
+    <script type="module" src="/assets/app.js"></script>
+    <!-- ACAC_ANALYTICS -->
+  </body>
+</html>

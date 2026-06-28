@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+_build/
+
+data/*.json
+!data/id-registry.json
+!data/.gitkeep
+
+dist/*
+!dist/.gitkeep
