@@ -33,6 +33,11 @@ TARGETS = [
         "window": "1440,1000",
     },
     {
+        "name": "desktop-context-map",
+        "url": "http://127.0.0.1:8765/#/projects/interface-design-direction#context-map",
+        "window": "1440,1000",
+    },
+    {
         "name": "mobile-note",
         "url": "http://127.0.0.1:8765/#/projects/interface-design-direction",
         "window": "390,844",

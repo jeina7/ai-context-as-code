@@ -44,6 +44,7 @@ const els = {
   commandResults: document.querySelector("#command-results"),
   hoverPreview: document.querySelector("#hover-preview"),
   sidebar: document.querySelector("#sidebar"),
+  workspace: document.querySelector(".workspace"),
   downloadLink: document.querySelector("#download-link"),
 };
 
@@ -520,6 +521,7 @@ async function renderNote() {
       document.getElementById(anchor)?.scrollIntoView({ block: "start" });
       return;
     }
+    els.workspace.scrollTo({ top: 0, left: 0, behavior: "auto" });
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   });
 }
