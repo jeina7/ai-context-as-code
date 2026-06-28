@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI Context as Code</title>
-    <link rel="stylesheet" href="./styles.css?v=20260628-1545">
+    <link rel="stylesheet" href="./styles.css?v=20260628-1550">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
   </head>
@@ -70,6 +70,13 @@
           </div>
         </section>
 
+      </main>
+
+      <aside class="context-panel">
+        <section>
+          <div class="section-title">Outline</div>
+          <div id="outline" class="outline"></div>
+        </section>
         <section id="context-map" class="graph-dock">
           <div class="graph-header">
             <div>
@@ -82,14 +89,7 @@
             </div>
           </div>
           <div id="graph-insights" class="graph-insights"></div>
-          <div id="global-graph" class="graph graph-large"></div>
-        </section>
-      </main>
-
-      <aside class="context-panel">
-        <section>
-          <div class="section-title">Outline</div>
-          <div id="outline" class="outline"></div>
+          <div id="global-graph" class="graph graph-small"></div>
         </section>
         <section>
           <div class="section-title">Backlinks</div>
@@ -120,6 +120,6 @@
 
     <div id="hover-preview" class="hover-preview hidden"></div>
     <a id="download-link" class="hidden" download></a>
-    <script type="module" src="./app.js?v=20260628-1545"></script>
+    <script type="module" src="./app.js?v=20260628-1550"></script>
   </body>
 </html>

@@ -33,8 +33,8 @@ TARGETS = [
         "window": "1440,1000",
     },
     {
-        "name": "desktop-context-map",
-        "url": "http://127.0.0.1:8765/#/projects/interface-design-direction#context-map",
+        "name": "desktop-scrolled-note",
+        "url": "http://127.0.0.1:8765/#/projects/interface-design-direction#related",
         "window": "1440,1000",
     },
     {

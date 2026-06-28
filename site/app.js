@@ -686,7 +686,7 @@ function renderGraphInsights(note, activeGraph) {
 function renderGraph() {
   const note = state.currentNote;
   const activeGraph = relatedGraph(note, state.graphMode);
-  els.globalGraph.innerHTML = graphSvg(activeGraph, note, false);
+  els.globalGraph.innerHTML = graphSvg(activeGraph, note, true);
   els.graphSummary.textContent = `${activeGraph.nodes.length} ${t("notesUnit")} · ${activeGraph.edges.length} ${t("linksUnit")}`;
   renderGraphInsights(note, activeGraph);
   els.graphLocal.classList.toggle("active", state.graphMode === "local");

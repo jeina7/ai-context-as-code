@@ -86,6 +86,8 @@ a {
 }
 
 .app-shell {
+  position: fixed;
+  inset: 0;
   display: grid;
   grid-template-columns: 278px minmax(0, 1fr) 316px;
   grid-template-rows: 54px minmax(0, 1fr);
@@ -402,7 +404,6 @@ details div {
 
 .dashboard-mode .sidebar,
 .dashboard-mode .context-panel,
-.dashboard-mode .graph-dock,
 .dashboard-mode .language-toggle,
 .dashboard-mode #edit-toggle,
 .dashboard-mode .breadcrumbs,
@@ -920,32 +921,32 @@ details div {
 
 .graph-dock {
   min-width: 0;
-  border-top: 1px solid var(--line);
-  padding: 16px clamp(34px, 4.8vw, 72px) 24px;
-  margin: 48px calc(clamp(34px, 4.8vw, 72px) * -1) -44px;
-  background: color-mix(in srgb, var(--surface) 70%, transparent);
 }
 
 .graph-header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 12px;
-  max-width: 880px;
-  margin: 0 auto 12px;
+  display: block;
+  margin: 0 0 12px;
 }
 
 .graph-actions {
   display: flex;
   gap: 8px;
+  margin-top: 10px;
+}
+
+.graph-actions .tool-button {
+  flex: 1;
+  min-width: 0;
+  height: 30px;
+  padding: 0 9px;
+  font-size: 12px;
 }
 
 .graph-insights {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  max-width: min(880px, 100%);
-  margin: 0 auto 12px;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 0 0 12px;
 }
 
 .graph-insight-card {
@@ -953,7 +954,7 @@ details div {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: color-mix(in srgb, var(--surface-2) 58%, transparent);
-  padding: 10px 11px;
+  padding: 9px 10px;
 }
 
 .graph-insight-card span {
@@ -1000,7 +1001,7 @@ details div {
 }
 
 .graph-small {
-  height: 210px;
+  height: 220px;
 }
 
 .graph svg {
@@ -1259,6 +1260,7 @@ textarea {
   }
 
   .app-shell {
+    position: static;
     grid-template-columns: 260px minmax(0, 1fr);
     grid-template-rows: 54px auto auto;
     grid-template-areas:
@@ -1444,14 +1446,16 @@ textarea {
     border-top: 1px solid var(--line);
   }
 
-  .workspace,
-  .graph-dock {
+  .workspace {
+    width: 100%;
+    max-width: 100vw;
+    min-width: 0;
     padding: 22px var(--app-inset);
     overflow: hidden;
   }
 
   .graph-dock {
-    margin: 36px calc(var(--app-inset) * -1) -22px;
+    padding: 12px;
   }
 
   .dashboard-mode .workspace {
@@ -1460,15 +1464,6 @@ textarea {
 
   .reader,
   .editor {
-    width: 100%;
-    max-width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-
-  .graph-header,
-  .graph-insights,
-  .graph-large {
     width: 100%;
     max-width: 100%;
     margin-left: 0;
@@ -1502,28 +1497,26 @@ textarea {
   .note p,
   .note li {
     width: 100%;
+    min-width: 0;
     max-width: 100%;
+    white-space: normal;
     overflow-wrap: anywhere;
     word-break: break-word;
   }
 
-  .editor-toolbar,
-  .graph-header {
+  .note ul,
+  .note ol {
+    max-width: 100%;
+    padding-left: 22px;
+  }
+
+  .editor-toolbar {
     display: block;
   }
 
-  .editor-actions,
-  .graph-actions {
+  .editor-actions {
     margin-top: 12px;
     justify-content: flex-start;
-  }
-
-  .graph-actions button {
-    flex: 1;
-  }
-
-  .graph-insights {
-    grid-template-columns: 1fr 1fr;
   }
 
   .editor-grid {
