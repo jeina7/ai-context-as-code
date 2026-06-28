@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the local checks that should pass before a Cloudflare Pages deployment."""
+"""Run the local checks that should pass before a Cloudflare deployment."""
 
 from __future__ import annotations
 

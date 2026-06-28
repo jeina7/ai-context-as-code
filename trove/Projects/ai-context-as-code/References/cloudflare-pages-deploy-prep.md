@@ -1,7 +1,7 @@
 ---
 type: reference
 title: "Cloudflare Pages Deploy Prep"
-description: "Deployment preparation checklist for publishing the ACAC first instance to Cloudflare Pages"
+description: "Deployment preparation checklist for publishing the ACAC first instance to Cloudflare"
 status: active
 created: 2026-06-28
 updated: 2026-06-28
@@ -15,6 +15,7 @@ id: F0lcG8SXxc
 This note prepares the ACAC first instance for Cloudflare Pages Git integration deployment.
 It records the build settings, local checks, analytics choice, and manual dashboard values needed before touching production.
 Actual Cloudflare project creation and custom-domain changes should happen only after explicit approval.
+If the dashboard requires a deploy command, use [[cloudflare-workers-static-assets-deploy-prep]] instead.
 
 ## Current Deploy Target
 
@@ -26,6 +27,7 @@ Actual Cloudflare project creation and custom-domain changes should happen only 
 | Domain | `acac.sh` |
 | Build command | `python3 scripts/build_trove.py` |
 | Build output directory | `dist` |
+| Workers fallback deploy command | `npx wrangler deploy` |
 | Source root | Repository root |
 | Route fallback | `dist/_redirects` |
 | Local predeploy check | `python3 scripts/deploy_check.py` |

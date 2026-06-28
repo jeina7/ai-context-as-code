@@ -43,13 +43,14 @@ The first implementation keeps the structure small, validates markdown source, b
 
 - [[legacy-knowledge-base-principles]]
 - [[cloudflare-pages-deploy-prep]]
+- [[cloudflare-workers-static-assets-deploy-prep]]
 
 ## Decisions
 
 - [[2026-06-29-cloudflare-pages-git-integration]]
+- [[2026-06-29-cloudflare-workers-static-assets-fallback]]
 
 ## Next Work
 
-- Commit and push the first instance baseline to `origin/main`.
-- Connect Cloudflare Pages through Git integration after the pushed baseline is verified.
+- Connect Cloudflare deployment through the current dashboard path after the pushed baseline is verified.
 - Add the first reviewed non-ACAC public-safe note after the deploy route is stable.

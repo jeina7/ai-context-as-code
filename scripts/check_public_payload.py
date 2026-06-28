@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that generated public output is ready for Cloudflare Pages."""
+"""Check that generated public output is ready for Cloudflare deployment."""
 
 from __future__ import annotations
 

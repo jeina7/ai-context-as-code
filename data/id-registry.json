@@ -30,6 +30,26 @@
       "updated": "2026-06-28",
       "visibility": "public"
     },
+    "CfwAsset01": {
+      "created": "2026-06-29",
+      "currentPath": "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md",
+      "previousPaths": [],
+      "route": "/trove/CfwAsset01",
+      "title": "Cloudflare Workers Static Assets Deploy Prep",
+      "type": "reference",
+      "updated": "2026-06-29",
+      "visibility": "public"
+    },
+    "CfwBuildA1": {
+      "created": "2026-06-29",
+      "currentPath": "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-workers-static-assets-fallback.md",
+      "previousPaths": [],
+      "route": "/trove/CfwBuildA1",
+      "title": "Cloudflare Workers Static Assets Fallback",
+      "type": "decision",
+      "updated": "2026-06-29",
+      "visibility": "public"
+    },
     "F0lcG8SXxc": {
       "created": "2026-06-28",
       "currentPath": "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md",
@@ -175,11 +195,13 @@
     "Daily/2026-06/2026-06-28.md": "tfvj3DZu_E",
     "Daily/2026-06/2026-06-29.md": "dY0atgAPw8",
     "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-pages-git-integration.md": "X_Vwcz2ZL1",
+    "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-workers-static-assets-fallback.md": "CfwBuildA1",
     "Projects/ai-context-as-code/Designs/first-implementation-plan.md": "zxhIW0jU5O",
     "Projects/ai-context-as-code/Designs/first-instance-architecture.md": "0PVpQI6H0g",
     "Projects/ai-context-as-code/Designs/first-instance-frame.md": "N_TyCBWLFT",
     "Projects/ai-context-as-code/Designs/first-instance-ui-ux-design.md": "z1hXOfY1w6",
     "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md": "F0lcG8SXxc",
+    "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md": "CfwAsset01",
     "Projects/ai-context-as-code/References/legacy-knowledge-base-principles.md": "9PsNP3egH4",
     "Projects/ai-context-as-code/Worklog/2026-06-28.md": "UzbYw-l2kg",
     "Projects/ai-context-as-code/Worklog/2026-06-29.md": "KLWL70bVad",

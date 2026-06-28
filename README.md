@@ -43,15 +43,16 @@ dist/
 2. Seed the ACAC project, daily context, and agent-facing config documents.
 3. Generate root `AGENTS.md` and `CLAUDE.md` from `trove/_config/Agents/`.
 4. Validate trove notes, build metadata, and assemble the read-only static reader.
-5. Migrate the first reviewed public-safe notes, then connect Cloudflare Pages.
+5. Migrate the first reviewed public-safe notes, then connect Cloudflare.
 
 ## Deploy Prep
 
-Run the local predeploy check before creating or updating a Cloudflare Pages deployment:
+Run the local predeploy check before creating or updating a Cloudflare deployment:
 
 ```bash
 python3 scripts/deploy_check.py
 ```
 
-The expected Cloudflare Pages build command is `python3 scripts/build_trove.py`, and the output directory is `dist`.
-The selected deployment mode is Cloudflare Pages Git integration from `origin/main`.
+The expected build command is `python3 scripts/build_trove.py`, and the output directory is `dist`.
+The preferred deployment mode is Cloudflare Pages Git integration from `origin/main`.
+If the Cloudflare dashboard requires a Workers Builds deploy command, use the committed `wrangler.jsonc` static assets config and set the deploy command to `npx wrangler deploy`.
