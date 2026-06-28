@@ -2,7 +2,7 @@
 type: decision
 title: "Cloudflare Pages Git Integration"
 description: "Decision to deploy the ACAC first instance through Cloudflare Pages Git integration"
-status: active
+status: archived
 created: 2026-06-29
 updated: 2026-06-29
 visibility: public
@@ -12,13 +12,13 @@ id: X_Vwcz2ZL1
 
 # Cloudflare Pages Git Integration
 
-ACAC will use Cloudflare Pages Git integration for the first public deployment path.
-This keeps deployment tied to repository history and supports preview deployments for non-production branches.
-Direct Upload is not the selected path for this first instance.
+ACAC initially planned to use Cloudflare Pages Git integration for the first public deployment path.
+This decision was superseded by [[2026-06-29-cloudflare-workers-static-assets-fallback]] after the live `acac.sh` deploy succeeded through Workers static assets.
+Keep this note as the Pages reference path, not the current deploy truth.
 
 ## Decision
 
-Use Cloudflare Pages Git integration.
+Use Cloudflare Pages Git integration if ACAC later moves away from the active Workers static assets path.
 
 ## Reason
 
@@ -47,5 +47,5 @@ That tradeoff is acceptable for this first instance because ACAC should use Git 
 ## Follow-up
 
 - Run `python3 scripts/deploy_check.py` before connecting or updating the Pages project.
-- Keep `ACAC_CF_WEB_ANALYTICS_TOKEN` unset if Cloudflare one-click Web Analytics is enabled.
+- Keep `ACAC_CF_WEB_ANALYTICS_TOKEN` unset if Cloudflare dashboard automatic Web Analytics is enabled.
 - Add the custom domain only after the first preview or production deployment is verified.

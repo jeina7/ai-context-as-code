@@ -15,6 +15,7 @@ id: zz2t-H9rM0
 ACAC starts here as a real first instance rather than a generic framework.
 This project folder holds the public-safe source notes for building the cloud-based context system.
 The first implementation keeps the structure small, validates markdown source, builds metadata, and serves a read-only static reader.
+The first live deployment is now running on Cloudflare Workers static assets at `acac.sh`.
 
 ## Current Scope
 
@@ -39,6 +40,7 @@ The first implementation keeps the structure small, validates markdown source, b
 - [[first-implementation-plan]]
 - [[first-instance-ui-ux-design]]
 - [[first-instance-reader-design-system]]
+- [[reader-tree-and-relational-context-map-follow-up]]
 
 ## References
 
@@ -53,5 +55,5 @@ The first implementation keeps the structure small, validates markdown source, b
 
 ## Next Work
 
-- Connect Cloudflare deployment through the current dashboard path after the pushed baseline is verified.
+- Enable Cloudflare Web Analytics through dashboard automatic setup for the proxied `acac.sh` hostname, keeping repo manual beacon injection off unless explicitly chosen.
 - Add the first reviewed non-ACAC public-safe note after the deploy route is stable.

@@ -33,7 +33,7 @@ dist/
 
 - `trove/` is the source layer people and agents edit.
 - `data/` will contain generated metadata for the site.
-- `dist/` will contain Cloudflare Pages output and should not be edited by hand.
+- `dist/` will contain the static assets output deployed by Cloudflare Workers and should not be edited by hand.
 - `_config/` stores agent-facing markdown content, not user-level runtime configuration.
 - `_assets/` is internal storage and is not a knowledge section.
 
@@ -54,8 +54,10 @@ python3 scripts/deploy_check.py
 ```
 
 The expected build command is `python3 scripts/build_trove.py`, and the output directory is `dist`.
-The preferred deployment mode is Cloudflare Pages Git integration from `origin/main`.
-If the Cloudflare dashboard requires a Workers Builds deploy command, use the committed `wrangler.jsonc` static assets config and set the deploy command to `npx wrangler deploy`.
+The first live deployment uses Cloudflare Workers static assets from `origin/main`.
+Use the committed `wrangler.jsonc` static assets config and set the deploy command to `npx wrangler deploy`.
 For Workers Builds, use path `/` and keep the default non-production branch deploy command `npx wrangler versions upload`.
 The Workers compatibility date is pinned to `2026-06-28` to avoid timezone-based "future date" failures during the first deploy.
 Workers static assets use `not_found_handling: single-page-application`, so `dist/_redirects` is intentionally not generated.
+For Cloudflare Web Analytics, prefer Cloudflare dashboard automatic setup for the proxied `acac.sh` hostname.
+Keep `ACAC_CF_WEB_ANALYTICS_TOKEN` unset unless choosing manual beacon injection, because build-time injection and dashboard injection should not both be enabled.

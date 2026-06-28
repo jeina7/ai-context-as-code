@@ -321,6 +321,7 @@ function renderStructureGrid() {
 
 function renderBuildMetrics() {
   const build = state.build || {};
+  const analytics = build.analytics || {};
   return `
     <ul class="metric-list">
       <li>
@@ -332,8 +333,8 @@ function renderBuildMetrics() {
         <span>validation warnings before deploy</span>
       </li>
       <li>
-        <strong>${build.analytics?.enabled ? "On" : "Off"}</strong>
-        <span>Cloudflare Web Analytics page views</span>
+        <strong>${analytics.manualBeacon ? "On" : "Off"}</strong>
+        <span>repo-injected analytics beacon</span>
       </li>
     </ul>
   `;
@@ -350,7 +351,7 @@ function renderHomeContext() {
         <span class="pill${build.warnings ? " warning" : " success"}">${escapeHtml(
           String(build.warnings || 0),
         )} warnings</span>
-        <span class="pill">analytics ${build.analytics?.enabled ? "enabled" : "disabled"}</span>
+        <span class="pill">manual beacon ${build.analytics?.manualBeacon ? "on" : "off"}</span>
       </div>
     </section>
     <section class="context-section">
@@ -367,6 +368,10 @@ function renderHomeContext() {
         <li>
           <strong>Generated output</strong>
           <div class="context-meta">The site reads JSON and markdown payloads built from trove source.</div>
+        </li>
+        <li>
+          <strong>Dashboard analytics first</strong>
+          <div class="context-meta">Cloudflare can inject Web Analytics outside this build; manual beacon injection stays off unless explicitly chosen.</div>
         </li>
       </ul>
     </section>

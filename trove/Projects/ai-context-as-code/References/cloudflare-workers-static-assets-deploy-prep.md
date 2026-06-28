@@ -1,7 +1,7 @@
 ---
 type: reference
 title: "Cloudflare Workers Static Assets Deploy Prep"
-description: "Deployment fallback checklist for using Workers Builds with a required deploy command"
+description: "Deployment checklist for the active ACAC Workers static assets deployment"
 status: active
 created: 2026-06-29
 updated: 2026-06-29
@@ -12,9 +12,9 @@ id: CfwAsset01
 
 # Cloudflare Workers Static Assets Deploy Prep
 
-This note records the deploy values to use when the Cloudflare dashboard requires a deploy command.
-That screen belongs to Workers Builds rather than the older Pages-only form.
-ACAC can use it as a static assets deployment without adding Worker application code.
+This note records the active deploy values for the ACAC Workers static assets deployment.
+The first `acac.sh` deployment uses Workers Builds, `wrangler.jsonc`, and generated `dist/` assets.
+ACAC uses this as a static assets deployment without adding Worker application code.
 
 ## Dashboard Values
 
@@ -37,6 +37,33 @@ The path value `/` means the repository root.
 The compatibility date intentionally uses `2026-06-28` because Cloudflare may validate deploy requests in a timezone where `2026-06-29` is still in the future.
 Do not include `dist/_redirects` for Workers static assets.
 Workers validates that file differently from Pages, and the Pages rewrite rules can fail as an infinite loop.
+
+## Web Analytics
+
+Prefer Cloudflare dashboard automatic setup for the proxied `acac.sh` hostname.
+Keep `ACAC_CF_WEB_ANALYTICS_TOKEN` unset unless ACAC explicitly switches to manual beacon injection.
+`data/build.json` reports repo-level injection status:
+
+| Field | Meaning |
+|---|---|
+| `analytics.enabled: false` | The build did not inject the manual Cloudflare beacon script. |
+| `analytics.manualBeacon: false` | `ACAC_CF_WEB_ANALYTICS_TOKEN` was empty during build. |
+| `analytics.mode: cloudflare-dashboard-or-disabled` | Analytics must be confirmed in Cloudflare dashboard or by checking served HTML after automatic setup. |
+
+Dashboard path for automatic setup on the active proxied hostname:
+
+1. Web Analytics.
+2. Add a site.
+3. Select the proxied `acac.sh` hostname.
+4. Select Done.
+5. Open Manage site and keep automatic setup enabled.
+
+Confirmation criteria:
+
+- `ACAC_CF_WEB_ANALYTICS_TOKEN` remains unset in the Workers build settings.
+- A fresh deployment still has no repo-injected `static.cloudflareinsights.com/beacon.min.js` script in `dist/index.html`.
+- The served `https://acac.sh/` HTML shows the Cloudflare-injected beacon after automatic setup is active.
+- Web Analytics starts showing page views for `/`, `/trove/<id>`, and `/search`.
 
 ## Custom Domain
 
@@ -62,7 +89,7 @@ Run this before pushing changes that Cloudflare will deploy:
 python3 scripts/deploy_check.py
 ```
 
-That command rebuilds `dist/` and checks that public metadata, markdown payloads, redirects, and JavaScript syntax are ready.
+That command rebuilds `dist/` and checks that public metadata, markdown payloads, Workers fallback expectations, and JavaScript syntax are ready.
 
 ## What This Will Not Do
 
@@ -76,3 +103,6 @@ That command rebuilds `dist/` and checks that public metadata, markdown payloads
 - https://developers.cloudflare.com/workers/ci-cd/builds/configuration/
 - https://developers.cloudflare.com/workers/static-assets/migration-guides/migrate-from-pages/
 - https://developers.cloudflare.com/workers/static-assets/binding/
+- https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/
+- https://developers.cloudflare.com/web-analytics/get-started/
+- https://developers.cloudflare.com/web-analytics/get-started/web-analytics-spa/

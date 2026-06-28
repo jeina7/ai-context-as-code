@@ -137,6 +137,13 @@ button {
   border-bottom: 1px solid var(--color-line);
 }
 
+.sidebar-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+}
+
 .brand,
 .mobile-brand {
   display: inline-flex;
@@ -926,6 +933,10 @@ button {
   display: none;
 }
 
+.sidebar-close {
+  display: none;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -1002,6 +1013,11 @@ button {
     transform: translateX(-104%);
     box-shadow: var(--shadow-drawer);
     transition: transform 160ms ease;
+  }
+
+  .sidebar-close {
+    display: inline-grid;
+    flex: 0 0 auto;
   }
 
   body.nav-open .sidebar {

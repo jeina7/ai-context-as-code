@@ -33,8 +33,8 @@ ACAC 첫 인스턴스는 `trove/` markdown source를 읽어서 public site와 ag
 | 영구 ID는 build가 관리함 | 첫 metadata build부터 `data/id-registry.json`을 만들고 `/trove/<id>` route를 지원해요. |
 | 사이트는 정적 앱으로 충분함 | 첫 구현은 vanilla HTML/CSS/JS와 build script로 시작해요. |
 | 편집기와 GitHub PAT 저장 기능 | 첫 구현에서는 제외해요. 읽기, 검색, 탐색이 먼저예요. |
-| Cloudflare Pages 배포 | 첫 public deploy target은 Cloudflare Pages예요. output directory는 `dist/`예요. |
-| Cloudflare Web Analytics | 첫 구현부터 page view 측정을 붙여요. token은 build-time config로 주입해요. |
+| Cloudflare Workers static assets 배포 | 첫 public deploy는 Workers Builds와 `wrangler.jsonc` static assets 설정으로 완료했어요. output directory는 `dist/`예요. |
+| Cloudflare Web Analytics | page view 측정은 Cloudflare dashboard automatic setup을 우선해요. build-time token 주입은 manual fallback이에요. |
 
 ## 전체 구조
 
@@ -46,10 +46,10 @@ flowchart TD
   validate --> build["scripts/build_trove.py"]
   build --> data["data/*.json"]
   build --> publishable["site가 읽을 markdown payload"]
-  build --> dist["dist/ Cloudflare Pages output"]
+  build --> dist["dist/ static assets output"]
   data --> site["site/ static reader"]
   publishable --> site
-  dist --> deploy["Cloudflare Pages"]
+  dist --> deploy["Cloudflare Workers static assets"]
   source --> agents["AGENTS.md와 _config special contents"]
 ```
 
@@ -62,7 +62,7 @@ flowchart TD
 | `data/` metadata layer | tree, note metadata, search index, backlinks, home summary를 저장해요. |
 | `site/` presentation layer | public reader UI예요. 첫 화면, sidebar, 문서 렌더링, 검색을 담당해요. |
 | agent interface layer | root `AGENTS.md`와 `trove/_config/`가 agent가 읽는 규칙과 절차를 제공해요. |
-| deploy layer | `dist/`를 Cloudflare Pages에 배포하고, 실제 route와 analytics를 확인해요. |
+| deploy layer | `dist/`를 Cloudflare Workers static assets로 배포하고, 실제 route와 analytics를 확인해요. |
 
 ## Source layer
 
@@ -210,7 +210,7 @@ error가 있으면 build를 멈추고, warning은 첫 구현에서는 보고만 
 | `data/id-registry.json` | path 변경에도 살아 있는 영구 ID registry |
 | `data/build.json` | build 시각, public 문서 수, warning 수, analytics 설정 상태 |
 | `_build/trove/` | site가 읽기 좋게 정규화한 markdown payload |
-| `dist/` | Cloudflare Pages가 배포할 최종 output |
+| `dist/` | Cloudflare Workers static assets가 배포할 최종 output |
 
 folder ordering:
 
@@ -227,7 +227,7 @@ folder ordering:
 - `site/index.html`과 `site/assets/`를 `dist/`로 복사해요.
 - `data/*.json`을 `dist/data/`로 복사해요.
 - `_build/trove/` markdown payload를 `dist/content/trove/`로 복사해요.
-- `dist/_redirects`를 생성해 `/trove/*`와 `/search`를 `index.html` app shell로 보내요.
+- Workers static assets에서는 `dist/_redirects`를 만들지 않고, `wrangler.jsonc`의 `not_found_handling: single-page-application`로 `/trove/*`와 `/search`를 `index.html` app shell로 보내요.
 - `dist/`는 deploy output이지 source가 아니므로 사람이 직접 편집하지 않아요.
 
 ## ID route and registry
@@ -334,14 +334,16 @@ Hash route는 쓰지 않아요.
 Cloudflare Web Analytics와 공유 링크가 실제 path를 인식할 수 있도록 History API 기반 실제 URL route를 써요.
 정적 배포에서는 `/trove/<id>`와 `/search`가 모두 `site/index.html` app shell로 들어오도록 fallback을 설정해요.
 
-Cloudflare Pages fallback:
+Cloudflare Workers static assets fallback:
 
-```text
-/trove/* /index.html 200
-/search /index.html 200
+```json
+"assets": {
+  "directory": "./dist",
+  "not_found_handling": "single-page-application"
+}
 ```
 
-위 규칙은 `dist/_redirects`에 들어가요.
+Pages로 되돌아갈 경우에는 `_redirects` fallback을 다시 검토해요.
 문서별 canonical URL은 여전히 `/trove/<id>`이고, markdown payload URL은 내부 fetch용 경로예요.
 
 ID registry 기준:
@@ -383,26 +385,28 @@ agent-facing content는 `_config/` 아래에서 markdown으로 관리해요.
 
 ## Deploy and analytics layer
 
-첫 public deploy target은 Cloudflare Pages예요.
-Cloudflare Pages는 build command exit code로 성공과 실패를 판단하므로, validator error가 있으면 build script가 non-zero exit code로 멈춰야 해요.
+첫 public deploy target은 현재 Cloudflare Workers static assets예요.
+Workers Builds는 build command와 deploy command의 exit code로 성공과 실패를 판단하므로, validator error가 있으면 build script가 non-zero exit code로 멈춰야 해요.
 
-Cloudflare Pages 기준:
+Cloudflare Workers static assets 기준:
 
 | 항목 | 기준 |
 |---|---|
 | build command | `python3 scripts/build_trove.py` |
-| output directory | `dist` |
-| route fallback | `dist/_redirects` |
+| deploy command | `npx wrangler deploy` |
+| static assets directory | `./dist` in `wrangler.jsonc` |
+| route fallback | `not_found_handling: single-page-application` |
 | custom domain | `acac.sh` |
 | deploy blocker | validator error, duplicate ID, public payload safety error |
 
 Cloudflare Web Analytics 기준:
 
 - 첫 구현부터 포함해요.
-- token은 `ACAC_CF_WEB_ANALYTICS_TOKEN` build-time environment variable로 받는 것을 기본으로 해요.
-- token이 있으면 build가 output HTML에 Cloudflare beacon script를 주입해요.
-- token이 없으면 analytics를 비활성화하고 `data/build.json`에 그 상태를 기록해요.
-- Cloudflare Pages dashboard의 one-click Web Analytics를 쓰는 경우에는 manual token injection과 동시에 켜지 않아요.
+- proxied hostname인 `acac.sh`는 Cloudflare dashboard automatic setup을 우선 검토해요.
+- `ACAC_CF_WEB_ANALYTICS_TOKEN`은 manual beacon injection을 선택한 경우에만 써요.
+- token이 있으면 build가 output HTML에 Cloudflare beacon script를 주입하고 `data/build.json`에 `analytics.manualBeacon: true`를 기록해요.
+- token이 없으면 repo는 beacon script를 넣지 않고 `analytics.enabled: false`, `analytics.manualBeacon: false`를 기록해요. 이 값은 dashboard automatic setup 상태를 직접 증명하지 않아요.
+- dashboard automatic setup과 manual token injection을 동시에 켜지 않아요.
 - History API route를 쓰기 때문에 `/trove/<id>` page view가 문서 단위로 남을 수 있어요.
 
 ## 비목표
@@ -420,7 +424,7 @@ Cloudflare Web Analytics 기준:
 
 - `trove/`만 봐도 ACAC 첫 인스턴스의 문서 구조가 이해돼요.
 - `python3 scripts/validate_trove.py`가 source 문서의 기본 오류를 잡아요.
-- `python3 scripts/build_trove.py`가 `data/*.json`, markdown payload, Cloudflare Pages output인 `dist/`를 만들어요.
+- `python3 scripts/build_trove.py`가 `data/*.json`, markdown payload, Cloudflare Workers static assets output인 `dist/`를 만들어요.
 - site 첫 화면이 `README.md`와 generated home data를 기반으로 열려요.
 - sidebar에서 main context와 special contents가 분리되어 보여요.
 - `_assets/`는 사용자 탐색 대상이 아니라 내부 storage로 남아요.

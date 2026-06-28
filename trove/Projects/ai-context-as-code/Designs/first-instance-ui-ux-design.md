@@ -327,7 +327,7 @@ Analytics는 제품 화면의 주인공이 아니에요.
 | tool | Cloudflare Web Analytics |
 | route | `/`, `/trove/<id>`, `/search?q=<query>` |
 | SPA tracking | History API route change를 사용해요. |
-| token | build-time config로 주입하고 repo source에는 고정하지 않아요. |
+| token | dashboard automatic setup을 우선하고, manual beacon injection을 고를 때만 build-time config로 주입해요. |
 | UI exposure | analytics token이나 tracking 설정을 화면에 보여주지 않아요. |
 
 첫 구현에서 추적하지 않는 것:
@@ -340,7 +340,7 @@ Analytics는 제품 화면의 주인공이 아니에요.
 
 필요한 화면 표시:
 
-- Home의 Build status에는 analytics가 enabled인지 disabled인지만 작게 보여줘요.
+- Home의 Build status에는 repo가 manual beacon을 주입했는지 작게 보여줘요. Dashboard automatic setup 상태는 build metadata만으로 증명하지 않아요.
 - analytics가 꺼져 있어도 reader 기능은 모두 정상 동작해야 해요.
 
 ## 첫 구현 범위

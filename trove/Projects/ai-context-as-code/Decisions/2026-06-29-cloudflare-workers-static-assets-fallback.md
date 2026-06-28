@@ -13,18 +13,18 @@ id: CfwBuildA1
 # Cloudflare Workers Static Assets Fallback
 
 ACAC still prefers a Git-connected Cloudflare deployment from `origin/main`.
-The Cloudflare dashboard can route repository import through Workers Builds, where a deploy command is required.
-ACAC supports that path with a minimal static assets Wrangler configuration.
+The Cloudflare dashboard routed the first live deployment through Workers Builds, where a deploy command is required.
+This Workers static assets path is now the active `acac.sh` deployment path, using a minimal Wrangler configuration.
 
 ## Decision
 
-Support Cloudflare Workers Builds as the deploy-command fallback for the first public deployment.
+Support Cloudflare Workers Builds as the active deploy-command path for the first public deployment.
 Keep the output source unchanged: `python3 scripts/build_trove.py` builds `dist/`, and Wrangler deploys those static assets.
 Do not add Worker application logic in this step.
 
 ## Reason
 
-- The current Cloudflare UI may require a deploy command when importing a Git repository.
+- The current Cloudflare UI required a deploy command when importing this Git repository.
 - Workers static assets can serve the same generated `dist/` output.
 - A committed `wrangler.jsonc` makes the deployment reproducible from repository source.
 - This keeps the first deployment unblocked without introducing MCP, hooks, Claude Code live connection, or automatic memory sync.
@@ -47,7 +47,7 @@ Do not add Worker application logic in this step.
 
 ## Accepted Tradeoff
 
-This fallback no longer uses Cloudflare Pages route handling as the primary deploy surface.
+This path no longer uses Cloudflare Pages route handling as the primary deploy surface.
 The repo does not generate `_redirects` for this Workers deployment because Workers static assets use the explicit `not_found_handling` setting in `wrangler.jsonc`.
 The first deployment remains static-only and public-safe.
 Non-production branches can create preview versions, but `main` remains the production branch.
@@ -57,4 +57,4 @@ The compatibility date stays one calendar day behind the KST project date to avo
 
 - Run `python3 scripts/deploy_check.py` before pushing deploy config changes.
 - Verify direct routes such as `/trove/<id>` after the Cloudflare deployment completes.
-- Revisit whether the durable deploy target should stay Workers static assets or move back to Pages after the first live URL is verified.
+- Revisit whether the durable deploy target should stay Workers static assets or move back to Pages only if a future limitation appears.

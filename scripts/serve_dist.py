@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Serve dist/ locally with the same app-shell fallback as Cloudflare Pages."""
+"""Serve dist/ locally with the same app-shell fallback used by Workers static assets."""
 
 from __future__ import annotations
 

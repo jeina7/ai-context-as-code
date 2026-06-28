@@ -453,7 +453,10 @@ def main() -> int:
             "warnings": len(report.warnings),
             "analytics": {
                 "enabled": bool(analytics_token),
+                "manualBeacon": bool(analytics_token),
+                "mode": "manual-beacon" if analytics_token else "cloudflare-dashboard-or-disabled",
                 "provider": "cloudflare-web-analytics",
+                "source": ANALYTICS_ENV if analytics_token else "cloudflare-dashboard",
             },
         },
     )

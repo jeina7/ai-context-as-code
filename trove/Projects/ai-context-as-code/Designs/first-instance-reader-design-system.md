@@ -139,7 +139,7 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 
 - Home은 product dashboard예요.
 - Context map, Start here, Current project, Today, Special contents, Build status를 보여줘요.
-- Build status는 public note 수, warning 수, analytics enabled 여부만 작게 보여줘요.
+- Build status는 public note 수, warning 수, repo-injected manual analytics beacon 여부만 작게 보여줘요.
 - README는 source boundary 설명으로 보여주되 첫 화면의 주인공이 되지 않게 해요.
 
 ### Loading, Empty, Missing

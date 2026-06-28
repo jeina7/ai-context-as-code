@@ -100,6 +100,16 @@
       "updated": "2026-06-29",
       "visibility": "public"
     },
+    "TreeCtxM01": {
+      "created": "2026-06-29",
+      "currentPath": "Projects/ai-context-as-code/Designs/reader-tree-and-relational-context-map-follow-up.md",
+      "previousPaths": [],
+      "route": "/trove/TreeCtxM01",
+      "title": "Reader Tree와 Relational Context Map 개선 요구사항",
+      "type": "design",
+      "updated": "2026-06-29",
+      "visibility": "public"
+    },
     "UzbYw-l2kg": {
       "created": "2026-06-28",
       "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-28.md",
@@ -211,6 +221,7 @@
     "Projects/ai-context-as-code/Designs/first-instance-frame.md": "N_TyCBWLFT",
     "Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md": "ReaderDS01",
     "Projects/ai-context-as-code/Designs/first-instance-ui-ux-design.md": "z1hXOfY1w6",
+    "Projects/ai-context-as-code/Designs/reader-tree-and-relational-context-map-follow-up.md": "TreeCtxM01",
     "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md": "F0lcG8SXxc",
     "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md": "CfwAsset01",
     "Projects/ai-context-as-code/References/legacy-knowledge-base-principles.md": "9PsNP3egH4",

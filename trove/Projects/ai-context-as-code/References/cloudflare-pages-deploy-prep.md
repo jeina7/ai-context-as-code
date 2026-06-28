@@ -12,16 +12,16 @@ id: F0lcG8SXxc
 
 # Cloudflare Pages Deploy Prep
 
-This note prepares the ACAC first instance for Cloudflare Pages Git integration deployment.
-It records the build settings, local checks, analytics choice, and manual dashboard values needed before touching production.
-Actual Cloudflare project creation and custom-domain changes should happen only after explicit approval.
-If the dashboard requires a deploy command, use [[cloudflare-workers-static-assets-deploy-prep]] instead.
+This note records the earlier Cloudflare Pages Git integration deployment plan for ACAC.
+The first live `acac.sh` deployment now uses [[cloudflare-workers-static-assets-deploy-prep]] instead.
+Keep this note as the Pages reference path, but do not treat its `_redirects` rule as the active Workers static assets rule.
+If the Cloudflare dashboard requires a deploy command, use the Workers static assets reference instead.
 
-## Current Deploy Target
+## Pages Deploy Target
 
 | Item | Value |
 |---|---|
-| Provider | Cloudflare Pages |
+| Provider | Cloudflare Pages, inactive reference path |
 | Mode | Git integration |
 | Repository | `jeina7/ai-context-as-code` |
 | Domain | `acac.sh` |
@@ -111,11 +111,12 @@ Use only one.
 
 | Mode | How it works | ACAC setting |
 |---|---|---|
-| Cloudflare one-click Web Analytics | Cloudflare injects the beacon on the next deployment | Leave `ACAC_CF_WEB_ANALYTICS_TOKEN` unset |
+| Cloudflare dashboard automatic setup | Cloudflare injects the beacon for the proxied hostname or Pages project | Leave `ACAC_CF_WEB_ANALYTICS_TOKEN` unset |
 | Manual token injection | `scripts/build_trove.py` injects the beacon into `dist/index.html` | Set `ACAC_CF_WEB_ANALYTICS_TOKEN` in Pages environment variables |
 
 Cloudflare Web Analytics can measure Single Page Applications through the History API and does not support hash-based routers for that measurement.
 ACAC uses real paths like `/trove/<id>`, so this matches the deploy design.
+For the active Workers static assets deployment, prefer Web Analytics automatic setup for the proxied `acac.sh` hostname from the Web Analytics dashboard.
 
 ## Sources Checked
 

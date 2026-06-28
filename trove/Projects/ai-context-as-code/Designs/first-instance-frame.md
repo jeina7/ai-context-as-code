@@ -53,9 +53,9 @@ id: N_TyCBWLFT
 | URL | 문서 canonical public URL은 `/trove/<id>`예요. `/notes/...`나 `/id/<id>` route는 만들지 않아요. |
 | ID | build가 10자 URL-safe ID를 생성하고 `data/id-registry.json`으로 source path와 매핑해요. |
 | 언어 | `_config/`는 영어 원본, `Daily/`와 `Projects/`는 한국어 원본이에요. |
-| deploy | 첫 public deploy target은 Cloudflare Pages예요. |
-| route fallback | Cloudflare Pages output에는 `/trove/*`와 `/search`를 app shell로 보내는 `_redirects`를 포함해요. |
-| analytics | Cloudflare Web Analytics를 첫 구현 범위에 포함해요. token은 repo에 고정하지 않고 build-time config로 주입해요. |
+| deploy | 첫 public deploy는 Cloudflare Workers static assets로 성공했어요. `dist/`를 Wrangler가 배포해요. |
+| route fallback | Workers static assets는 `wrangler.jsonc`의 `not_found_handling: single-page-application`로 `/trove/*`와 `/search`를 app shell에 연결해요. `dist/_redirects`는 만들지 않아요. |
+| analytics | Cloudflare Web Analytics는 dashboard automatic setup을 우선해요. manual beacon injection을 고르면 `ACAC_CF_WEB_ANALYTICS_TOKEN`을 쓰고, 둘을 동시에 켜지 않아요. |
 | seed scope | 첫 seed 문서는 public-safe 최소 문서만 넣어요. 전체 Obsidian migration은 하지 않아요. |
 | agent docs | `_config/Agents/`에는 `common.md`, `agent.md`, `claude.md`를 seed로 둬요. |
 | agent sync | repo-local agent entry 문서를 생성하는 script는 만들지만, `~/.codex`나 `~/.claude` 같은 외부 runtime config를 자동으로 건드리지는 않아요. |
@@ -96,7 +96,7 @@ ai-context-as-code/
   site/
   scripts/
   data/
-  dist/        # generated Cloudflare Pages output, not source
+  dist/        # generated Cloudflare Workers static assets output, not source
 ```
 
 ## 폴더 역할
@@ -372,10 +372,10 @@ en/Projects/ai-context-as-code/Designs/first-instance-frame.md
 7. `scripts/sync_agent_docs.py`로 root `AGENTS.md`, `CLAUDE.md`를 생성해요.
 8. `scripts/validate_trove.py`로 frontmatter, H1, visibility, `_assets/` 규칙을 검증해요.
 9. `scripts/build_trove.py`로 `data/id-registry.json`, `data/notes.json`, `data/tree.json`, `data/home.json`, `data/search-index.json`, `data/backlinks.json`, `data/build.json`을 만들어요.
-10. `scripts/build_trove.py`가 Cloudflare Pages output인 `dist/`를 조립하게 해요.
+10. `scripts/build_trove.py`가 Cloudflare Workers static assets output인 `dist/`를 조립하게 해요.
 11. 모든 public 문서가 `/trove/<id>` route를 갖게 해요.
 12. site는 먼저 home, sidebar, search, `/trove/<id>` 문서 렌더링만 제공해요.
-13. Cloudflare Web Analytics token 주입과 비활성 fallback을 붙여요.
+13. Cloudflare Web Analytics dashboard automatic setup을 우선하고, manual token injection은 fallback으로 남겨요.
 14. 작은 Obsidian 문서 하나를 후보로 골라 public-safe하게 옮겨요.
 15. 옮긴 문서를 기준으로 부족한 규칙을 고쳐요.
 
