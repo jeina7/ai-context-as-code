@@ -57,3 +57,4 @@ The expected build command is `python3 scripts/build_trove.py`, and the output d
 The preferred deployment mode is Cloudflare Pages Git integration from `origin/main`.
 If the Cloudflare dashboard requires a Workers Builds deploy command, use the committed `wrangler.jsonc` static assets config and set the deploy command to `npx wrangler deploy`.
 For Workers Builds, use path `/` and keep the default non-production branch deploy command `npx wrangler versions upload`.
+The Workers compatibility date is pinned to `2026-06-28` to avoid timezone-based "future date" failures during the first deploy.

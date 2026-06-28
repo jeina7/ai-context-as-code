@@ -40,6 +40,7 @@ Do not add Worker application logic in this step.
 | Build command | `python3 scripts/build_trove.py` |
 | Deploy command | `npx wrangler deploy` |
 | Static assets directory | `./dist` in `wrangler.jsonc` |
+| Compatibility date | `2026-06-28` |
 | Path | `/` |
 | Non-production branch builds | Enabled |
 | Non-production branch deploy command | `npx wrangler versions upload` |
@@ -50,6 +51,7 @@ This fallback no longer uses Cloudflare Pages route handling as the primary depl
 The repo keeps generating `_redirects` for Pages compatibility, but Workers static assets use the explicit `not_found_handling` setting in `wrangler.jsonc`.
 The first deployment remains static-only and public-safe.
 Non-production branches can create preview versions, but `main` remains the production branch.
+The compatibility date stays one calendar day behind the KST project date to avoid timezone-based deploy failures.
 
 ## Follow-up
 
