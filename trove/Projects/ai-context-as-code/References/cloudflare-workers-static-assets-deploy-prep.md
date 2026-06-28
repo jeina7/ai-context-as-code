@@ -24,13 +24,15 @@ Use these values when the Cloudflare form requires a deploy command:
 |---|---|
 | Repository | `jeina7/ai-context-as-code` |
 | Production branch | `main` |
+| Path | `/` |
 | Build command | `python3 scripts/build_trove.py` |
 | Deploy command | `npx wrangler deploy` |
-| Non-production branch builds | Disabled for the first deployment |
-| Non-production deploy command | Leave default if the field is hidden; otherwise skip by disabling non-production branch builds |
+| Non-production branch builds | Enabled |
+| Non-production deploy command | `npx wrangler versions upload` |
 
 The deploy command depends on the committed `wrangler.jsonc` file.
 That file points Workers static assets at `./dist` and enables single-page app fallback handling.
+The path value `/` means the repository root.
 
 ## Local Checks
 
