@@ -58,3 +58,4 @@ The preferred deployment mode is Cloudflare Pages Git integration from `origin/m
 If the Cloudflare dashboard requires a Workers Builds deploy command, use the committed `wrangler.jsonc` static assets config and set the deploy command to `npx wrangler deploy`.
 For Workers Builds, use path `/` and keep the default non-production branch deploy command `npx wrangler versions upload`.
 The Workers compatibility date is pinned to `2026-06-28` to avoid timezone-based "future date" failures during the first deploy.
+Workers static assets use `not_found_handling: single-page-application`, so `dist/_redirects` is intentionally not generated.

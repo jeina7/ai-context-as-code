@@ -48,7 +48,7 @@ Do not add Worker application logic in this step.
 ## Accepted Tradeoff
 
 This fallback no longer uses Cloudflare Pages route handling as the primary deploy surface.
-The repo keeps generating `_redirects` for Pages compatibility, but Workers static assets use the explicit `not_found_handling` setting in `wrangler.jsonc`.
+The repo does not generate `_redirects` for this Workers deployment because Workers static assets use the explicit `not_found_handling` setting in `wrangler.jsonc`.
 The first deployment remains static-only and public-safe.
 Non-production branches can create preview versions, but `main` remains the production branch.
 The compatibility date stays one calendar day behind the KST project date to avoid timezone-based deploy failures.

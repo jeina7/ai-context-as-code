@@ -35,6 +35,8 @@ The deploy command depends on the committed `wrangler.jsonc` file.
 That file points Workers static assets at `./dist` and enables single-page app fallback handling.
 The path value `/` means the repository root.
 The compatibility date intentionally uses `2026-06-28` because Cloudflare may validate deploy requests in a timezone where `2026-06-29` is still in the future.
+Do not include `dist/_redirects` for Workers static assets.
+Workers validates that file differently from Pages, and the Pages rewrite rules can fail as an infinite loop.
 
 ## Custom Domain
 

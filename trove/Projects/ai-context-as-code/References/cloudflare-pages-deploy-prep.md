@@ -29,7 +29,8 @@ If the dashboard requires a deploy command, use [[cloudflare-workers-static-asse
 | Build output directory | `dist` |
 | Workers fallback deploy command | `npx wrangler deploy` |
 | Source root | Repository root |
-| Route fallback | `dist/_redirects` |
+| Pages route fallback | `dist/_redirects` |
+| Workers route fallback | `not_found_handling: single-page-application` in `wrangler.jsonc` |
 | Local predeploy check | `python3 scripts/deploy_check.py` |
 
 ## Local Checks
@@ -92,7 +93,7 @@ Do not push if `scripts/deploy_check.py` fails.
 ## Redirects
 
 Cloudflare Pages reads a plain `_redirects` file from the static output directory.
-ACAC generates this file inside `dist/`:
+ACAC previously generated this file inside `dist/`:
 
 ```text
 /trove/* /index.html 200
@@ -100,6 +101,8 @@ ACAC generates this file inside `dist/`:
 ```
 
 These rules let direct visits to `/trove/<id>` and `/search` return the static app shell.
+Do not use these rules for the Workers static assets deployment.
+Workers rejects this `_redirects` file as an infinite loop, so the active Workers path uses `not_found_handling: single-page-application` instead.
 
 ## Analytics Choice
 

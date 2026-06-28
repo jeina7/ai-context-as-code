@@ -13,11 +13,6 @@ DATA_DIR = ROOT / "data"
 DIST_DIR = ROOT / "dist"
 CONTENT_DIR = DIST_DIR / "content" / "trove"
 
-REQUIRED_REDIRECTS = {
-    "/trove/* /index.html 200",
-    "/search /index.html 200",
-}
-
 
 def read_json(path: Path):
     if not path.is_file():
@@ -78,17 +73,8 @@ def main() -> int:
             fail(errors, f"unexpected markdown payloads: {', '.join(extra_payloads)}")
 
     redirects_path = DIST_DIR / "_redirects"
-    if not redirects_path.is_file():
-        fail(errors, "dist/_redirects is missing")
-    else:
-        redirects = {
-            line.strip()
-            for line in redirects_path.read_text(encoding="utf-8").splitlines()
-            if line.strip() and not line.strip().startswith("#")
-        }
-        missing_redirects = REQUIRED_REDIRECTS - redirects
-        if missing_redirects:
-            fail(errors, f"missing redirects: {', '.join(sorted(missing_redirects))}")
+    if redirects_path.exists():
+        fail(errors, "dist/_redirects must not be generated for Workers static assets")
 
     registry_ids = set(registry.get("ids", {}).keys())
     if not public_ids.issubset(registry_ids):

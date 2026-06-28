@@ -363,10 +363,6 @@ def copy_site_to_dist(analytics_token: str | None) -> None:
 
     shutil.copytree(DATA_DIR, DIST_DIR / "data", ignore=shutil.ignore_patterns(".gitkeep"), dirs_exist_ok=True)
     shutil.copytree(PAYLOAD_DIR, DIST_DIR / "content" / "trove", dirs_exist_ok=True)
-    (DIST_DIR / "_redirects").write_text(
-        "/trove/* /index.html 200\n/search /index.html 200\n",
-        encoding="utf-8",
-    )
 
 
 def analytics_script(token: str | None) -> str:
