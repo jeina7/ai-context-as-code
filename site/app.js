@@ -1,3 +1,6 @@
+const systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");
+const initialThemeMode = readThemeMode();
+
 const state = {
   notes: [],
   notesBySlug: new Map(),
@@ -11,7 +14,8 @@ const state = {
   currentNote: null,
   lang: normalizeLang(new URLSearchParams(location.search).get("lang") || localStorage.getItem("acc-note-lang") || "en"),
   graphMode: "local",
-  theme: localStorage.getItem("acc-theme") || "dark",
+  themeMode: initialThemeMode,
+  theme: themeForMode(initialThemeMode),
 };
 
 const PRODUCT_NAME = "acac.sh";
@@ -44,6 +48,13 @@ const els = {
   commandPalette: document.querySelector("#command-palette"),
   commandInput: document.querySelector("#command-input"),
   commandResults: document.querySelector("#command-results"),
+  settingsModal: document.querySelector("#settings-modal"),
+  settingsOpen: document.querySelector("#settings-open"),
+  settingsClose: document.querySelector("#settings-close"),
+  settingsTheme: document.querySelector("#settings-theme"),
+  settingsLanguage: document.querySelector("#settings-language"),
+  settingsDraftCount: document.querySelector("#settings-draft-count"),
+  settingsClearDrafts: document.querySelector("#settings-clear-drafts"),
   hoverPreview: document.querySelector("#hover-preview"),
   sidebar: document.querySelector("#sidebar"),
   workspace: document.querySelector(".workspace"),
@@ -66,6 +77,23 @@ const typeLabels = {
 
 function normalizeLang(value) {
   return value === "ko" ? "ko" : "en";
+}
+
+function normalizeThemeMode(value) {
+  return ["dark", "light", "system"].includes(value) ? value : "light";
+}
+
+function readThemeMode() {
+  const mode = localStorage.getItem("acc-theme-mode");
+  if (mode) return normalizeThemeMode(mode);
+  const legacyMode = localStorage.getItem("acc-theme");
+  return normalizeThemeMode(legacyMode);
+}
+
+function themeForMode(mode) {
+  const normalized = normalizeThemeMode(mode);
+  if (normalized === "system") return systemThemeQuery.matches ? "light" : "dark";
+  return normalized;
 }
 
 function activeContentLang() {
@@ -181,6 +209,7 @@ function syncLanguageControls() {
   document.documentElement.lang = activeContentLang();
   els.langKo.classList.toggle("active", activeContentLang() === "ko");
   els.langEn.classList.toggle("active", activeContentLang() === "en");
+  syncSettingsControls();
 }
 
 function summaryFromMarkdown(markdown, limit = 180) {
@@ -919,6 +948,7 @@ function renderCommandResults(query) {
   const value = query.trim().toLowerCase();
   const commands = [
     { title: "Open dashboard", action: () => { location.hash = "#/dashboard"; } },
+    { title: "Open settings", action: () => openSettingsModal() },
     { title: "Toggle editor", action: () => toggleEditor() },
     { title: "Toggle theme", action: () => toggleTheme() },
     { title: "Show full context map", action: () => { state.graphMode = "all"; renderGraph(); } },
@@ -994,10 +1024,25 @@ function runSelectedCommand() {
 }
 
 function toggleTheme() {
-  state.theme = state.theme === "dark" ? "light" : "dark";
-  localStorage.setItem("acc-theme", state.theme);
+  setThemeMode(state.theme === "dark" ? "light" : "dark");
+}
+
+function setThemeMode(mode) {
+  state.themeMode = normalizeThemeMode(mode);
+  localStorage.setItem("acc-theme-mode", state.themeMode);
+  if (state.themeMode === "system") {
+    localStorage.removeItem("acc-theme");
+  } else {
+    localStorage.setItem("acc-theme", state.themeMode);
+  }
+  applyTheme();
+}
+
+function applyTheme(shouldRender = true) {
+  state.theme = themeForMode(state.themeMode);
   document.documentElement.dataset.theme = state.theme;
-  renderNote();
+  syncSettingsControls();
+  if (shouldRender && state.notes.length) renderNote();
 }
 
 function setLanguage(lang) {
@@ -1007,6 +1052,54 @@ function setLanguage(lang) {
   els.commandInput.placeholder = t("searchPrompt");
   syncLanguageControls();
   renderNote();
+}
+
+function draftCount() {
+  let count = 0;
+  for (let index = 0; index < localStorage.length; index++) {
+    const key = localStorage.key(index);
+    if (key?.startsWith("acc-draft:")) count += 1;
+  }
+  return count;
+}
+
+function syncSettingsControls() {
+  els.settingsTheme?.querySelectorAll("[data-theme-mode]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.themeMode === state.themeMode);
+  });
+  els.settingsLanguage?.querySelectorAll("[data-settings-lang]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.settingsLang === state.lang);
+  });
+  const count = draftCount();
+  if (els.settingsDraftCount) {
+    els.settingsDraftCount.textContent = count === 0 ? "No browser drafts." : `${count} browser draft${count === 1 ? "" : "s"}.`;
+  }
+  if (els.settingsClearDrafts) els.settingsClearDrafts.disabled = count === 0;
+}
+
+function openSettingsModal() {
+  closeCommandPalette();
+  syncSettingsControls();
+  els.settingsModal.classList.remove("hidden");
+  els.settingsClose.focus();
+}
+
+function closeSettingsModal() {
+  els.settingsModal.classList.add("hidden");
+}
+
+function clearBrowserDrafts() {
+  const keys = [];
+  for (let index = 0; index < localStorage.length; index++) {
+    const key = localStorage.key(index);
+    if (key?.startsWith("acc-draft:")) keys.push(key);
+  }
+  keys.forEach((key) => localStorage.removeItem(key));
+  if (state.currentNote) {
+    renderMeta(state.currentNote);
+    renderEditorState();
+  }
+  syncSettingsControls();
 }
 
 function showHoverPreview(event) {
@@ -1037,7 +1130,7 @@ async function navigateHash() {
 }
 
 async function init() {
-  document.documentElement.dataset.theme = state.theme;
+  applyTheme(false);
   document.documentElement.lang = activeContentLang();
   const [notes, tree, stats, graph, report, dashboard, searchIndex] = await Promise.all([
     loadJson("./_build/notes.json"),
@@ -1077,6 +1170,8 @@ els.graphLocal.addEventListener("click", () => { state.graphMode = "local"; rend
 els.graphAll.addEventListener("click", () => { state.graphMode = "all"; renderGraph(); });
 document.querySelector("#edit-toggle").addEventListener("click", () => toggleEditor());
 document.querySelector("#theme-toggle").addEventListener("click", toggleTheme);
+els.settingsOpen.addEventListener("click", openSettingsModal);
+els.settingsClose.addEventListener("click", closeSettingsModal);
 els.langKo.addEventListener("click", () => setLanguage("ko"));
 els.langEn.addEventListener("click", () => setLanguage("en"));
 document.querySelector("#command-open").addEventListener("click", () => openCommandPalette());
@@ -1109,6 +1204,18 @@ els.commandInput.addEventListener("keydown", (event) => {
 els.commandPalette.addEventListener("click", (event) => {
   if (event.target === els.commandPalette) closeCommandPalette();
 });
+els.settingsModal.addEventListener("click", (event) => {
+  if (event.target === els.settingsModal) closeSettingsModal();
+});
+els.settingsTheme.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-theme-mode]");
+  if (button) setThemeMode(button.dataset.themeMode);
+});
+els.settingsLanguage.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-settings-lang]");
+  if (button) setLanguage(button.dataset.settingsLang);
+});
+els.settingsClearDrafts.addEventListener("click", clearBrowserDrafts);
 els.typeFilters.addEventListener("click", (event) => {
   const button = event.target.closest("[data-filter]");
   if (!button) return;
@@ -1127,7 +1234,17 @@ window.addEventListener("keydown", (event) => {
     event.preventDefault();
     openCommandPalette();
   }
-  if (event.key === "Escape") closeCommandPalette();
+  if (event.key === "Escape") {
+    if (!els.settingsModal.classList.contains("hidden")) {
+      closeSettingsModal();
+    } else {
+      closeCommandPalette();
+    }
+  }
+});
+
+systemThemeQuery.addEventListener("change", () => {
+  if (state.themeMode === "system") applyTheme();
 });
 
 init().catch((error) => {
