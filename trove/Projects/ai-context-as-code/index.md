@@ -1,7 +1,7 @@
 ---
 type: project
 title: "AI Context as Code"
-description: "ACAC first instance project inside the trove source"
+description: "ACAC product direction and minimal project source"
 status: active
 created: 2026-06-28
 updated: 2026-06-30
@@ -12,48 +12,32 @@ id: zz2t-H9rM0
 
 # AI Context as Code
 
-ACAC starts here as a real first instance rather than a generic framework.
-This project folder holds the public-safe source notes for building the cloud-based context system.
-The first implementation keeps the structure small, validates markdown source, builds metadata, and serves a read-only static reader.
-The first live deployment is now running on Cloudflare Workers static assets at `acac.sh`.
+ACAC is now framed as an AI-native context layer for agents and makers.
+This project folder keeps only the minimal public-safe source needed to carry the new product direction forward.
+Earlier first-instance planning, deploy preparation, and legacy reference notes were removed after the product model was clarified.
+Future design notes should branch from the product model instead of reviving the old scaffold documents.
+
+## Canonical Product Model
+
+- [[ai-native-context-layer-product-model]]
 
 ## Current Scope
 
-- Build the first `trove/` and `forge/` source structure.
-- Keep `trove/Daily/`, `trove/Projects/`, and `forge/_config/` clearly separated.
-- Treat `forge/_config/Agents/`, `forge/_config/Memory/`, `forge/_config/Skills/`, and `forge/_config/Commands/` as markdown content.
-- Generate `data/*.json`, `_build/trove/`, and `dist/` from source.
-- Defer Claude Code live connection, MCP, hooks, and automatic memory sync.
+- Keep the product model as the single durable source for ACAC's vocabulary and direction.
+- Keep repo-local agent entry sources under `forge/_config/Agents/` only because current scripts generate `AGENTS.md` and `CLAUDE.md` from them.
+- Keep detailed future design specs separate and add them only when they become durable.
+- Keep generated metadata reproducible through the existing build scripts until the source model is redesigned.
 
-## Folder Map
+## Next Design Notes
 
-- `Decisions/`: decisions and reasons.
-- `Designs/`: architecture and implementation design notes.
-- `Worklog/`: detailed project worklog entries.
-- `References/`: reusable project references.
-- `Research/`: research outputs that are not yet durable rules.
+The next useful specs are:
 
-## Migrated Designs
+1. Source Store and Sync Model
+2. Semantic Write Actions and Ledger Design
+3. Context Graph and Relations Schema
+4. Desktop App and Web Surface Design
+5. Forge and Agent Runtime Sync Design
 
-- [[first-instance-frame]]
-- [[first-instance-architecture]]
-- [[first-implementation-plan]]
-- [[first-instance-ui-ux-design]]
-- [[first-instance-reader-design-system]]
+## Related Notes
+
 - [[ai-native-context-layer-product-model]]
-
-## References
-
-- [[legacy-knowledge-base-principles]]
-- [[cloudflare-pages-deploy-prep]]
-- [[cloudflare-workers-static-assets-deploy-prep]]
-
-## Decisions
-
-- [[2026-06-29-cloudflare-pages-git-integration]]
-- [[2026-06-29-cloudflare-workers-static-assets-fallback]]
-
-## Next Work
-
-- Enable Cloudflare Web Analytics through dashboard automatic setup for the proxied `acac.sh` hostname, keeping repo manual beacon injection off unless explicitly chosen.
-- Add the first reviewed non-ACAC public-safe note after the deploy route is stable.

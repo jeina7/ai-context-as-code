@@ -1,72 +1,51 @@
 # AI Context as Code
 
-AI Context as Code, or ACAC, is a live first instance of context-as-code: a public-safe markdown source that can be validated, built into static metadata, searched, linked, and served as a read-only website.
+AI Context as Code, or ACAC, is an AI-native context layer for agents and makers.
+The current public reader is a small deployed surface for the source notes that remain in this repository.
+The product direction is now captured in one canonical model note rather than spread across earlier first-instance planning documents.
 
 Live reader: [https://acac.sh](https://acac.sh/)
 
-This repository is intentionally concrete.
-It is not a general open-source framework yet.
-It is the working reference implementation for moving jeina's local Obsidian operating system into a durable cloud-readable source.
+## Start Here
 
-## Current Status
+- Product model: [AI-Native Context Layer Product Model](trove/Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md)
+- Project index: [trove/Projects/ai-context-as-code/index.md](trove/Projects/ai-context-as-code/index.md)
+- Forge index: [forge/_config/index.md](forge/_config/index.md)
 
-- `acac.sh` is deployed with Cloudflare Workers static assets.
-- `trove/` is the editable source layer for public-safe user-facing context notes.
-- `forge/` is the editable source layer for agent-facing config, system notes, archives, and hidden storage.
-- `scripts/build_trove.py` builds JSON metadata, markdown payloads, and static site output from `trove/` and `forge/`.
-- The static reader supports the home view, trove navigation, note pages, search, wikilinks, backlinks, and bounded relation previews.
-- `scripts/source_write_service.py` provides local-only helpers for future source edits with preview, validation, and rollback behavior.
-- Claude Code live connection, MCP, hooks, and automatic memory sync stay outside this first baseline.
-
-## Repository Shape
+## Current Source Shape
 
 ```text
 trove/
   Daily/
   Projects/
+    ai-context-as-code/
+      index.md
+      Designs/
+        ai-native-context-layer-product-model.md
+      Worklog/
 forge/
   _config/
     Agents/
     Memory/
-    Skills/
-    Commands/
   _assets/
-  _archived/
 site/
 scripts/
-tests/
 data/
-_build/
 dist/
 ```
 
 ## Source And Output
 
-- `trove/` is the user-facing context source layer.
-- `forge/` is the agent-facing and system source layer.
-- `site/` is the static reader shell.
-- `scripts/` contains validation, build, deploy-check, local serving, and source-write helper scripts.
-- `tests/` covers local helper behavior that should stay independent from the public reader.
-- `data/id-registry.json` is committed so stable `/trove/<id>` routes can survive file moves.
-- Other `data/*.json`, `_build/`, and `dist/` are generated output and should not be edited by hand.
-- `forge/_assets/` is internal storage and is intentionally hidden from navigation and search.
-
-## Trove Note Rules
-
-Every markdown source note in `trove/` or `forge/` should have:
-
-- required frontmatter fields such as `type`, `title`, `description`, `status`, `created`, `updated`, and `visibility`;
-- an H1 that exactly matches the `title` frontmatter value;
-- a 3-5 line summary immediately after the H1;
-- a stable 10-character `id`, assigned by the build when missing;
-- `visibility: public` only when the note is safe for the public site.
-
-Wikilinks are resolved during validation and build.
-Possible broken wikilinks are warnings today, not hard failures.
+- `trove/` contains public-safe product and project source notes.
+- `forge/` contains repo-local agent-facing source and internal assets.
+- `site/` contains the current static reader shell.
+- `scripts/` contains validation, build, deploy-check, local serving, and source-write helpers.
+- `data/id-registry.json` is committed for stable note identity.
+- Other `data/*.json`, `_build/`, and `dist/` are generated output.
 
 ## Local Commands
 
-Validate the trove source:
+Validate source notes:
 
 ```bash
 python3 scripts/validate_trove.py
@@ -78,19 +57,19 @@ Build generated metadata, payloads, and `dist/`:
 python3 scripts/build_trove.py
 ```
 
-Run the full local predeploy check:
+Run the local predeploy check:
 
 ```bash
 python3 scripts/deploy_check.py
 ```
 
-Serve the built `dist/` output locally with the same app-shell fallback used by Workers static assets:
+Serve the built `dist/` output locally:
 
 ```bash
 python3 scripts/serve_dist.py --port 4173
 ```
 
-Regenerate root agent entry files after editing `forge/_config/Agents/`:
+Regenerate repo-local agent entry files:
 
 ```bash
 python3 scripts/sync_agent_docs.py
@@ -98,23 +77,5 @@ python3 scripts/sync_agent_docs.py
 
 ## Deployment
 
-The active deployment path is Cloudflare Workers static assets.
-
-- Build command: `python3 scripts/build_trove.py`
-- Output directory: `dist`
-- Wrangler config: `wrangler.jsonc`
-- Deploy command: `npx wrangler deploy`
-- Custom domain: [https://acac.sh](https://acac.sh/)
-
-Workers static assets use `not_found_handling: single-page-application`, so `/trove/<id>` and `/search` routes fall back to the app shell.
-`dist/_redirects` is intentionally not generated.
-
-For Cloudflare Web Analytics, prefer Cloudflare dashboard automatic setup for the proxied `acac.sh` hostname.
-Keep `ACAC_CF_WEB_ANALYTICS_TOKEN` unset unless choosing manual beacon injection, because dashboard injection and build-time injection should not both be enabled.
-
-## Project Documents
-
-- Project index: [trove/Projects/ai-context-as-code/index.md](trove/Projects/ai-context-as-code/index.md)
-- Architecture: [trove/Projects/ai-context-as-code/Designs/first-instance-architecture.md](trove/Projects/ai-context-as-code/Designs/first-instance-architecture.md)
-- Reader design system: [trove/Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md](trove/Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md)
-- Workers deploy prep: [trove/Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md](trove/Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md)
+The current public reader deploys from `origin/main`.
+Push to `main` triggers the hosted build path for `acac.sh`.

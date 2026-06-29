@@ -6,54 +6,47 @@
 
 # Codex Agent Entry
 
-This file is the source for the repository-local `AGENTS.md`.
-It should stay small and point agents toward the trove source.
-Detailed reusable rules belong in `forge/_config/Memory/`.
+This entry points Codex toward the current ACAC product model.
+The repository keeps only minimal source documents after the product direction reset.
+Future work should start from the product model and avoid reviving removed scaffold notes.
 
 ## Start Here
 
 1. Read the root `README.md`.
-2. Read `trove/Projects/ai-context-as-code/index.md`.
-3. Read `forge/_config/Memory/MEMORY.md`.
-4. Use `scripts/sync_agent_docs.py` after changing files in `forge/_config/Agents/`.
+2. Read `trove/Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md`.
+3. Read `trove/Projects/ai-context-as-code/index.md`.
+4. Read `forge/_config/index.md`.
 
-## Implementation Scope
+## Current Scope
 
-Build the first ACAC instance in small, verifiable steps.
-The current baseline includes scaffold, validation, metadata build, and the read-only static reader.
-Keep external runtime integration out of this baseline.
+This repository now keeps a minimal source set for the ACAC product direction.
+Do not revive removed first-instance, deploy-prep, or legacy reference notes unless the user explicitly asks for that historical material.
+Use `scripts/sync_agent_docs.py` after changing files in `forge/_config/Agents/`.
 
 # Common Agent Rules
 
 These rules apply to agents working inside this repository.
-The trove and forge source should stay readable by humans and machines.
-Generated outputs should be reproducible from source and scripts.
-Reusable note-writing and worklog rules live in the trove memory conventions.
+The current durable product direction is the AI-native context layer product model.
+Keep new work aligned with that model unless the user explicitly changes the product direction.
 
 ## Source And Output
 
-- Treat `trove/` as the editable user-facing context source layer.
-- Treat `forge/` as the editable agent-facing and system source layer.
+- Treat `trove/` as the editable public-safe product and project source layer.
+- Treat `forge/` as the editable repo-local agent-facing source layer.
 - Treat `data/`, `_build/`, and `dist/` as generated output unless a script explicitly says otherwise.
-- Do not create `trove/Home.md`; the root `README.md` and generated home data own the first screen.
-- Do not expose `_assets/` in navigation or search as a knowledge section.
+- Treat `forge/_assets/` as internal asset storage, not a knowledge section.
+- Do not create new durable project notes unless they strengthen the new ACAC product model or a requested design spec.
 
 ## Safety
 
-- Keep seed content public-safe.
-- Do not copy private Obsidian notes into this repo without a separate review.
+- Keep source content public-safe before setting `visibility: public`.
 - Do not modify user-level runtime paths such as `~/.codex`, `~/.claude`, MCP config, or hooks from this repository.
-- Do not implement live Claude Code connection, MCP, hooks, or automatic memory sync in the first scaffold.
+- Do not add external runtime integration, MCP, hosted sync, or automatic memory sync unless the user explicitly asks for that implementation step.
 
 ## Writing
 
-- Follow `[[trove-note-convention]]` when creating or editing `trove/**/*.md` or `forge/**/*.md`.
-- Follow `[[worklog-note-convention]]` when recording meaningful ACAC work in project worklog notes or Daily pointers.
-- Use English for `forge/_config/` source content.
-- Use Korean-first content for `trove/Daily/` and `trove/Projects/`.
 - Keep frontmatter values that contain natural language in double quotes.
 - Keep H1 equal to the `title` frontmatter value.
 - Do not create or hand-edit `id`; the build manages it through `data/id-registry.json`.
-- Keep `reference`, `research`, `memory`, and `convention` notes current-state oriented.
-- Preserve timing and context in `decision`, `design`, `worklog`, and `daily` notes.
-- Update the nearest useful index or memory pointer when adding a reusable trove note.
+- Prefer updating the nearest canonical design note over creating parallel notes.
+- If a meaningful unit of work changes durable project state, record a concise project worklog entry and Daily pointer.

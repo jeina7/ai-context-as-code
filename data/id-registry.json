@@ -1,15 +1,5 @@
 {
   "ids": {
-    "0PVpQI6H0g": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/Designs/first-instance-architecture.md",
-      "previousPaths": [],
-      "route": "/trove/0PVpQI6H0g",
-      "title": "첫 번째 인스턴스 아키텍처",
-      "type": "design",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
     "4dYzPkCVtG": {
       "created": "2026-06-30",
       "currentPath": "Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md",
@@ -18,16 +8,6 @@
       "title": "AI-Native Context Layer Product Model",
       "type": "design",
       "updated": "2026-06-30",
-      "visibility": "public"
-    },
-    "9PsNP3egH4": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/References/legacy-knowledge-base-principles.md",
-      "previousPaths": [],
-      "route": "/trove/9PsNP3egH4",
-      "title": "Legacy Knowledge Base Principles",
-      "type": "reference",
-      "updated": "2026-06-29",
       "visibility": "public"
     },
     "9m41s1bWfU": {
@@ -39,37 +19,7 @@
       "route": "/trove/9m41s1bWfU",
       "title": "Codex Agent Entry",
       "type": "agent-entry",
-      "updated": "2026-06-28",
-      "visibility": "public"
-    },
-    "CfwAsset01": {
-      "created": "2026-06-29",
-      "currentPath": "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md",
-      "previousPaths": [],
-      "route": "/trove/CfwAsset01",
-      "title": "Cloudflare Workers Static Assets Deploy Prep",
-      "type": "reference",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "CfwBuildA1": {
-      "created": "2026-06-29",
-      "currentPath": "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-workers-static-assets-fallback.md",
-      "previousPaths": [],
-      "route": "/trove/CfwBuildA1",
-      "title": "Cloudflare Workers Static Assets Fallback",
-      "type": "decision",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "F0lcG8SXxc": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md",
-      "previousPaths": [],
-      "route": "/trove/F0lcG8SXxc",
-      "title": "Cloudflare Pages Deploy Prep",
-      "type": "reference",
-      "updated": "2026-06-28",
+      "updated": "2026-06-30",
       "visibility": "public"
     },
     "FL87bCPt08": {
@@ -79,81 +29,9 @@
         "_config/index.md"
       ],
       "route": "/trove/FL87bCPt08",
-      "title": "Configuration Contents",
+      "title": "Forge Source",
       "type": "index",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "KLWL70bVad": {
-      "created": "2026-06-29",
-      "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-29.md",
-      "previousPaths": [],
-      "route": "/trove/KLWL70bVad",
-      "title": "2026-06-29",
-      "type": "worklog",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "N_TyCBWLFT": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/Designs/first-instance-frame.md",
-      "previousPaths": [],
-      "route": "/trove/N_TyCBWLFT",
-      "title": "첫 번째 인스턴스 틀 설계",
-      "type": "design",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "ReaderDS01": {
-      "created": "2026-06-29",
-      "currentPath": "Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md",
-      "previousPaths": [],
-      "route": "/trove/ReaderDS01",
-      "title": "첫 번째 인스턴스 Reader 디자인 시스템",
-      "type": "design",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "Tx8SwdTFoS": {
-      "created": "2026-06-29",
-      "currentPath": "forge/_config/Memory/Conventions/trove-note-convention.md",
-      "previousPaths": [
-        "_config/Memory/Conventions/trove-note-convention.md"
-      ],
-      "route": "/trove/Tx8SwdTFoS",
-      "title": "Trove Note Convention",
-      "type": "convention",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "UzbYw-l2kg": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-28.md",
-      "previousPaths": [],
-      "route": "/trove/UzbYw-l2kg",
-      "title": "2026-06-28",
-      "type": "worklog",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "X_Vwcz2ZL1": {
-      "created": "2026-06-29",
-      "currentPath": "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-pages-git-integration.md",
-      "previousPaths": [],
-      "route": "/trove/X_Vwcz2ZL1",
-      "title": "Cloudflare Pages Git Integration",
-      "type": "decision",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "dY0atgAPw8": {
-      "created": "2026-06-29",
-      "currentPath": "Daily/2026-06/2026-06-29.md",
-      "previousPaths": [],
-      "route": "/trove/dY0atgAPw8",
-      "title": "2026-06-29",
-      "type": "daily",
-      "updated": "2026-06-29",
+      "updated": "2026-06-30",
       "visibility": "public"
     },
     "dqkUg3hS9I": {
@@ -185,27 +63,7 @@
       "route": "/trove/qskThSYA1P",
       "title": "ACAC Memory Index",
       "type": "memory",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "tH4apLCCnu": {
-      "created": "2026-06-29",
-      "currentPath": "forge/_config/Memory/Conventions/worklog-note-convention.md",
-      "previousPaths": [],
-      "route": "/trove/tH4apLCCnu",
-      "title": "Worklog Note Convention",
-      "type": "convention",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "tfvj3DZu_E": {
-      "created": "2026-06-28",
-      "currentPath": "Daily/2026-06/2026-06-28.md",
-      "previousPaths": [],
-      "route": "/trove/tfvj3DZu_E",
-      "title": "2026-06-28",
-      "type": "daily",
-      "updated": "2026-06-28",
+      "updated": "2026-06-30",
       "visibility": "public"
     },
     "vuO9iZrVWu": {
@@ -217,7 +75,7 @@
       "route": "/trove/vuO9iZrVWu",
       "title": "Common Agent Rules",
       "type": "agent-entry",
-      "updated": "2026-06-29",
+      "updated": "2026-06-30",
       "visibility": "public"
     },
     "yKLASXCycn": {
@@ -229,27 +87,7 @@
       "route": "/trove/yKLASXCycn",
       "title": "Claude Agent Entry",
       "type": "agent-entry",
-      "updated": "2026-06-28",
-      "visibility": "public"
-    },
-    "z1hXOfY1w6": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/Designs/first-instance-ui-ux-design.md",
-      "previousPaths": [],
-      "route": "/trove/z1hXOfY1w6",
-      "title": "첫 번째 인스턴스 UI/UX 설계",
-      "type": "design",
-      "updated": "2026-06-29",
-      "visibility": "public"
-    },
-    "zxhIW0jU5O": {
-      "created": "2026-06-28",
-      "currentPath": "Projects/ai-context-as-code/Designs/first-implementation-plan.md",
-      "previousPaths": [],
-      "route": "/trove/zxhIW0jU5O",
-      "title": "첫 구현 최종 스펙",
-      "type": "design",
-      "updated": "2026-06-29",
+      "updated": "2026-06-30",
       "visibility": "public"
     },
     "zz2t-H9rM0": {
@@ -264,35 +102,13 @@
     }
   },
   "paths": {
-    "Daily/2026-06/2026-06-28.md": "tfvj3DZu_E",
-    "Daily/2026-06/2026-06-29.md": "dY0atgAPw8",
     "Daily/2026-06/2026-06-30.md": "nKPjBxr_J9",
-    "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-pages-git-integration.md": "X_Vwcz2ZL1",
-    "Projects/ai-context-as-code/Decisions/2026-06-29-cloudflare-workers-static-assets-fallback.md": "CfwBuildA1",
     "Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md": "4dYzPkCVtG",
-    "Projects/ai-context-as-code/Designs/first-implementation-plan.md": "zxhIW0jU5O",
-    "Projects/ai-context-as-code/Designs/first-instance-architecture.md": "0PVpQI6H0g",
-    "Projects/ai-context-as-code/Designs/first-instance-frame.md": "N_TyCBWLFT",
-    "Projects/ai-context-as-code/Designs/first-instance-reader-design-system.md": "ReaderDS01",
-    "Projects/ai-context-as-code/Designs/first-instance-ui-ux-design.md": "z1hXOfY1w6",
-    "Projects/ai-context-as-code/References/cloudflare-pages-deploy-prep.md": "F0lcG8SXxc",
-    "Projects/ai-context-as-code/References/cloudflare-workers-static-assets-deploy-prep.md": "CfwAsset01",
-    "Projects/ai-context-as-code/References/legacy-knowledge-base-principles.md": "9PsNP3egH4",
-    "Projects/ai-context-as-code/Worklog/2026-06-28.md": "UzbYw-l2kg",
-    "Projects/ai-context-as-code/Worklog/2026-06-29.md": "KLWL70bVad",
     "Projects/ai-context-as-code/Worklog/2026-06-30.md": "dqkUg3hS9I",
     "Projects/ai-context-as-code/index.md": "zz2t-H9rM0",
-    "_config/Agents/agent.md": "9m41s1bWfU",
-    "_config/Agents/claude.md": "yKLASXCycn",
-    "_config/Agents/common.md": "vuO9iZrVWu",
-    "_config/Memory/Conventions/trove-note-convention.md": "Tx8SwdTFoS",
-    "_config/Memory/MEMORY.md": "qskThSYA1P",
-    "_config/index.md": "FL87bCPt08",
     "forge/_config/Agents/agent.md": "9m41s1bWfU",
     "forge/_config/Agents/claude.md": "yKLASXCycn",
     "forge/_config/Agents/common.md": "vuO9iZrVWu",
-    "forge/_config/Memory/Conventions/trove-note-convention.md": "Tx8SwdTFoS",
-    "forge/_config/Memory/Conventions/worklog-note-convention.md": "tH4apLCCnu",
     "forge/_config/Memory/MEMORY.md": "qskThSYA1P",
     "forge/_config/index.md": "FL87bCPt08"
   },

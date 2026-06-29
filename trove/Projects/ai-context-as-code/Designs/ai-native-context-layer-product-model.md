@@ -949,10 +949,9 @@ The next durable notes should split this product model into detailed specs:
 
 ## Related Notes
 
-- [[first-instance-architecture]]
-- [[first-implementation-plan]]
-- [[first-instance-reader-design-system]]
-- [[trove-note-convention]]
+- [[../index|AI Context as Code]]
+- [[../../../../forge/_config/index|Forge Source]]
+- [[../../../../forge/_config/Memory/MEMORY|ACAC Memory Index]]
 
 [^llm-wiki]: Andrej Karpathy, "LLM Wiki", https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f
 [^graphrag]: Microsoft GraphRAG documentation, https://microsoft.github.io/graphrag/
