@@ -16,6 +16,7 @@ This file is the first long-term memory index for the ACAC trove.
 It should point to durable source notes instead of duplicating their full bodies.
 When a rule becomes important enough to reuse across sessions, promote it into a focused memory note and link it here.
 The current note-writing convention lives in a focused convention note.
+The current worklog convention lives in a focused convention note.
 
 ## Current Pointers
 
@@ -23,6 +24,7 @@ The current note-writing convention lives in a focused convention note.
 - `Daily/` holds day-level context and pointers, while project folders hold detailed worklog and decisions.
 - `forge/_config/Agents/` source documents generate root entry files for local repository use only.
 - [[trove-note-convention]] defines the executable note-writing rules for `trove/**/*.md` and `forge/**/*.md`.
+- [[worklog-note-convention]] defines when and how ACAC work units are recorded in project worklog notes and Daily pointers.
 
 ## Promotion Criteria
 

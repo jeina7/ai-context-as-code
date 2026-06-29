@@ -28,7 +28,7 @@ Keep external runtime integration out of this baseline.
 These rules apply to agents working inside this repository.
 The trove and forge source should stay readable by humans and machines.
 Generated outputs should be reproducible from source and scripts.
-Reusable note-writing rules live in the trove memory convention.
+Reusable note-writing and worklog rules live in the trove memory conventions.
 
 ## Source And Output
 
@@ -48,6 +48,7 @@ Reusable note-writing rules live in the trove memory convention.
 ## Writing
 
 - Follow `[[trove-note-convention]]` when creating or editing `trove/**/*.md` or `forge/**/*.md`.
+- Follow `[[worklog-note-convention]]` when recording meaningful ACAC work in project worklog notes or Daily pointers.
 - Use English for `forge/_config/` source content.
 - Use Korean-first content for `trove/Daily/` and `trove/Projects/`.
 - Keep frontmatter values that contain natural language in double quotes.

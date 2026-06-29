@@ -158,6 +158,16 @@
       "updated": "2026-06-29",
       "visibility": "public"
     },
+    "tH4apLCCnu": {
+      "created": "2026-06-29",
+      "currentPath": "forge/_config/Memory/Conventions/worklog-note-convention.md",
+      "previousPaths": [],
+      "route": "/trove/tH4apLCCnu",
+      "title": "ACAC Worklog Note Convention",
+      "type": "convention",
+      "updated": "2026-06-29",
+      "visibility": "public"
+    },
     "tfvj3DZu_E": {
       "created": "2026-06-28",
       "currentPath": "Daily/2026-06/2026-06-28.md",
@@ -249,6 +259,7 @@
     "forge/_config/Agents/claude.md": "yKLASXCycn",
     "forge/_config/Agents/common.md": "vuO9iZrVWu",
     "forge/_config/Memory/Conventions/trove-note-convention.md": "Tx8SwdTFoS",
+    "forge/_config/Memory/Conventions/worklog-note-convention.md": "tH4apLCCnu",
     "forge/_config/Memory/MEMORY.md": "qskThSYA1P",
     "forge/_config/index.md": "FL87bCPt08"
   },
