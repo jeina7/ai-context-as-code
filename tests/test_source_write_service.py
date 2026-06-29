@@ -757,6 +757,167 @@ Line three.
         self.assertFalse(allowed.route_impact.route_preserved)
         self.assertIn("does not remove git history", "\n".join(allowed.warnings))
 
+    def test_apply_hard_delete_note_deletes_archived_note_after_successful_validation(self) -> None:
+        source = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-hard-delete.md"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(source.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Hard Delete",
+            description="Hard delete note used by source write service tests",
+            note_type="research",
+            status="archived",
+            note_id="HardDel001",
+            summary_lines=[
+                "First hard delete summary line.",
+                "Second hard delete summary line.",
+                "Third hard delete summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_hard_delete_note(
+            source_path=source,
+            note_id="HardDel001",
+            confirmation_token=service.HARD_DELETE_CONFIRMATION,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertFalse(source.exists())
+        self.assertEqual(result.applied_files, ["forge/_archived/Projects/ai-context-as-code/Research/local-hard-delete.md"])
+        self.assertIn("does not remove git history", "\n".join(result.warnings))
+
+    def test_apply_hard_delete_note_rolls_back_when_validation_fails(self) -> None:
+        source = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-hard-delete-fail.md"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(source.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Hard Delete Failure",
+            description="Hard delete failure note used by source write service tests",
+            note_type="research",
+            status="archived",
+            note_id="HardDelBad",
+            summary_lines=[
+                "First failed hard delete summary line.",
+                "Second failed hard delete summary line.",
+                "Third failed hard delete summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_hard_delete_note(
+            source_path=source,
+            note_id="HardDelBad",
+            confirmation_token=service.HARD_DELETE_CONFIRMATION,
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertEqual(source.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(result.rolled_back_files, ["forge/_archived/Projects/ai-context-as-code/Research/local-hard-delete-fail.md"])
+        self.assertIn("validation failed", "\n".join(result.errors))
+
+    def test_apply_hard_delete_note_requires_confirmation_without_writing(self) -> None:
+        source = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-hard-delete-no-token.md"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(source.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Hard Delete No Token",
+            description="Hard delete no token note used by source write service tests",
+            note_type="research",
+            status="archived",
+            note_id="HardNoTok1",
+            summary_lines=[
+                "First no token hard delete summary line.",
+                "Second no token hard delete summary line.",
+                "Third no token hard delete summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_hard_delete_note(
+            source_path=source,
+            note_id="HardNoTok1",
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertIn(service.HARD_DELETE_CONFIRMATION, "\n".join(result.errors))
+
+    def test_apply_hard_delete_note_requires_archive_first(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-hard-delete-unarchived.md"
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Hard Delete Unarchived",
+            description="Hard delete unarchived note used by source write service tests",
+            note_type="research",
+            status="archived",
+            note_id="HardNotArc",
+            summary_lines=[
+                "First unarchived hard delete summary line.",
+                "Second unarchived hard delete summary line.",
+                "Third unarchived hard delete summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_hard_delete_note(
+            source_path=source,
+            note_id="HardNotArc",
+            confirmation_token=service.HARD_DELETE_CONFIRMATION,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertIn("forge/_archived", "\n".join(result.errors))
+
+    def test_apply_hard_delete_note_requires_archived_status(self) -> None:
+        source = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-hard-delete-draft.md"
+        source.parent.mkdir(parents=True, exist_ok=True)
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(source.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Hard Delete Draft",
+            description="Hard delete draft note used by source write service tests",
+            note_type="research",
+            status="draft",
+            note_id="HardDraft1",
+            summary_lines=[
+                "First draft hard delete summary line.",
+                "Second draft hard delete summary line.",
+                "Third draft hard delete summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_hard_delete_note(
+            source_path=source,
+            note_id="HardDraft1",
+            confirmation_token=service.HARD_DELETE_CONFIRMATION,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertIn("status: archived", "\n".join(result.errors))
+
     def test_run_validation_wrapper_reports_success(self) -> None:
         result = service.run_validation([[sys.executable, "-c", "print('ok')"]])
 

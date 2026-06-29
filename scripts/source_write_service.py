@@ -650,6 +650,13 @@ def rollback_archived_file(
     return True, None
 
 
+def rollback_deleted_file(path: Path, before_text: str) -> tuple[bool, str | None]:
+    if path.exists():
+        return False, f"rollback failed because deleted path already exists: {repo_relative(path)}"
+    path.write_text(before_text, encoding="utf-8")
+    return True, None
+
+
 def create_note(
     *,
     source_path: str | Path,
@@ -1136,6 +1143,95 @@ def apply_archive_note(
     )
 
 
+def apply_hard_delete_note(
+    *,
+    source_path: str | Path,
+    confirmation_token: str | None = None,
+    note_id: str | None = None,
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = hard_delete_note(
+        source_path=source_path,
+        confirmation_token=confirmation_token,
+        note_id=note_id,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_hard_delete_note",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if len(preview.changed_files) != 1:
+        raise SourceWriteError("hard delete apply expected exactly one changed file")
+
+    source = existing_note_path(source_path)
+    source_rel = repo_relative(source)
+    if source_rel != preview.before_summary.get("sourcePath") or source_rel != preview.changed_files[0]:
+        raise SourceWriteError("hard delete preview source does not match source path")
+
+    source_root, source_parts = source_root_and_parts(source)
+    before = source.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, source_rel)
+    if before_note.errors:
+        raise SourceWriteError(f"source markdown is invalid: {'; '.join(before_note.errors)}")
+
+    guard_errors: list[str] = []
+    if source_root != "forge" or not source_parts or source_parts[0] != "_archived":
+        guard_errors.append("hard delete requires the note to be under forge/_archived/")
+    if before_note.frontmatter.get("status") != "archived":
+        guard_errors.append("hard delete requires status: archived")
+    if guard_errors:
+        return ApplyResult(
+            ok=False,
+            operation="apply_hard_delete_note",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=guard_errors,
+            warnings=list(preview.warnings),
+        )
+
+    source.unlink()
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_hard_delete_note",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=[source_rel],
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_deleted_file(source, before)
+    errors = ["validation failed; hard delete apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_hard_delete_note",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else [source_rel],
+        rolled_back_files=[source_rel] if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
+    )
+
+
 def rename_note(
     *,
     source_path: str | Path,
@@ -1321,6 +1417,7 @@ applyMoveNote = apply_move_note
 moveNote = move_note
 applyArchiveNote = apply_archive_note
 archiveNote = archive_note
+applyHardDeleteNote = apply_hard_delete_note
 hardDeleteNote = hard_delete_note
 runValidation = run_validation
 buildPreviewDiff = build_preview_diff
@@ -1411,6 +1508,12 @@ def main(argv: list[str] | None = None) -> int:
     hard_delete_parser.add_argument("--source-path", required=True)
     hard_delete_parser.add_argument("--confirmation-token")
     hard_delete_parser.add_argument("--note-id")
+
+    apply_hard_delete_parser = subparsers.add_parser("apply-hard-delete", help="Hard delete an archived note and run validation")
+    apply_hard_delete_parser.add_argument("--source-path", required=True)
+    apply_hard_delete_parser.add_argument("--confirmation-token")
+    apply_hard_delete_parser.add_argument("--note-id")
+    apply_hard_delete_parser.add_argument("--skip-build", action="store_true")
 
     validate_parser = subparsers.add_parser("run-validation", help="Run ACAC validation/build commands")
     validate_parser.add_argument("--skip-build", action="store_true")
@@ -1546,6 +1649,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-hard-delete":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_hard_delete_note(
+                source_path=args.source_path,
+                confirmation_token=args.confirmation_token,
+                note_id=args.note_id,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "run-validation":
             commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
