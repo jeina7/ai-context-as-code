@@ -4,7 +4,7 @@ title: "AI Context as Code"
 description: "ACAC first instance project inside the trove source"
 status: active
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-30
 visibility: public
 id: zz2t-H9rM0
 
@@ -40,6 +40,7 @@ The first live deployment is now running on Cloudflare Workers static assets at 
 - [[first-implementation-plan]]
 - [[first-instance-ui-ux-design]]
 - [[first-instance-reader-design-system]]
+- [[ai-native-context-layer-product-model]]
 
 ## References
 
