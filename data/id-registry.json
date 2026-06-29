@@ -54,6 +54,16 @@
       "updated": "2026-06-30",
       "visibility": "public"
     },
+    "afMXXdr8qE": {
+      "created": "2026-06-30",
+      "currentPath": "Projects/ai-context-as-code/Designs/acac-visual-design-system-core-direction.md",
+      "previousPaths": [],
+      "route": "/trove/afMXXdr8qE",
+      "title": "ACAC Visual Design System Core Direction",
+      "type": "design",
+      "updated": "2026-06-30",
+      "visibility": "public"
+    },
     "dqkUg3hS9I": {
       "created": "2026-06-30",
       "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-30.md",
@@ -143,6 +153,7 @@
   },
   "paths": {
     "Daily/2026-06/2026-06-30.md": "nKPjBxr_J9",
+    "Projects/ai-context-as-code/Designs/acac-visual-design-system-core-direction.md": "afMXXdr8qE",
     "Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md": "4dYzPkCVtG",
     "Projects/ai-context-as-code/Research/acac-product-direction-grill-qna-extract.md": "sOkKpZBKqF",
     "Projects/ai-context-as-code/Research/acac-product-direction-grill-raw-transcript.md": "E73ubE7kLV",
