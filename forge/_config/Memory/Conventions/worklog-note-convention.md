@@ -1,6 +1,6 @@
 ---
 type: convention
-title: "ACAC Worklog Note Convention"
+title: "Worklog Note Convention"
 description: "Rules for writing ACAC worklog notes and Daily pointers"
 status: active
 created: 2026-06-29
@@ -10,7 +10,7 @@ id: tH4apLCCnu
 
 ---
 
-# ACAC Worklog Note Convention
+# Worklog Note Convention
 
 This convention defines when ACAC work gets a durable worklog note.
 Detailed work units live under `trove/Projects/ai-context-as-code/Worklog/`, while `trove/Daily/` keeps one-line navigation pointers.
