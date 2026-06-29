@@ -183,24 +183,6 @@ def layer_for_path(path: str) -> dict[str, str]:
 
 
 def display_folder_name(rel_path: str, raw_name: str) -> str:
-    names = {
-        "forge/_config": "Operating layer",
-        "forge/_archived": "Archive",
-        "forge/_config/Agents": "Agent entries",
-        "forge/_config/Commands": "Commands",
-        "forge/_config/Memory": "Memory",
-        "forge/_config/Skills": "Skills",
-        "_config": "Operating layer",
-        "_archived": "Archive",
-        "_config/Agents": "Agent entries",
-        "_config/Commands": "Commands",
-        "_config/Memory": "Memory",
-        "_config/Skills": "Skills",
-    }
-    if rel_path in names:
-        return names[rel_path]
-    if raw_name.startswith("_"):
-        return raw_name.lstrip("_").replace("-", " ").replace("_", " ").title()
     return raw_name
 
 
