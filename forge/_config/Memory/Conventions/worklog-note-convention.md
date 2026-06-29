@@ -78,7 +78,7 @@ The Daily note keeps navigation, not detailed history.
 Add one line to `## Worklog` for each detailed worklog entry that should be visible from the day view.
 
 ```markdown
-- ACAC source write apply-create 구현 [[../../Projects/ai-context-as-code/Worklog/2026-06-29#20:07 — Apply Create Local Source Write Implemented|#]]
+- ACAC source write apply-create implementation [[../../Projects/ai-context-as-code/Worklog/2026-06-29#20:07 — Apply Create Local Source Write Implemented|#]]
 ```
 
 Rules:
@@ -105,7 +105,7 @@ Record what happened without copying private material.
 
 - Do not copy private Obsidian design notes, private source text, credentials, tokens, internal URLs, private dashboard details, personal filesystem paths, or private collaboration threads.
 - Summarize private-source decisions as public-safe facts when needed.
-- Use wording such as "private vault design으로 분리했다" when detailed private context belongs outside this repository.
+- Use wording such as "the detailed design was separated into the private vault" when detailed private context belongs outside this repository.
 - Keep public URLs only when they are intended project surfaces such as `https://acac.sh/`.
 
 ## Evidence
