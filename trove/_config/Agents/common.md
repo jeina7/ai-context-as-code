@@ -4,7 +4,7 @@ title: "Common Agent Rules"
 description: "Shared rules for agents working in the ACAC first instance"
 status: active
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: vuO9iZrVWu
 
@@ -15,6 +15,7 @@ id: vuO9iZrVWu
 These rules apply to agents working inside this repository.
 The trove source should stay readable by humans and machines.
 Generated outputs should be reproducible from source and scripts.
+Reusable note-writing rules live in the trove memory convention.
 
 ## Source And Output
 
@@ -32,7 +33,12 @@ Generated outputs should be reproducible from source and scripts.
 
 ## Writing
 
+- Follow `[[trove-note-convention]]` when creating or editing `trove/**/*.md`.
 - Use English for `_config/` source content.
 - Use Korean-first content for `Daily/` and `Projects/`.
 - Keep frontmatter values that contain natural language in double quotes.
 - Keep H1 equal to the `title` frontmatter value.
+- Do not create or hand-edit `id`; the build manages it through `data/id-registry.json`.
+- Keep `reference`, `research`, `memory`, and `convention` notes current-state oriented.
+- Preserve timing and context in `decision`, `design`, `worklog`, and `daily` notes.
+- Update the nearest useful index or memory pointer when adding a reusable trove note.

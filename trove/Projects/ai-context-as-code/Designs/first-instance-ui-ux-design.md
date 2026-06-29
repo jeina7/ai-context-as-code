@@ -1,10 +1,8 @@
 ---
-name: first-instance-ui-ux-design
-title: 첫 번째 인스턴스 UI/UX 설계
-description: "ACAC 첫 인스턴스 public reader의 화면 구성, 탐색 방식, 시각 디자인 기준"
 type: design
+title: "첫 번째 인스턴스 UI/UX 설계"
+description: "ACAC 첫 인스턴스 public reader의 화면 구성, 탐색 방식, 시각 디자인 기준"
 status: active
-date: 2026-06-28
 created: 2026-06-28
 updated: 2026-06-29
 visibility: public

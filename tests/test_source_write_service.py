@@ -183,6 +183,60 @@ Line three.
         self.assertIn('title: "AI Context as Code Preview"', preview.diff)
         self.assertIn("# AI Context as Code Preview", preview.diff)
 
+    def test_apply_rename_title_updates_file_after_successful_validation(self) -> None:
+        path = ROOT / "trove" / "Projects" / "ai-context-as-code" / "index.md"
+        before = path.read_text(encoding="utf-8")
+        self.addCleanup(lambda: path.write_text(before, encoding="utf-8"))
+
+        result = service.apply_rename_title(
+            source_path=path,
+            note_id="zz2t-H9rM0",
+            new_title="AI Context as Code Apply Preview",
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        after = path.read_text(encoding="utf-8")
+        self.assertTrue(result.ok, result.errors)
+        self.assertEqual(result.applied_files, ["trove/Projects/ai-context-as-code/index.md"])
+        self.assertEqual(result.rolled_back_files, [])
+        self.assertIn('title: "AI Context as Code Apply Preview"', after)
+        self.assertIn("# AI Context as Code Apply Preview", after)
+        self.assertIn("id: zz2t-H9rM0", after)
+
+    def test_apply_rename_title_rolls_back_when_validation_fails(self) -> None:
+        path = ROOT / "trove" / "Projects" / "ai-context-as-code" / "index.md"
+        before = path.read_text(encoding="utf-8")
+        self.addCleanup(lambda: path.write_text(before, encoding="utf-8"))
+
+        result = service.apply_rename_title(
+            source_path=path,
+            note_id="zz2t-H9rM0",
+            new_title="AI Context as Code Failed Apply",
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(path.read_text(encoding="utf-8"), before)
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(result.rolled_back_files, ["trove/Projects/ai-context-as-code/index.md"])
+        self.assertIn("validation failed", "\n".join(result.errors))
+
+    def test_apply_rename_title_rejects_wrong_note_id_without_writing(self) -> None:
+        path = ROOT / "trove" / "Projects" / "ai-context-as-code" / "index.md"
+        before = path.read_text(encoding="utf-8")
+
+        result = service.apply_rename_title(
+            source_path=path,
+            note_id="WrongNote1",
+            new_title="AI Context as Code Wrong ID",
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertEqual(path.read_text(encoding="utf-8"), before)
+        self.assertEqual(result.applied_files, [])
+        self.assertIn("note id mismatch", "\n".join(result.errors))
+
     def test_rename_path_preview_keeps_route_id(self) -> None:
         preview = service.rename_note(
             source_path="trove/Projects/ai-context-as-code/index.md",

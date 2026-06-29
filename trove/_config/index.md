@@ -4,7 +4,7 @@ title: "Configuration Contents"
 description: "Agent-facing markdown content managed inside the ACAC trove"
 status: active
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: FL87bCPt08
 
@@ -15,11 +15,13 @@ id: FL87bCPt08
 This folder stores agent-facing markdown content for the ACAC first instance.
 It is content inside the trove, not a direct sync target for user-level runtime folders.
 The first seed keeps only the smallest reusable rules needed by future agents and build scripts.
+Durable writing conventions live under `Memory/Conventions/`.
 
 ## Sections
 
 - `Agents/`: source documents for generated root agent entry files.
 - `Memory/`: long-term context pointers and durable operating principles.
+- `Memory/Conventions/`: reusable rules for writing and maintaining trove source notes.
 - `Skills/`: repeatable agent workflows, added only when a workflow becomes stable.
 - `Commands/`: repeatable command procedures, added only when they are useful across sessions.
 

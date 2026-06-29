@@ -1,12 +1,10 @@
 ---
-name: first-implementation-plan
-title: 첫 구현 최종 스펙
-description: "ACAC 첫 인스턴스 아키텍처를 repo의 작동하는 최소 구조로 옮기는 최종 구현 기준"
 type: design
+title: "첫 구현 최종 스펙"
+description: "ACAC 첫 인스턴스 아키텍처를 repo의 작동하는 최소 구조로 옮기는 최종 구현 기준"
 status: active
-date: 2026-06-28
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: zxhIW0jU5O
 

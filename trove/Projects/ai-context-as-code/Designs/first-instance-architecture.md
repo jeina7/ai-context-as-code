@@ -1,12 +1,10 @@
 ---
-name: first-instance-architecture
-title: 첫 번째 인스턴스 아키텍처
-description: "Reference knowledge base를 trove 기반 ACAC 첫 인스턴스 구조로 구체화한 설계"
 type: design
+title: "첫 번째 인스턴스 아키텍처"
+description: "Reference knowledge base를 trove 기반 ACAC 첫 인스턴스 구조로 구체화한 설계"
 status: active
-date: 2026-06-28
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: 0PVpQI6H0g
 
@@ -107,7 +105,7 @@ trove/
 ```yaml
 ---
 type: design
-title: Example Title
+title: "Example Title"
 description: "One-line description"
 status: draft
 created: 2026-06-28
@@ -127,7 +125,7 @@ visibility: public
 | `created` | 처음 만든 날짜예요. |
 | `updated` | 의미 있게 고친 날짜예요. |
 | `visibility` | `public`, `private`, `internal` 중 하나예요. 첫 public site는 `public`만 배포해요. |
-| `id` | 사람이 직접 쓰지 않아요. build가 생성해 source frontmatter에 쓰고, `data/id-registry.json`을 기준으로 관리해요. |
+| `id` | 사람이 직접 만들거나 고치지 않아요. build가 source frontmatter에 쓰고, `data/id-registry.json`을 기준으로 관리해요. |
 
 초기 문서 타입:
 

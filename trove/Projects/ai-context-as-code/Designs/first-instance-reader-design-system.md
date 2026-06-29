@@ -1,10 +1,8 @@
 ---
-name: first-instance-reader-design-system
+type: design
 title: "첫 번째 인스턴스 Reader 디자인 시스템"
 description: "ACAC 첫 public-safe context reader의 토큰, 컴포넌트 규칙, 반응형 화면 기준"
-type: design
 status: active
-date: 2026-06-29
 created: 2026-06-29
 updated: 2026-06-29
 visibility: public

@@ -1,12 +1,10 @@
 ---
-name: first-instance-frame
-title: 첫 번째 인스턴스 틀 설계
-description: "Initial frame for the ACAC first instance that migrates jeina's local Obsidian into a cloud-based trove root"
 type: design
+title: "첫 번째 인스턴스 틀 설계"
+description: "Initial frame for the ACAC first instance that migrates jeina's local Obsidian into a cloud-based trove root"
 status: active
-date: 2026-06-28
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: N_TyCBWLFT
 
@@ -294,11 +292,12 @@ Daily의 worklog section은 아래처럼 짧게 유지해요.
 ```yaml
 ---
 type: design
-title: Example Title
+title: "Example Title"
 description: "One-line description"
 status: draft
 created: 2026-06-28
 updated: 2026-06-28
+visibility: public
 ---
 ```
 
@@ -310,9 +309,10 @@ updated: 2026-06-28
 - `status`: `draft`, `active`, `archived` 중 하나로 시작해요.
 - `created`: 처음 만든 날짜예요.
 - `updated`: 마지막으로 의미 있게 고친 날짜예요.
+- `visibility`: `public`, `private`, `internal` 중 하나예요.
 
 영구 ID는 사람이 직접 만들지 않아요.
-site build가 `data/id-registry.json`으로 자동 관리해요.
+site build가 frontmatter에 추가하고 `data/id-registry.json`으로 자동 관리해요.
 문서의 canonical public URL은 `/trove/<id>`예요.
 파일 path는 breadcrumb와 registry 내부 매핑으로만 보여줘요.
 Hash route는 쓰지 않아요.
@@ -321,10 +321,10 @@ Hash route는 쓰지 않아요.
 
 - H1 바로 아래에 3~5줄 요약을 둬요.
 - 처음 읽는 사람이 전체 그림을 잡은 뒤 세부 내용을 볼 수 있게 써요.
-- 파일명과 H1은 같게 맞춰요.
+- frontmatter `title`과 H1은 같게 맞춰요.
 - wikilink는 파일명 기준으로 걸어요.
 - 한 문서에는 하나의 주제만 담아요.
-- `reference`와 `principle`은 최신 기준으로 다시 쓰는 문서예요.
+- `reference`, `research`, `memory`, `convention`은 최신 기준으로 다시 쓰는 문서예요.
 - `decision`, `design`, `worklog`는 시점과 맥락을 보존하는 문서예요.
 
 ## 언어와 번역

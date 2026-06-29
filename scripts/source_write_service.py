@@ -564,6 +564,15 @@ def rollback_created_file(path: Path, expected_text: str) -> tuple[bool, str | N
     return True, None
 
 
+def rollback_modified_file(path: Path, before_text: str, expected_text: str) -> tuple[bool, str | None]:
+    if not path.exists():
+        return False, f"rollback failed because file is missing: {repo_relative(path)}"
+    if path.read_text(encoding="utf-8") != expected_text:
+        return False, f"rollback skipped because file changed after write: {repo_relative(path)}"
+    path.write_text(before_text, encoding="utf-8")
+    return True, None
+
+
 def create_note(
     *,
     source_path: str | Path,
@@ -697,6 +706,94 @@ def apply_create_note(
         validation=validation,
         applied_files=[] if rollback_ok else [repo_relative(target)],
         rolled_back_files=[repo_relative(target)] if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
+    )
+
+
+def apply_rename_title(
+    *,
+    source_path: str | Path,
+    new_title: str,
+    note_id: str | None = None,
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = rename_note(
+        source_path=source_path,
+        new_title=new_title,
+        note_id=note_id,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_rename_title",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if not preview.changed_files:
+        return ApplyResult(
+            ok=True,
+            operation="apply_rename_title",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            warnings=[*preview.warnings, "no title changes to apply"],
+        )
+
+    if len(preview.changed_files) != 1:
+        raise SourceWriteError("rename title apply expected exactly one changed file")
+
+    path = existing_note_path(source_path)
+    rel_path = repo_relative(path)
+    if rel_path != preview.changed_files[0]:
+        raise SourceWriteError("rename title preview target does not match source path")
+
+    before = path.read_text(encoding="utf-8")
+    after = replace_frontmatter_value(before, "title", new_title)
+    after = replace_first_h1(after, new_title)
+    after_note = parse_markdown_note(after, rel_path)
+    if after_note.errors:
+        raise SourceWriteError(f"rename title markdown is invalid: {'; '.join(after_note.errors)}")
+
+    before_note = parse_markdown_note(before, rel_path)
+    if before_note.note_id and after_note.note_id and before_note.note_id != after_note.note_id:
+        raise SourceWriteError(f"route id would change: {before_note.note_id} -> {after_note.note_id}")
+
+    path.write_text(after, encoding="utf-8")
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_rename_title",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=[rel_path],
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_modified_file(path, before, after)
+    errors = ["validation failed; rename title apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_rename_title",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else [rel_path],
+        rolled_back_files=[rel_path] if rollback_ok else [],
         errors=errors,
         warnings=list(preview.warnings),
     )
@@ -879,6 +976,7 @@ def note_id_errors(note: MarkdownNote, expected_note_id: str | None) -> list[str
 
 createNote = create_note
 applyCreateNote = apply_create_note
+applyRenameTitle = apply_rename_title
 renameNote = rename_note
 moveNote = move_note
 archiveNote = archive_note
@@ -925,6 +1023,12 @@ def main(argv: list[str] | None = None) -> int:
     rename_title_parser.add_argument("--source-path", required=True)
     rename_title_parser.add_argument("--new-title", required=True)
     rename_title_parser.add_argument("--note-id")
+
+    apply_rename_title_parser = subparsers.add_parser("apply-rename-title", help="Rename a note title and run validation")
+    apply_rename_title_parser.add_argument("--source-path", required=True)
+    apply_rename_title_parser.add_argument("--new-title", required=True)
+    apply_rename_title_parser.add_argument("--note-id")
+    apply_rename_title_parser.add_argument("--skip-build", action="store_true")
 
     rename_path_parser = subparsers.add_parser("preview-rename-path", help="Preview file path rename")
     rename_path_parser.add_argument("--source-path", required=True)
@@ -1001,6 +1105,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-rename-title":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_rename_title(
+                source_path=args.source_path,
+                new_title=args.new_title,
+                note_id=args.note_id,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "preview-rename-path":
             preview = rename_note(
