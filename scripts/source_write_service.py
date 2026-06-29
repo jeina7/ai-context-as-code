@@ -933,6 +933,93 @@ def apply_rename_path(
     )
 
 
+def apply_move_note(
+    *,
+    source_path: str | Path,
+    target_path: str | Path | None = None,
+    target_folder: str | Path | None = None,
+    note_id: str | None = None,
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = move_note(
+        source_path=source_path,
+        target_path=target_path,
+        target_folder=target_folder,
+        note_id=note_id,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_move_note",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if len(preview.changed_files) != 2:
+        raise SourceWriteError("move apply expected exactly two changed file entries")
+
+    source = existing_note_path(source_path)
+    source_rel = repo_relative(source)
+    target_rel = preview.after_summary.get("sourcePath")
+    if not target_rel:
+        raise SourceWriteError("move preview did not produce a target path")
+    if source_rel != preview.before_summary.get("sourcePath") or source_rel != preview.changed_files[0]:
+        raise SourceWriteError("move preview source does not match source path")
+
+    target = safe_source_path(target_rel, must_exist=False)
+    require_lifecycle_path(target)
+    require_existing_parent(target)
+    require_available_target(target)
+    if source.parent == target.parent:
+        raise SourceWriteError("move apply must change folders; use rename path apply instead")
+
+    before = source.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, source_rel)
+    after_note = parse_markdown_note(before, target_rel)
+    if before_note.errors:
+        raise SourceWriteError(f"source markdown is invalid: {'; '.join(before_note.errors)}")
+    if after_note.errors:
+        raise SourceWriteError(f"target markdown is invalid: {'; '.join(after_note.errors)}")
+    if before_note.note_id and after_note.note_id and before_note.note_id != after_note.note_id:
+        raise SourceWriteError(f"route id would change: {before_note.note_id} -> {after_note.note_id}")
+
+    source.rename(target)
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_move_note",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=list(preview.changed_files),
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_renamed_file(source, target, before)
+    errors = ["validation failed; move apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_move_note",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else list(preview.changed_files),
+        rolled_back_files=list(preview.changed_files) if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
+    )
+
+
 def rename_note(
     *,
     source_path: str | Path,
@@ -1114,6 +1201,7 @@ applyCreateNote = apply_create_note
 applyRenameTitle = apply_rename_title
 applyRenamePath = apply_rename_path
 renameNote = rename_note
+applyMoveNote = apply_move_note
 moveNote = move_note
 archiveNote = archive_note
 hardDeleteNote = hard_delete_note
@@ -1184,6 +1272,13 @@ def main(argv: list[str] | None = None) -> int:
     move_parser.add_argument("--target-path")
     move_parser.add_argument("--target-folder")
     move_parser.add_argument("--note-id")
+
+    apply_move_parser = subparsers.add_parser("apply-move", help="Move a note file and run validation")
+    apply_move_parser.add_argument("--source-path", required=True)
+    apply_move_parser.add_argument("--target-path")
+    apply_move_parser.add_argument("--target-folder")
+    apply_move_parser.add_argument("--note-id")
+    apply_move_parser.add_argument("--skip-build", action="store_true")
 
     archive_parser = subparsers.add_parser("preview-archive", help="Preview archiving a note")
     archive_parser.add_argument("--source-path", required=True)
@@ -1291,6 +1386,18 @@ def main(argv: list[str] | None = None) -> int:
             )
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-move":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_move_note(
+                source_path=args.source_path,
+                target_path=args.target_path,
+                target_folder=args.target_folder,
+                note_id=args.note_id,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "preview-archive":
             preview = archive_note(source_path=args.source_path, note_id=args.note_id)

@@ -421,6 +421,182 @@ Line three.
         self.assertTrue(preview.route_impact.route_preserved)
         self.assertEqual(preview.after_summary["sourcePath"], "trove/Projects/ai-context-as-code/Research/index-preview-move.md")
 
+    def test_apply_move_note_moves_file_after_successful_validation(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-source.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "References" / "local-move-source.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Move Note",
+            description="Move note used by source write service tests",
+            note_type="research",
+            note_id="MoveOk0001",
+            summary_lines=[
+                "First move summary line.",
+                "Second move summary line.",
+                "Third move summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_move_note(
+            source_path=source,
+            note_id="MoveOk0001",
+            target_folder=target.parent,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertFalse(source.exists())
+        self.assertTrue(target.exists())
+        self.assertEqual(target.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(
+            result.applied_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-move-source.md",
+                "trove/Projects/ai-context-as-code/References/local-move-source.md",
+            ],
+        )
+        self.assertTrue(result.preview.route_impact.route_preserved)
+
+    def test_apply_move_note_rolls_back_when_validation_fails(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-fail.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "References" / "local-move-fail.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Move Failure",
+            description="Move failure note used by source write service tests",
+            note_type="research",
+            note_id="MoveFail01",
+            summary_lines=[
+                "First failed move summary line.",
+                "Second failed move summary line.",
+                "Third failed move summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_move_note(
+            source_path=source,
+            note_id="MoveFail01",
+            target_folder=target.parent,
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertEqual(source.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(
+            result.rolled_back_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-move-fail.md",
+                "trove/Projects/ai-context-as-code/References/local-move-fail.md",
+            ],
+        )
+        self.assertIn("validation failed", "\n".join(result.errors))
+
+    def test_apply_move_note_rejects_wrong_note_id_without_writing(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-wrong-id.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "References" / "local-move-wrong-id.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Move Wrong ID",
+            description="Move wrong id note used by source write service tests",
+            note_type="research",
+            note_id="MoveBadID1",
+            summary_lines=[
+                "First wrong id move summary line.",
+                "Second wrong id move summary line.",
+                "Third wrong id move summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_move_note(
+            source_path=source,
+            note_id="WrongNote1",
+            target_folder=target.parent,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertIn("note id mismatch", "\n".join(result.errors))
+
+    def test_apply_move_note_requires_folder_change(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-same-folder.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-same-folder-target.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Move Same Folder",
+            description="Move same folder note used by source write service tests",
+            note_type="research",
+            note_id="MoveSame01",
+            summary_lines=[
+                "First same folder move summary line.",
+                "Second same folder move summary line.",
+                "Third same folder move summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        with self.assertRaises(service.SourceWriteError):
+            service.apply_move_note(
+                source_path=source,
+                note_id="MoveSame01",
+                target_path=target,
+                validation_commands=[[sys.executable, "-c", "print('ok')"]],
+            )
+
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+
+    def test_apply_move_note_blocks_assets(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-move-assets.md"
+        source.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Move Assets",
+            description="Move assets note used by source write service tests",
+            note_type="research",
+            note_id="MoveAsset1",
+            summary_lines=[
+                "First assets move summary line.",
+                "Second assets move summary line.",
+                "Third assets move summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        with self.assertRaises(service.SourceWriteError):
+            service.apply_move_note(
+                source_path=source,
+                note_id="MoveAsset1",
+                target_path="forge/_assets/local-move-assets.md",
+                validation_commands=[[sys.executable, "-c", "print('ok')"]],
+            )
+
+        self.assertTrue(source.exists())
+
     def test_archive_note_preview_moves_to_archived_and_sets_status(self) -> None:
         preview = service.archive_note(
             source_path="trove/Projects/ai-context-as-code/index.md",
