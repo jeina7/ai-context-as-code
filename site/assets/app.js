@@ -135,16 +135,37 @@ function renderTree() {
   const systemNodes = state.tree.nodes?.system || state.tree.nodes?.special || [];
   treeRoot.innerHTML = `
     <section class="tree-section">
-      <h2 class="tree-section-title">TROVES</h2>
+      <h2 class="tree-section-title">${sectionIcon("troves")}<span>TROVES</span></h2>
       ${renderTreeList(mainNodes, "main")}
     </section>
     <div class="tree-divider" aria-hidden="true"></div>
     <section class="tree-section">
-      <h2 class="tree-section-title">FORGE</h2>
+      <h2 class="tree-section-title">${sectionIcon("forge")}<span>FORGE</span></h2>
       ${renderTreeList(systemNodes, "system")}
     </section>
   `;
   syncActiveTree();
+}
+
+function sectionIcon(kind) {
+  if (kind === "forge") {
+    return `
+      <span class="section-icon section-icon-forge" aria-hidden="true">
+        <svg viewBox="0 0 20 20" focusable="false">
+          <path d="M10 2.7 16.3 6.2v7.1L10 16.9l-6.3-3.6V6.2L10 2.7Z" />
+          <path d="M6.7 8.2h6.6M6.7 11.8h6.6M8.3 5.4v9.2M11.7 5.4v9.2" />
+        </svg>
+      </span>
+    `;
+  }
+  return `
+    <span class="section-icon section-icon-troves" aria-hidden="true">
+      <svg viewBox="0 0 20 20" focusable="false">
+        <path d="M10 2.8 16.2 8l-6.2 9.2L3.8 8 10 2.8Z" />
+        <path d="M3.8 8h12.4M7.3 8 10 2.8 12.7 8M7.3 8 10 17.2 12.7 8" />
+      </svg>
+    </span>
+  `;
 }
 
 function renderTreeList(nodes, group, depth = 0) {

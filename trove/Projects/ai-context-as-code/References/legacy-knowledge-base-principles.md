@@ -4,7 +4,7 @@ title: "Legacy Knowledge Base Principles"
 description: "Public-safe principles carried from an earlier knowledge base into ACAC"
 status: active
 created: 2026-06-28
-updated: 2026-06-28
+updated: 2026-06-29
 visibility: public
 id: 9PsNP3egH4
 
@@ -28,11 +28,11 @@ Internal company names, private URLs, token flows, and editing workflows are int
 
 ## Principles Changed
 
-- ACAC uses `trove/` instead of a generic `notes/` root.
+- ACAC uses `trove/` for user-facing context and `forge/` for system/config/archive source instead of a generic `notes/` root.
 - ACAC routes public notes through `/trove/<id>`, not hash routes.
 - ACAC starts read-only and does not include browser editing in the first implementation.
-- ACAC uses `_config/` for agent-facing special contents.
-- ACAC treats `_assets/` as hidden internal storage.
+- ACAC uses `forge/_config/` for agent-facing special contents.
+- ACAC treats `forge/_assets/` as hidden internal storage.
 
 ## Migration Boundary
 

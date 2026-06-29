@@ -13,11 +13,19 @@
   <body>
     <div class="mobile-bar">
       <button class="icon-button" type="button" data-action="toggle-nav" aria-label="Open navigation">
-        <span aria-hidden="true">☰</span>
+        <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M4 6.5h12M4 10h12M4 13.5h12" />
+        </svg>
       </button>
-      <a class="mobile-brand" href="/" data-route="/">ACAC</a>
+      <a class="mobile-brand" href="/" data-route="/">
+        <span class="mobile-brand-mark" aria-hidden="true"></span>
+        <span>ACAC</span>
+      </a>
       <button class="icon-button" type="button" data-action="open-search-palette" aria-label="Open search">
-        <span aria-hidden="true">⌕</span>
+        <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="8.8" cy="8.8" r="4.8" />
+          <path d="m12.4 12.4 3.2 3.2" />
+        </svg>
       </button>
     </div>
 
@@ -27,7 +35,13 @@
         <header class="sidebar-header">
           <div class="sidebar-title-row">
             <a class="brand" href="/" data-route="/">
-              <span class="brand-mark" aria-hidden="true">A</span>
+              <span class="brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 34 34" focusable="false">
+                  <path class="brand-mark-plate" d="M17 4.8 28.2 11.4v11.2L17 29.2 5.8 22.6V11.4L17 4.8Z" />
+                  <path class="brand-mark-gem" d="M17 8.4 24.8 13 17 17.6 9.2 13 17 8.4Z" />
+                  <path class="brand-mark-route" d="M9.2 13v8.1L17 25.6l7.8-4.5V13M17 17.6v8" />
+                </svg>
+              </span>
               <span>
                 <strong>ACAC</strong>
                 <small>AI Context as Code</small>
@@ -40,16 +54,23 @@
               aria-label="Collapse sidebar"
               aria-expanded="true"
             >
-              <span class="sidebar-collapse-icon" aria-hidden="true"></span>
+              <svg class="button-icon sidebar-collapse-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m12 5-5 5 5 5" />
+              </svg>
             </button>
             <button class="icon-button sidebar-close" type="button" data-action="toggle-nav" aria-label="Close navigation">
-              <span aria-hidden="true">×</span>
+              <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <path d="m5.5 5.5 9 9M14.5 5.5l-9 9" />
+              </svg>
             </button>
           </div>
           <form class="search-form" role="search">
             <label class="search-label" for="global-search">Search trove</label>
             <div class="search-box" data-action="open-search-palette">
-              <span aria-hidden="true">⌕</span>
+              <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true">
+                <circle cx="8.8" cy="8.8" r="4.8" />
+                <path d="m12.4 12.4 3.2 3.2" />
+              </svg>
               <input
                 id="global-search"
                 name="q"
@@ -58,11 +79,13 @@
                 readonly
                 data-action="open-search-palette"
                 aria-haspopup="dialog"
-                placeholder="Search title, path, or context"
+                placeholder="Search context"
               />
               <span class="shortcut-hint" data-shortcut-hint aria-hidden="true">⌘K</span>
               <button class="search-submit" type="button" data-action="open-search-palette" aria-label="Open search palette">
-                <span aria-hidden="true">↵</span>
+                <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M5 10h9M10.5 6.5 14 10l-3.5 3.5" />
+                </svg>
               </button>
             </div>
           </form>
@@ -85,7 +108,10 @@
       <div class="palette-backdrop" data-action="close-search-palette" aria-hidden="true"></div>
       <section class="palette-dialog" role="dialog" aria-modal="true" aria-label="Search public trove">
         <div class="palette-input-row">
-          <span class="palette-search-icon" aria-hidden="true">⌕</span>
+          <svg class="palette-search-icon" viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="8.8" cy="8.8" r="4.8" />
+            <path d="m12.4 12.4 3.2 3.2" />
+          </svg>
           <label class="sr-only" for="palette-search-input">Search public trove</label>
           <input
             id="palette-search-input"
@@ -99,7 +125,9 @@
             placeholder="Search title, path, or context"
           />
           <button class="palette-close" type="button" data-action="close-search-palette" aria-label="Close search">
-            <span aria-hidden="true">×</span>
+            <svg class="button-icon" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="m5.5 5.5 9 9M14.5 5.5l-9 9" />
+            </svg>
           </button>
         </div>
         <div class="palette-status" id="palette-status" aria-live="polite"></div>
