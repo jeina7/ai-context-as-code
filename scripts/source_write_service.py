@@ -108,6 +108,22 @@ class ValidationResult:
         return asdict(self)
 
 
+@dataclass
+class ApplyResult:
+    ok: bool
+    operation: str
+    mode: str
+    preview: DiffPreview
+    validation: ValidationResult | None
+    applied_files: list[str]
+    rolled_back_files: list[str]
+    errors: list[str] = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
 def repo_relative(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
 
@@ -163,6 +179,35 @@ def require_existing_parent(path: Path) -> None:
 def require_available_target(path: Path) -> None:
     if path.exists():
         raise SourceWriteError(f"target path already exists: {repo_relative(path)}")
+
+
+def load_id_registry() -> dict[str, Any]:
+    registry_path = ROOT / "data" / "id-registry.json"
+    if not registry_path.is_file():
+        return {"version": 1, "ids": {}, "paths": {}}
+    try:
+        registry = json.loads(registry_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SourceWriteError("data/id-registry.json is not valid JSON") from exc
+    registry.setdefault("ids", {})
+    registry.setdefault("paths", {})
+    return registry
+
+
+def registry_trove_path(path: Path) -> str:
+    return path.relative_to(TROVE_DIR).as_posix()
+
+
+def require_unregistered_target(path: Path) -> None:
+    registry = load_id_registry()
+    rel_path = registry_trove_path(path)
+    if rel_path in registry.get("paths", {}):
+        raise SourceWriteError(f"target path is already registered: {rel_path}")
+
+
+def require_available_note_id(note_id: str | None) -> None:
+    if note_id and note_id in collect_used_ids():
+        raise SourceWriteError(f"note id is already registered: {note_id}")
 
 
 def normalize_markdown_filename(file_name: str) -> str:
@@ -510,6 +555,15 @@ def run_validation(commands: list[list[str]] | None = None) -> ValidationResult:
     return ValidationResult(ok=all(result.returncode == 0 for result in results), commands=results)
 
 
+def rollback_created_file(path: Path, expected_text: str) -> tuple[bool, str | None]:
+    if not path.exists():
+        return True, None
+    if path.read_text(encoding="utf-8") != expected_text:
+        return False, f"rollback skipped because file changed after write: {repo_relative(path)}"
+    path.unlink()
+    return True, None
+
+
 def create_note(
     *,
     source_path: str | Path,
@@ -525,6 +579,8 @@ def create_note(
 ) -> DiffPreview:
     path = markdown_path_for_target(source_path)
     require_available_target(path)
+    require_unregistered_target(path)
+    require_available_note_id(note_id)
     rel_path = repo_relative(path)
     markdown = compose_note_markdown(
         title=title,
@@ -543,6 +599,106 @@ def create_note(
         [FileChange(rel_path, "", markdown, "create")],
         before_note=empty_note(),
         after_note=after_note,
+    )
+
+
+def apply_create_note(
+    *,
+    source_path: str | Path,
+    title: str,
+    description: str,
+    note_type: str,
+    status: str = "draft",
+    visibility: str = "private",
+    note_id: str | None = None,
+    created: str | None = None,
+    updated: str | None = None,
+    summary_lines: list[str] | None = None,
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = create_note(
+        source_path=source_path,
+        title=title,
+        description=description,
+        note_type=note_type,
+        status=status,
+        visibility=visibility,
+        note_id=note_id,
+        created=created,
+        updated=updated,
+        summary_lines=summary_lines,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_create_note",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if len(preview.changed_files) != 1:
+        raise SourceWriteError("create apply expected exactly one changed file")
+
+    note_id_to_write = preview.after_summary.get("id")
+    if not note_id_to_write:
+        raise SourceWriteError("create preview did not produce a note id")
+
+    target = safe_source_path(preview.changed_files[0], must_exist=False)
+    require_lifecycle_path(target)
+    require_existing_parent(target)
+    require_available_target(target)
+
+    # The diff is for humans. Rebuild the markdown from the preview summary to
+    # keep the actual write independent from unified diff parsing.
+    markdown = compose_note_markdown(
+        title=title,
+        description=description,
+        note_type=note_type,
+        status=status,
+        visibility=visibility,
+        note_id=note_id_to_write,
+        created=created,
+        updated=updated,
+        summary_lines=summary_lines,
+    )
+    after_note = parse_markdown_note(markdown, repo_relative(target))
+    if after_note.errors:
+        raise SourceWriteError(f"create markdown is invalid: {'; '.join(after_note.errors)}")
+
+    target.write_text(markdown, encoding="utf-8")
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_create_note",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=[repo_relative(target)],
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_created_file(target, markdown)
+    errors = ["validation failed; create apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_create_note",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else [repo_relative(target)],
+        rolled_back_files=[repo_relative(target)] if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
     )
 
 
@@ -722,6 +878,7 @@ def note_id_errors(note: MarkdownNote, expected_note_id: str | None) -> list[str
 
 
 createNote = create_note
+applyCreateNote = apply_create_note
 renameNote = rename_note
 moveNote = move_note
 archiveNote = archive_note
@@ -752,6 +909,17 @@ def main(argv: list[str] | None = None) -> int:
     create_parser.add_argument("--visibility", default="private")
     create_parser.add_argument("--note-id")
     create_parser.add_argument("--summary-line", action="append", dest="summary_lines")
+
+    apply_create_parser = subparsers.add_parser("apply-create", help="Create a note and run validation")
+    apply_create_parser.add_argument("--source-path", required=True)
+    apply_create_parser.add_argument("--title", required=True)
+    apply_create_parser.add_argument("--description", required=True)
+    apply_create_parser.add_argument("--type", required=True, dest="note_type")
+    apply_create_parser.add_argument("--status", default="draft")
+    apply_create_parser.add_argument("--visibility", default="private")
+    apply_create_parser.add_argument("--note-id")
+    apply_create_parser.add_argument("--summary-line", action="append", dest="summary_lines")
+    apply_create_parser.add_argument("--skip-build", action="store_true")
 
     rename_title_parser = subparsers.add_parser("preview-rename-title", help="Preview title rename")
     rename_title_parser.add_argument("--source-path", required=True)
@@ -808,6 +976,22 @@ def main(argv: list[str] | None = None) -> int:
             )
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-create":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_create_note(
+                source_path=args.source_path,
+                title=args.title,
+                description=args.description,
+                note_type=args.note_type,
+                status=args.status,
+                visibility=args.visibility,
+                note_id=args.note_id,
+                summary_lines=args.summary_lines,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "preview-rename-title":
             preview = rename_note(

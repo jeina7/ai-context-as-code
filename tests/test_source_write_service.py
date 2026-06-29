@@ -101,6 +101,74 @@ Line three.
         self.assertFalse(preview.route_impact.public_surface_changed)
         self.assertIn('visibility: "private"', preview.diff)
 
+    def test_create_note_preview_rejects_duplicate_note_id(self) -> None:
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "duplicate-id-note.md"
+        self.assertFalse(target.exists())
+
+        with self.assertRaises(service.SourceWriteError):
+            service.create_note(
+                source_path=target,
+                title="Duplicate ID Note",
+                description="Duplicate ID note used by source write service tests",
+                note_type="research",
+                note_id="zz2t-H9rM0",
+                summary_lines=[
+                    "First duplicate summary line.",
+                    "Second duplicate summary line.",
+                    "Third duplicate summary line.",
+                ],
+            )
+
+    def test_apply_create_note_writes_file_after_successful_validation(self) -> None:
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-apply-note.md"
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        result = service.apply_create_note(
+            source_path=target,
+            title="Local Apply Note",
+            description="Apply note used by source write service tests",
+            note_type="research",
+            note_id="ApplyOk001",
+            summary_lines=[
+                "First apply summary line.",
+                "Second apply summary line.",
+                "Third apply summary line.",
+            ],
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertTrue(target.exists())
+        self.assertEqual(result.applied_files, ["trove/Projects/ai-context-as-code/Research/local-apply-note.md"])
+        self.assertEqual(result.rolled_back_files, [])
+        self.assertIn("# Local Apply Note", target.read_text(encoding="utf-8"))
+
+    def test_apply_create_note_rolls_back_when_validation_fails(self) -> None:
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-apply-fail-note.md"
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        result = service.apply_create_note(
+            source_path=target,
+            title="Local Apply Failure Note",
+            description="Apply failure note used by source write service tests",
+            note_type="research",
+            note_id="ApplyFail1",
+            summary_lines=[
+                "First failed apply summary line.",
+                "Second failed apply summary line.",
+                "Third failed apply summary line.",
+            ],
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertFalse(target.exists())
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(result.rolled_back_files, ["trove/Projects/ai-context-as-code/Research/local-apply-fail-note.md"])
+        self.assertIn("validation failed", "\n".join(result.errors))
+
     def test_rename_title_preview_updates_frontmatter_and_h1(self) -> None:
         preview = service.rename_note(
             source_path="trove/Projects/ai-context-as-code/index.md",
