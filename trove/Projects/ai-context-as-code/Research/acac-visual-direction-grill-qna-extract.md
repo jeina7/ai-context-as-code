@@ -5,7 +5,7 @@ description: "Meaningful Q&A extraction from the ACAC visual direction grill tra
 status: active
 created: 2026-06-30
 updated: 2026-06-30
-visibility: internal
+visibility: public
 id: mz9Mw6b6aE
 
 ---

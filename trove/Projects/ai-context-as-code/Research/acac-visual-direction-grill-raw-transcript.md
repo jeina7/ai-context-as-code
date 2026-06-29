@@ -5,7 +5,7 @@ description: "Raw Q&A transcript for the ACAC visual direction grill"
 status: active
 created: 2026-06-30
 updated: 2026-06-30
-visibility: internal
+visibility: public
 id: UBKLr5rA0s
 
 ---

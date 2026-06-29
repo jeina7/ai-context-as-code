@@ -5,7 +5,7 @@ description: "Raw Q&A transcript for the ACAC product direction grill before dec
 status: active
 created: 2026-06-30
 updated: 2026-06-30
-visibility: internal
+visibility: public
 id: E73ubE7kLV
 
 ---

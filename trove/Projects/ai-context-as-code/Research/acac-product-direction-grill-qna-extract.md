@@ -5,7 +5,7 @@ description: "Meaningful Q&A extraction from the ACAC product direction grill tr
 status: active
 created: 2026-06-30
 updated: 2026-06-30
-visibility: internal
+visibility: public
 id: sOkKpZBKqF
 
 ---
