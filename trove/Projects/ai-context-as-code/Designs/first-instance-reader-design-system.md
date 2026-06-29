@@ -76,9 +76,11 @@ Line-height는 본문 1.7 안팎, UI text 1.45 안팎으로 둬요.
 ## Border, Radius, Shadow
 
 ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
+다만 sidebar controls는 제품 표면처럼 보여야 하므로, 작은 버튼과 input에는 더 부드러운 rounded surface를 써요.
 
 - Repeated row: border-top으로 구분해요.
-- Sidebar item: 5px radius만 써요.
+- Sidebar item: compact한 8-10px radius를 써요.
+- Sidebar control: search, shortcut hint, submit, collapse, close button은 같은 soft rounded surface를 써요.
 - Module과 state card: 8px 이하 radius를 써요.
 - Shadow는 drawer와 중요한 state card에만 제한적으로 써요.
 - Section 자체를 큰 floating card처럼 만들지 않아요.
@@ -104,14 +106,20 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 ### Sidebar
 
 - Brand, search, TROVES, FORGE 순서로 둬요.
+- Brand mark는 단순한 글자 박스가 아니라 ACAC의 context/gem/route 느낌을 담은 작은 logo-like mark로 보여줘요.
 - `Daily/`와 `Projects/`는 TROVES예요.
 - `forge/_config/`와 `forge/_archived/`는 divider 아래 FORGE예요.
 - Sidebar folder는 chevron으로 접고 펼쳐요.
 - Current route가 들어있는 folder는 자동으로 열려 있어야 해요.
 - `dir`, `day`, `des`, `dec`, `ref`, `log` 같은 텍스트 badge는 쓰지 않아요.
+- TROVES와 FORGE section heading은 emoji가 아닌 inline SVG icon과 label 조합으로 보여줘요.
+- TROVES icon은 trove/gem/treasure 느낌, FORGE icon은 making/system layer 느낌이어야 해요.
+- File/folder row에는 큰 아이콘을 넣지 않아요. 긴 제목 공간을 우선해요.
 - `forge/_config`와 `forge/_archived` raw folder name은 1차 navigation label로 노출하지 않고 `Operating layer`, `Archive`를 써요.
 - `forge/_assets/`는 보이지 않아야 해요.
-- Active route는 accent-soft background와 `aria-current="page"`로 표시해요.
+- Active route는 accent-soft rounded selected state와 `aria-current="page"`로 표시해요.
+- Desktop에서는 drawer close X를 보이지 않게 하고, collapse/expand button만 보여줘요.
+- Mobile drawer에서는 close X를 유지하되 search, shortcut, submit, collapse button과 같은 visual language를 써요.
 
 ### Reader
 
