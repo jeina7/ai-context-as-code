@@ -45,21 +45,21 @@ Keep the body Korean-first for ACAC project worklogs.
 ```markdown
 ## HH:MM — Clear Title
 
-작업 맥락을 1-2문장으로 적어요.
-왜 이 기록이 나중에 필요할지 알 수 있게 써요.
+Write one or two sentences of work context.
+Explain why this record will matter later.
 
-- 핵심 변경 1
-- 핵심 변경 2
-- 핵심 변경 3
+- Core change 1
+- Core change 2
+- Core change 3
 
-검증:
+Verification:
 
 - `python3 scripts/validate_trove.py` passed.
-- 관련 commit, live URL check, thread final, 또는 기존 record를 확인했어요.
+- Confirmed the related commit, live URL check, thread final, or existing record.
 
-남은 판단:
+Remaining Decisions:
 
-- 필요할 때만 후속 작업을 적어요.
+- Add follow-up only when needed.
 ```
 
 Rules:
@@ -69,7 +69,7 @@ Rules:
 - Keep the title specific enough to distinguish it from nearby entries.
 - Start with one or two context sentences before implementation bullets.
 - Use bullets for core changes.
-- Include verification bullets or a `검증:` section.
+- Include verification bullets or a `Verification:` section.
 - Add remaining decisions or follow-up only when they are actionable.
 
 ## Daily Pointer
