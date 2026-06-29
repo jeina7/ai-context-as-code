@@ -12,9 +12,9 @@ id: 0PVpQI6H0g
 
 # 첫 번째 인스턴스 아키텍처
 
-ACAC 첫 인스턴스는 `trove/` markdown source를 읽어서 public site와 agent-readable context로 바꾸는 정적 시스템이에요.
+ACAC 첫 인스턴스는 `trove/`와 `forge/` markdown source를 읽어서 public site와 agent-readable context로 바꾸는 정적 시스템이에요.
 기존 reference knowledge base의 핵심은 가져오되, 지금은 jeina의 Obsidian 마이그레이션을 위한 첫 사용 사례에 맞춰 단순하게 시작해요.
-초기 아키텍처의 핵심은 source와 output 분리, project 중심 문서 구조, `_config/` special contents, 검증 가능한 build예요.
+초기 아키텍처의 핵심은 source와 output 분리, project 중심 문서 구조, `forge/_config/` special contents, 검증 가능한 build예요.
 브라우저 편집기, GitHub API 저장, 전체 graph, 전체 Obsidian import는 첫 구현 이후로 미뤄요.
 
 ## 설계 입력에서 가져오는 것
@@ -25,7 +25,7 @@ ACAC 첫 인스턴스는 `trove/` markdown source를 읽어서 public site와 ag
 | reference 원칙 | ACAC 첫 인스턴스 적용 |
 |---|---|
 | 파일 경로가 문서의 의미를 설명함 | `trove/Projects/<project>/...`와 `trove/Daily/...`를 사람이 읽을 수 있는 경로로 유지해요. |
-| source와 output을 분리함 | `trove/`는 원본, `data/`와 site build 결과는 생성물이에요. |
+| source와 output을 분리함 | `trove/`와 `forge/`는 원본, `data/`와 site build 결과는 생성물이에요. |
 | `index.md`가 폴더의 진입점임 | 프로젝트와 special contents folder에는 `index.md`를 둬요. |
 | frontmatter와 wikilink를 표준으로 씀 | 모든 markdown 문서에 최소 frontmatter와 H1 요약을 둬요. |
 | 영구 ID는 build가 관리함 | 첫 metadata build부터 `data/id-registry.json`을 만들고 `/trove/<id>` route를 지원해요. |
@@ -40,7 +40,7 @@ ACAC 첫 인스턴스는 네 층으로 나눠요.
 
 ```mermaid
 flowchart TD
-  source["trove/ markdown source"] --> validate["scripts/validate_trove.py"]
+  source["trove/ and forge/ markdown source"] --> validate["scripts/validate_trove.py"]
   validate --> build["scripts/build_trove.py"]
   build --> data["data/*.json"]
   build --> publishable["site가 읽을 markdown payload"]
@@ -48,29 +48,31 @@ flowchart TD
   data --> site["site/ static reader"]
   publishable --> site
   dist --> deploy["Cloudflare Workers static assets"]
-  source --> agents["AGENTS.md와 _config special contents"]
+  source --> agents["AGENTS.md와 forge/_config special contents"]
 ```
 
 각 층의 책임:
 
 | 층 | 책임 |
 |---|---|
-| `trove/` source layer | 사람이 직접 고치는 durable context 원본이에요. |
+| `trove/` source layer | 사람이 읽는 Daily와 Projects context 원본이에요. |
+| `forge/` source layer | agent-facing config, archive, hidden storage 원본이에요. |
 | `scripts/` validation/build layer | frontmatter, 링크, 폴더 규칙을 검사하고 site가 읽을 데이터를 만들어요. |
 | `data/` metadata layer | tree, note metadata, search index, backlinks, home summary를 저장해요. |
 | `site/` presentation layer | public reader UI예요. 첫 화면, sidebar, 문서 렌더링, 검색을 담당해요. |
-| agent interface layer | root `AGENTS.md`와 `trove/_config/`가 agent가 읽는 규칙과 절차를 제공해요. |
+| agent interface layer | root `AGENTS.md`와 `forge/_config/`가 agent가 읽는 규칙과 절차를 제공해요. |
 | deploy layer | `dist/`를 Cloudflare Workers static assets로 배포하고, 실제 route와 analytics를 확인해요. |
 
 ## Source layer
 
-`trove/`는 ACAC가 관리하는 durable context root예요.
+`trove/`는 사람이 읽는 context root이고, `forge/`는 그 context를 운영하고 보존하는 system root예요.
 Obsidian의 vault를 그대로 복제하지 않고, 첫 인스턴스에 필요한 구조만 먼저 둬요.
 
 ```text
 trove/
   Daily/
   Projects/
+forge/
   _config/
     Agents/
     Memory/
@@ -84,16 +86,16 @@ trove/
 
 | 폴더 | 역할 | public site 표시 |
 |---|---|---|
-| `Daily/` | 하루 단위 context hub와 worklog pointer | main sidebar 상단 |
-| `Projects/` | 프로젝트별 결정, 설계, 작업 기록, 참고, 조사 | main sidebar 상단 |
-| `_config/` | Memory, Skills, Commands, Agents 같은 special contents | 구분선 아래 하단 영역 |
-| `_assets/` | 이미지와 첨부 파일 저장 | sidebar 숨김 |
-| `_archived/` | 현재 기준에서 밀려난 문서 | 구분선 아래, 기본 접힘 |
+| `trove/Daily/` | 하루 단위 context hub와 worklog pointer | `TROVES` 상단 |
+| `trove/Projects/` | 프로젝트별 결정, 설계, 작업 기록, 참고, 조사 | `TROVES` 상단 |
+| `forge/_config/` | Memory, Skills, Commands, Agents 같은 special contents | 구분선 아래 `FORGE` |
+| `forge/_assets/` | 이미지와 첨부 파일 저장 | sidebar 숨김 |
+| `forge/_archived/` | 현재 기준에서 밀려난 문서 | `FORGE`, 기본 접힘 |
 
 언어 기준:
 
 - `trove/Projects/`와 `trove/Daily/`는 한국어 원본이에요.
-- `trove/_config/`는 영어 원본이에요.
+- `forge/_config/`는 영어 원본이에요.
 - 영어 번역본은 한국어 원본이 안정화된 뒤 별도 `en/` 구조로 생성해요.
 - 번역본과 원본이 충돌하면 한국어 원본이 이겨요.
 
@@ -139,10 +141,10 @@ visibility: public
 | `worklog` | `trove/Projects/<project>/Worklog/...` | 작업 단위 기록 |
 | `reference` | `trove/Projects/<project>/References/...` | 다시 찾아볼 설명과 가이드 |
 | `research` | `trove/Projects/<project>/Research/...` | 조사 산출물 |
-| `memory` | `trove/_config/Memory/...` | 장기 context |
-| `skill` | `trove/_config/Skills/...` | 반복 workflow |
-| `command` | `trove/_config/Commands/...` | 반복 command procedure |
-| `agent-entry` | `trove/_config/Agents/...` | agent runtime entry document |
+| `memory` | `forge/_config/Memory/...` | 장기 context |
+| `skill` | `forge/_config/Skills/...` | 반복 workflow |
+| `command` | `forge/_config/Commands/...` | 반복 command procedure |
+| `agent-entry` | `forge/_config/Agents/...` | agent runtime entry document |
 
 본문 기준:
 
@@ -179,7 +181,7 @@ ACAC 첫 인스턴스는 public product surface가 필요하지만, local Obsidi
 - H1 아래 3-5줄 요약 없음
 - 허용되지 않은 `type`, `status`, `visibility`
 - public build 대상인데 `visibility: public`이 아님
-- `_assets/` markdown 문서가 sidebar 대상으로 잡힘
+- `forge/_assets/` markdown 문서가 sidebar 대상으로 잡힘
 
 초기 warning:
 
@@ -193,7 +195,7 @@ error가 있으면 build를 멈추고, warning은 첫 구현에서는 보고만 
 
 ## Build layer
 
-`scripts/build_trove.py`는 `trove/`를 읽어서 site가 쓸 데이터를 만들어요.
+`scripts/build_trove.py`는 `trove/`와 `forge/`를 읽어서 site가 쓸 데이터를 만들어요.
 첫 구현에서는 Python 표준 라이브러리 중심으로 시작하고, markdown rendering은 site 쪽에서 처리해요.
 
 생성물:
@@ -215,10 +217,10 @@ folder ordering:
 1. `Daily/`
 2. `Projects/`
 3. special section separator
-4. `_config/`
-5. `_archived/`
+4. `forge/_config/`
+5. `forge/_archived/`
 
-`_assets/`는 tree와 search에서 숨기고, 참조한 문서를 통해서만 접근하게 해요.
+`forge/_assets/`는 tree와 search에서 숨기고, 참조한 문서를 통해서만 접근하게 해요.
 
 `dist/` 조립 기준:
 
@@ -248,8 +250,8 @@ ID 생성 기준:
 
 ID 생성 흐름:
 
-1. `scripts/build_trove.py`가 `trove/` 아래 markdown 문서를 스캔해요.
-2. `_assets/` 아래 파일은 문서 ID 생성 대상에서 제외해요.
+1. `scripts/build_trove.py`가 `trove/`와 `forge/` 아래 markdown 문서를 스캔해요.
+2. `forge/_assets/` 아래 파일은 문서 ID 생성 대상에서 제외해요.
 3. frontmatter의 `id`가 registry에 있으면 그 ID를 유지해요.
 4. frontmatter에 `id`가 없고 path가 registry에 있으면 registry의 ID를 frontmatter에 복원해요.
 5. frontmatter `id`도 없고 path도 registry에 없으면 새 ID를 생성해요.
@@ -365,21 +367,21 @@ ID registry 기준:
 ## Agent interface layer
 
 ACAC는 사람이 읽는 사이트이면서 agent가 읽는 context repository예요.
-agent-facing content는 `_config/` 아래에서 markdown으로 관리해요.
+agent-facing content는 `forge/_config/` 아래에서 markdown으로 관리해요.
 
 초기 기준:
 
 - root `AGENTS.md`는 agent가 처음 읽는 얇은 entry file이에요.
-- 실제 장기 원칙은 `trove/_config/Memory/`에 둬요.
-- `trove/_config/Skills/`는 반복 workflow를 담아요.
-- `trove/_config/Commands/`는 반복 command procedure를 담아요.
-- `trove/_config/Agents/`는 `common.md`, `agent.md`, `claude.md` 같은 runtime entry source 문서를 담아요.
+- 실제 장기 원칙은 `forge/_config/Memory/`에 둬요.
+- `forge/_config/Skills/`는 반복 workflow를 담아요.
+- `forge/_config/Commands/`는 반복 command procedure를 담아요.
+- `forge/_config/Agents/`는 `common.md`, `agent.md`, `claude.md` 같은 runtime entry source 문서를 담아요.
 - 같은 내용이 중복되면 `Memory/`가 설명 원본이고, `Agents/`, `Skills/`, `Commands/`는 실행하기 쉬운 형태로 요약해요.
 
 첫 구현에서는 repo-local sync만 만들어요.
-`scripts/sync_agent_docs.py`는 `_config/Agents/` source를 읽어서 root `AGENTS.md`와 `CLAUDE.md`를 생성해요.
+`scripts/sync_agent_docs.py`는 `forge/_config/Agents/` source를 읽어서 root `AGENTS.md`와 `CLAUDE.md`를 생성해요.
 전역 runtime entry인 `~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`, 전역 skill folder는 자동으로 건드리지 않아요.
-먼저 `_config/`가 content로 잘 읽히고, 사람이 봐도 구조가 이해되는지 확인해요.
+먼저 `forge/_config/`가 content로 잘 읽히고, 사람이 봐도 구조가 이해되는지 확인해요.
 
 ## Deploy and analytics layer
 
@@ -420,11 +422,11 @@ Cloudflare Web Analytics 기준:
 
 이 아키텍처의 첫 구현이 끝났다고 보려면 아래가 되어야 해요.
 
-- `trove/`만 봐도 ACAC 첫 인스턴스의 문서 구조가 이해돼요.
+- `trove/`와 `forge/`를 보면 ACAC 첫 인스턴스의 source 구조가 이해돼요.
 - `python3 scripts/validate_trove.py`가 source 문서의 기본 오류를 잡아요.
 - `python3 scripts/build_trove.py`가 `data/*.json`, markdown payload, Cloudflare Workers static assets output인 `dist/`를 만들어요.
 - site 첫 화면이 `README.md`와 generated home data를 기반으로 열려요.
-- sidebar에서 main context와 special contents가 분리되어 보여요.
-- `_assets/`는 사용자 탐색 대상이 아니라 내부 storage로 남아요.
+- sidebar에서 `TROVES`와 `FORGE`가 분리되어 보여요.
+- `forge/_assets/`는 사용자 탐색 대상이 아니라 내부 storage로 남아요.
 - public site에는 `visibility: public` 문서만 올라가요.
 - `trove/Projects/ai-context-as-code/`가 첫 실제 프로젝트 예시로 작동해요.

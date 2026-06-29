@@ -1,7 +1,7 @@
 ---
 type: index
 title: "Configuration Contents"
-description: "Agent-facing markdown content managed inside the ACAC trove"
+description: "Agent-facing markdown content managed inside the ACAC forge"
 status: active
 created: 2026-06-28
 updated: 2026-06-29
@@ -13,7 +13,7 @@ id: FL87bCPt08
 # Configuration Contents
 
 This folder stores agent-facing markdown content for the ACAC first instance.
-It is content inside the trove, not a direct sync target for user-level runtime folders.
+It is content inside the forge, not a direct sync target for user-level runtime folders.
 The first seed keeps only the smallest reusable rules needed by future agents and build scripts.
 Durable writing conventions live under `Memory/Conventions/`.
 

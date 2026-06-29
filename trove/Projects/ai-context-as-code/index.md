@@ -19,9 +19,9 @@ The first live deployment is now running on Cloudflare Workers static assets at 
 
 ## Current Scope
 
-- Build the first `trove/` source structure.
-- Keep `Daily/`, `Projects/`, and `_config/` clearly separated.
-- Treat `_config/Agents/`, `_config/Memory/`, `_config/Skills/`, and `_config/Commands/` as markdown content.
+- Build the first `trove/` and `forge/` source structure.
+- Keep `trove/Daily/`, `trove/Projects/`, and `forge/_config/` clearly separated.
+- Treat `forge/_config/Agents/`, `forge/_config/Memory/`, `forge/_config/Skills/`, and `forge/_config/Commands/` as markdown content.
 - Generate `data/*.json`, `_build/trove/`, and `dist/` from source.
 - Defer Claude Code live connection, MCP, hooks, and automatic memory sync.
 

@@ -42,20 +42,20 @@ id: N_TyCBWLFT
 | 기준 | 구현 내용 |
 |---|---|
 | 첫 목표 | 범용 오픈소스 본체가 아니라 jeina의 local Obsidian을 cloud 기반 ACAC 첫 인스턴스로 옮기는 틀을 먼저 만들어요. |
-| root folder | ACAC가 관리하는 durable context root는 `trove/`예요. `vault/`나 `context/`를 쓰지 않아요. |
-| main context | `trove/Daily/`, `trove/Projects/`가 기본 탐색 영역이에요. |
-| special contents | `Memory/`, `Skills/`, `Commands/`, `Agents/`는 모두 `trove/_config/` 아래에 둬요. top-level `Memory/`는 만들지 않아요. |
-| special area | `_config/`, `_archived/`는 사이드바 하단 영역이에요. main context처럼 보이게 하지 않아요. |
-| hidden storage | `_assets/`는 내부 저장소예요. sidebar와 기본 search 결과에 직접 노출하지 않아요. |
+| source folders | ACAC가 관리하는 source root는 `trove/`와 `forge/`예요. `vault/`나 `context/`를 쓰지 않아요. |
+| main context | `trove/Daily/`, `trove/Projects/`가 `TROVES` 기본 탐색 영역이에요. |
+| special contents | `Memory/`, `Skills/`, `Commands/`, `Agents/`는 모두 `forge/_config/` 아래에 둬요. top-level `Memory/`는 만들지 않아요. |
+| special area | `forge/_config/`, `forge/_archived/`는 사이드바 하단 `FORGE` 영역이에요. main context처럼 보이게 하지 않아요. |
+| hidden storage | `forge/_assets/`는 내부 저장소예요. sidebar와 기본 search 결과에 직접 노출하지 않아요. |
 | home | `trove/Home.md`를 만들지 않아요. 첫 화면은 root `README.md`와 `data/home.json`이 담당해요. |
 | URL | 문서 canonical public URL은 `/trove/<id>`예요. `/notes/...`나 `/id/<id>` route는 만들지 않아요. |
 | ID | build가 10자 URL-safe ID를 생성하고 `data/id-registry.json`으로 source path와 매핑해요. |
-| 언어 | `_config/`는 영어 원본, `Daily/`와 `Projects/`는 한국어 원본이에요. |
+| 언어 | `forge/_config/`는 영어 원본, `trove/Daily/`와 `trove/Projects/`는 한국어 원본이에요. |
 | deploy | 첫 public deploy는 Cloudflare Workers static assets로 성공했어요. `dist/`를 Wrangler가 배포해요. |
 | route fallback | Workers static assets는 `wrangler.jsonc`의 `not_found_handling: single-page-application`로 `/trove/*`와 `/search`를 app shell에 연결해요. `dist/_redirects`는 만들지 않아요. |
 | analytics | Cloudflare Web Analytics는 dashboard automatic setup을 우선해요. manual beacon injection을 고르면 `ACAC_CF_WEB_ANALYTICS_TOKEN`을 쓰고, 둘을 동시에 켜지 않아요. |
 | seed scope | 첫 seed 문서는 public-safe 최소 문서만 넣어요. 전체 Obsidian migration은 하지 않아요. |
-| agent docs | `_config/Agents/`에는 `common.md`, `agent.md`, `claude.md`를 seed로 둬요. |
+| agent docs | `forge/_config/Agents/`에는 `common.md`, `agent.md`, `claude.md`를 seed로 둬요. |
 | agent sync | repo-local agent entry 문서를 생성하는 script는 만들지만, `~/.codex`나 `~/.claude` 같은 외부 runtime config를 자동으로 건드리지는 않아요. |
 
 ## 새 repo의 첫 구조
@@ -79,6 +79,7 @@ ai-context-as-code/
         Worklog/
         References/
         Research/
+  forge/
     _config/
       index.md
       Agents/
@@ -103,27 +104,27 @@ ai-context-as-code/
 | ------------------- | --------------------------------------------- | ------ |
 | `trove/Daily/`    | 하루 단위 context, 작업 요약, project worklog pointer | 한국어 우선 |
 | `trove/Projects/` | 프로젝트별 문서, 설계, 결정, 작업 기록, 참고 문서, 조사 결과         | 한국어 우선 |
-| `trove/_config/`  | Memory, Skills, Commands 같은 agent-facing special contents | 영어     |
-| `trove/_assets/`  | 이미지와 첨부 파일을 뒤에서 저장하는 내부 storage               | 해당 없음  |
-| `trove/_archived/` | 현재 기준에서 밀려난 문서                               | 원문 유지  |
+| `forge/_config/`  | Memory, Skills, Commands 같은 agent-facing special contents | 영어     |
+| `forge/_assets/`  | 이미지와 첨부 파일을 뒤에서 저장하는 내부 storage               | 해당 없음  |
+| `forge/_archived/` | 현재 기준에서 밀려난 문서                               | 원문 유지  |
 | `site/`             | public site shell                             | 코드 기준  |
 | `scripts/`          | build, validate, import 스크립트                  | 코드 기준  |
 | `data/`             | ID registry, generated metadata               | 코드 기준  |
 
 ## 제품 사이드바 표시 규칙
 
-`_config/`, `_archived/`는 main context가 아니에요.
-제품에서는 special contents와 과거 기록을 위한 하단 보조 영역으로 취급해요.
-`_assets/`는 UI에서 탐색하는 폴더가 아니라 내부 storage로 취급해요.
+`forge/_config/`, `forge/_archived/`는 main context가 아니에요.
+제품에서는 special contents와 과거 기록을 위한 하단 `FORGE` 영역으로 취급해요.
+`forge/_assets/`는 UI에서 탐색하는 폴더가 아니라 내부 storage로 취급해요.
 
-- 사이드바의 기본 탐색은 `Daily/`, `Projects/`를 먼저 보여줘요.
-- `_config/`, `_archived/`는 구분선 아래 맨 아래쪽에 묶어서 보여줘요.
-- `_config/` 안의 `Memory/`, `Skills/`, `Commands/`는 special contents로 보여줘요.
-- `_archived/`는 기본적으로 접힌 상태로 두고, 검색이나 직접 열기에서 접근하게 해요.
-- `_assets/`는 사이드바에 보여주지 않고, 첨부를 가진 문서에서만 간접적으로 접근해요.
-- `_config/`와 `_archived/`는 검색과 링크 대상에 포함해요.
-- `_assets/`의 파일 자체는 기본 검색 결과로 노출하지 않고, 그 파일을 참조하는 문서를 우선 보여줘요.
-- public site에서 `_config/`는 사람이 매일 읽는 main context가 아니라 agent가 쓰는 특수 문서 묶음으로 보여줘요.
+- 사이드바의 `TROVES` 영역은 `Daily/`, `Projects/`를 먼저 보여줘요.
+- `forge/_config/`, `forge/_archived/`는 구분선 아래 `FORGE`에 묶어서 보여줘요.
+- `forge/_config/` 안의 `Memory/`, `Skills/`, `Commands/`는 special contents로 보여줘요.
+- `forge/_archived/`는 기본적으로 접힌 상태로 두고, 검색이나 직접 열기에서 접근하게 해요.
+- `forge/_assets/`는 사이드바에 보여주지 않고, 첨부를 가진 문서에서만 간접적으로 접근해요.
+- `forge/_config/`와 `forge/_archived/`는 검색과 링크 대상에 포함해요.
+- `forge/_assets/`의 파일 자체는 기본 검색 결과로 노출하지 않고, 그 파일을 참조하는 문서를 우선 보여줘요.
+- public site에서 `forge/_config/`는 사람이 매일 읽는 main context가 아니라 agent가 쓰는 특수 문서 묶음으로 보여줘요.
 
 ## 문서 단위
 
@@ -138,31 +139,31 @@ ai-context-as-code/
 | `reference` | `trove/Projects/<project>/References/...` | 해당 프로젝트에서 다시 찾아볼 설명과 가이드 |
 | `research` | `trove/Projects/<project>/Research/...` | 해당 프로젝트의 조사 결과 |
 | `daily` | `trove/Daily/YYYY-MM/YYYY-MM-DD.md` | 하루 단위 context와 worklog pointer |
-| `memory` | `trove/_config/Memory/...` | 여러 세션과 프로젝트에서 반복해서 쓰는 장기 context |
-| `skill` | `trove/_config/Skills/...` | 반복 가능한 agent workflow |
-| `command` | `trove/_config/Commands/...` | 반복 가능한 command procedure |
-| `agent-entry` | `trove/_config/Agents/...` | agent runtime entry document |
-| `principle` | `trove/_config/Memory/Principles/...` | ACAC 인스턴스 전체에 적용할 운영 원칙 |
-| `convention` | `trove/_config/Memory/Conventions/...` | 문서 작성, 링크, 번역, 검증 규칙 |
-| `context-design` | `trove/_config/Memory/Designs/...` | ACAC 인스턴스 자체의 구조 설계 |
+| `memory` | `forge/_config/Memory/...` | 여러 세션과 프로젝트에서 반복해서 쓰는 장기 context |
+| `skill` | `forge/_config/Skills/...` | 반복 가능한 agent workflow |
+| `command` | `forge/_config/Commands/...` | 반복 가능한 command procedure |
+| `agent-entry` | `forge/_config/Agents/...` | agent runtime entry document |
+| `principle` | `forge/_config/Memory/Principles/...` | ACAC 인스턴스 전체에 적용할 운영 원칙 |
+| `convention` | `forge/_config/Memory/Conventions/...` | 문서 작성, 링크, 번역, 검증 규칙 |
+| `context-design` | `forge/_config/Memory/Designs/...` | ACAC 인스턴스 자체의 구조 설계 |
 
 `References/`와 `Research/`는 프로젝트별 하위 폴더로 둬요.
-조사 결과가 여러 프로젝트에 반복 적용할 원칙이나 작성 규약으로 굳어지면 `trove/_config/Memory/`로 올려요.
+조사 결과가 여러 프로젝트에 반복 적용할 원칙이나 작성 규약으로 굳어지면 `forge/_config/Memory/`로 올려요.
 나중에 필요해지면 프로젝트별 `Troubleshooting/`, `Meetings/`를 추가해요.
 
 ## Special contents 운영 규칙
 
-`trove/_config/`는 agent-facing special contents를 관리하는 곳이에요.
+`forge/_config/`는 agent-facing special contents를 관리하는 곳이에요.
 여기에는 agent가 읽는 장기 기억, 반복 workflow, 반복 command, runtime entry 문서가 함께 들어가요.
 
 초기 하위 폴더:
 
 | 폴더 | 담을 내용 |
 |---|---|
-| `trove/_config/Agents/` | `common.md`, `agent.md`, `claude.md` 같은 agent entry document source |
-| `trove/_config/Memory/` | 여러 세션과 프로젝트에서 반복해서 쓰는 장기 context |
-| `trove/_config/Skills/` | 재사용 가능한 agent workflow |
-| `trove/_config/Commands/` | 반복 실행할 command procedure |
+| `forge/_config/Agents/` | `common.md`, `agent.md`, `claude.md` 같은 agent entry document source |
+| `forge/_config/Memory/` | 여러 세션과 프로젝트에서 반복해서 쓰는 장기 context |
+| `forge/_config/Skills/` | 재사용 가능한 agent workflow |
+| `forge/_config/Commands/` | 반복 실행할 command procedure |
 
 `Memory/`, `Skills/`, `Commands/`는 모두 markdown content예요.
 다만 main context가 아니라 agent가 쓰는 특수 콘텐츠로 다뤄요.
@@ -171,37 +172,37 @@ ai-context-as-code/
 
 | 문서 | 담을 내용 |
 |---|---|
-| `trove/_config/Agents/common.md` | 여러 agent entry가 공유하는 기본 규칙 |
-| `trove/_config/Agents/agent.md` | root `AGENTS.md`로 생성될 repo-local agent entry source |
-| `trove/_config/Agents/claude.md` | root `CLAUDE.md`로 생성될 Claude entry source |
-| `trove/_config/Memory/MEMORY.md` | 장기 기억 index |
+| `forge/_config/Agents/common.md` | 여러 agent entry가 공유하는 기본 규칙 |
+| `forge/_config/Agents/agent.md` | root `AGENTS.md`로 생성될 repo-local agent entry source |
+| `forge/_config/Agents/claude.md` | root `CLAUDE.md`로 생성될 Claude entry source |
+| `forge/_config/Memory/MEMORY.md` | 장기 기억 index |
 
 아래 문서는 첫 seed 이후에 필요해질 때 추가해요.
 처음부터 전부 만들면 구조가 무거워져서, seed에는 포함하지 않아요.
 
 | 후보 문서 | 담을 내용 |
 |---|---|
-| `trove/_config/Memory/Principles/source-of-truth.md` | context note가 본문 SSOT이고 runtime memory는 pointer라는 원칙 |
-| `trove/_config/Memory/Principles/memory-tiers.md` | working, daily, long-term memory를 나누는 규칙 |
-| `trove/_config/Memory/Principles/durable-documents.md` | Daily 없이 6개월 뒤에도 읽히는 문서를 만드는 규칙 |
-| `trove/_config/Memory/Conventions/daily-and-worklog.md` | detailed worklog + Daily pointer 이중 기록 규칙 |
-| `trove/_config/Memory/Conventions/frontmatter.md` | natural-language frontmatter 값은 따옴표로 감싸는 규칙 |
-| `trove/_config/Memory/Conventions/wikilinks-and-sources.md` | wikilink, source, archive, reference 사용 규칙 |
-| `trove/_config/Memory/Conventions/raw-note-imports.md` | raw note를 정리하고 원본을 처리하는 규칙 |
-| `trove/_config/Memory/Conventions/writing-voice.md` | 쉬운 한국어, 해요체, 자체 발명 용어 금지 규칙 |
-| `trove/_config/Memory/Designs/context-structure.md` | `Daily/`, `Projects/`, `_config/` 경계 설계 |
+| `forge/_config/Memory/Principles/source-of-truth.md` | context note가 본문 SSOT이고 runtime memory는 pointer라는 원칙 |
+| `forge/_config/Memory/Principles/memory-tiers.md` | working, daily, long-term memory를 나누는 규칙 |
+| `forge/_config/Memory/Principles/durable-documents.md` | Daily 없이 6개월 뒤에도 읽히는 문서를 만드는 규칙 |
+| `forge/_config/Memory/Conventions/daily-and-worklog.md` | detailed worklog + Daily pointer 이중 기록 규칙 |
+| `forge/_config/Memory/Conventions/frontmatter.md` | natural-language frontmatter 값은 따옴표로 감싸는 규칙 |
+| `forge/_config/Memory/Conventions/wikilinks-and-sources.md` | wikilink, source, archive, reference 사용 규칙 |
+| `forge/_config/Memory/Conventions/raw-note-imports.md` | raw note를 정리하고 원본을 처리하는 규칙 |
+| `forge/_config/Memory/Conventions/writing-voice.md` | 쉬운 한국어, 해요체, 자체 발명 용어 금지 규칙 |
+| `forge/_config/Memory/Designs/context-structure.md` | `Daily/`, `Projects/`, `forge/_config/` 경계 설계 |
 
 Special contents 경계:
 
-- `trove/_config/Memory/`: agent가 장기적으로 재사용해야 하는 원칙, 선호, 판단 기준, 구조 설계를 담아요.
-- `trove/_config/Skills/`: 특정 상황에서 반복 실행할 workflow를 담아요.
-- `trove/_config/Commands/`: agent나 사람이 반복 실행할 command procedure를 담아요.
-- `trove/_config/Agents/`: agent runtime이 처음 읽는 entry document를 담아요.
+- `forge/_config/Memory/`: agent가 장기적으로 재사용해야 하는 원칙, 선호, 판단 기준, 구조 설계를 담아요.
+- `forge/_config/Skills/`: 특정 상황에서 반복 실행할 workflow를 담아요.
+- `forge/_config/Commands/`: agent나 사람이 반복 실행할 command procedure를 담아요.
+- `forge/_config/Agents/`: agent runtime이 처음 읽는 entry document를 담아요.
 - 같은 내용이 여러 special contents에 필요하면 `Memory/`가 설명 원본이고, `Skills/`, `Commands/`, `Agents/`는 실행하기 쉬운 형태로 요약해요.
 
 Agent entry sync 기준:
 
-- `trove/_config/Agents/common.md`, `agent.md`, `claude.md`가 source예요.
+- `forge/_config/Agents/common.md`, `agent.md`, `claude.md`가 source예요.
 - root `AGENTS.md`와 root `CLAUDE.md`는 `scripts/sync_agent_docs.py`가 생성하는 output으로 취급해요.
 - 생성된 파일에는 직접 수정하지 말라는 header를 넣어요.
 - sync script는 repo 안의 entry file만 갱신해요.
@@ -209,11 +210,11 @@ Agent entry sync 기준:
 
 ## _assets 운영 규칙
 
-`trove/_assets/`는 이미지와 첨부 파일을 저장하는 내부 폴더예요.
+`forge/_assets/`는 이미지와 첨부 파일을 저장하는 내부 폴더예요.
 사용자가 따로 탐색하거나 관리해야 하는 지식 영역으로 보지 않아요.
 
-- 문서가 이미지나 파일을 참조할 때만 `_assets/`에 저장해요.
-- public site 사이드바에는 `_assets/`를 보여주지 않아요.
+- 문서가 이미지나 파일을 참조할 때만 `forge/_assets/`에 저장해요.
+- public site 사이드바에는 `forge/_assets/`를 보여주지 않아요.
 - 검색 결과에는 파일 자체보다 그 파일을 참조하는 문서를 우선 보여줘요.
 - 첨부 파일 이름과 경로는 build/import 도구가 관리할 수 있게 해요.
 
@@ -275,7 +276,7 @@ Daily 문서가 담지 않는 것:
 - 프로젝트 작업 상세: `trove/Projects/<project>/Worklog/YYYY-MM-DD.md`
 - 결정 본문: `trove/Projects/<project>/Decisions/...`
 - 설계 본문: `trove/Projects/<project>/Designs/...`
-- 장기 운영 규칙: `trove/_config/Memory/...`
+- 장기 운영 규칙: `forge/_config/Memory/...`
 
 Daily의 worklog section은 아래처럼 짧게 유지해요.
 
@@ -329,16 +330,16 @@ Hash route는 쓰지 않아요.
 
 ## 언어와 번역
 
-`_config/` content는 영어가 원본이에요.
+`forge/_config/` content는 영어가 원본이에요.
 
 예시:
 
-- `trove/_config/Agents/common.md`
-- `trove/_config/Agents/agent.md`
-- `trove/_config/Agents/claude.md`
-- `trove/_config/Memory/MEMORY.md`
-- `trove/_config/Skills/*/SKILL.md`
-- `trove/_config/Commands/*.md`
+- `forge/_config/Agents/common.md`
+- `forge/_config/Agents/agent.md`
+- `forge/_config/Agents/claude.md`
+- `forge/_config/Memory/MEMORY.md`
+- `forge/_config/Skills/*/SKILL.md`
+- `forge/_config/Commands/*.md`
 
 `Projects/`, `Daily/` content는 한국어가 원본이에요.
 영어 콘텐츠는 나중에 `en/` 아래에 생성해요.
@@ -366,11 +367,11 @@ en/Projects/ai-context-as-code/Designs/first-instance-frame.md
 1. 빈 repo에 `trove/`, `site/`, `scripts/`, `data/` 기본 구조를 만들어요.
 2. `trove/Projects/ai-context-as-code/index.md`를 만들어요.
 3. `trove/Daily/YYYY-MM/YYYY-MM-DD.md` 템플릿을 만들어요.
-4. `trove/_config/index.md`를 영어로 만들고 special contents의 기준을 적어요.
-5. `trove/_config/Agents/common.md`, `agent.md`, `claude.md`를 만들어요.
-6. `trove/_config/Memory/MEMORY.md`를 만들고 장기 기억의 승격 기준을 적어요.
+4. `forge/_config/index.md`를 영어로 만들고 special contents의 기준을 적어요.
+5. `forge/_config/Agents/common.md`, `agent.md`, `claude.md`를 만들어요.
+6. `forge/_config/Memory/MEMORY.md`를 만들고 장기 기억의 승격 기준을 적어요.
 7. `scripts/sync_agent_docs.py`로 root `AGENTS.md`, `CLAUDE.md`를 생성해요.
-8. `scripts/validate_trove.py`로 frontmatter, H1, visibility, `_assets/` 규칙을 검증해요.
+8. `scripts/validate_trove.py`로 frontmatter, H1, visibility, `forge/_assets/` 규칙을 검증해요.
 9. `scripts/build_trove.py`로 `data/id-registry.json`, `data/notes.json`, `data/tree.json`, `data/home.json`, `data/search-index.json`, `data/backlinks.json`, `data/build.json`을 만들어요.
 10. `scripts/build_trove.py`가 Cloudflare Workers static assets output인 `dist/`를 조립하게 해요.
 11. 모든 public 문서가 `/trove/<id>` route를 갖게 해요.
@@ -393,8 +394,8 @@ en/Projects/ai-context-as-code/Designs/first-instance-frame.md
 
 - repo root만 봐도 ACAC가 첫 인스턴스 프로젝트라는 점이 보여요.
 - root `README.md`와 public site 첫 화면에서 전체 구조와 사용법을 이해할 수 있어요.
-- `Daily/`, `Projects/`, `_config/`, `_assets/`, `_archived/`의 역할이 겹치지 않아요.
+- `Daily/`, `Projects/`, `forge/_config/`, `forge/_assets/`, `forge/_archived/`의 역할이 겹치지 않아요.
 - `Daily/`가 하루 단위 context hub이고, 상세 worklog는 project folder에 남는다는 기준이 보여요.
-- AGENTS와 memory에서 가져온 context 운영 규칙이 `_config/Memory/Principles/`와 `_config/Memory/Conventions/`에 들어갈 위치가 보여요.
-- `_config/` content는 영어, `Projects/`, `Daily/` content는 한국어 우선이라는 원칙이 문서와 예시에서 드러나요.
+- AGENTS와 memory에서 가져온 context 운영 규칙이 `forge/_config/Memory/Principles/`와 `forge/_config/Memory/Conventions/`에 들어갈 위치가 보여요.
+- `forge/_config/` content는 영어, `Projects/`, `Daily/` content는 한국어 우선이라는 원칙이 문서와 예시에서 드러나요.
 - 이전 설계와 새 설계가 섞이지 않고 archive에서만 확인돼요.

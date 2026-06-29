@@ -22,8 +22,10 @@
     },
     "9m41s1bWfU": {
       "created": "2026-06-28",
-      "currentPath": "_config/Agents/agent.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/Agents/agent.md",
+      "previousPaths": [
+        "_config/Agents/agent.md"
+      ],
       "route": "/trove/9m41s1bWfU",
       "title": "Codex Agent Entry",
       "type": "agent-entry",
@@ -62,8 +64,10 @@
     },
     "FL87bCPt08": {
       "created": "2026-06-28",
-      "currentPath": "_config/index.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/index.md",
+      "previousPaths": [
+        "_config/index.md"
+      ],
       "route": "/trove/FL87bCPt08",
       "title": "Configuration Contents",
       "type": "index",
@@ -102,8 +106,10 @@
     },
     "Tx8SwdTFoS": {
       "created": "2026-06-29",
-      "currentPath": "_config/Memory/Conventions/trove-note-convention.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/Memory/Conventions/trove-note-convention.md",
+      "previousPaths": [
+        "_config/Memory/Conventions/trove-note-convention.md"
+      ],
       "route": "/trove/Tx8SwdTFoS",
       "title": "Trove Note Convention",
       "type": "convention",
@@ -117,7 +123,7 @@
       "route": "/trove/UzbYw-l2kg",
       "title": "2026-06-28",
       "type": "worklog",
-      "updated": "2026-06-28",
+      "updated": "2026-06-29",
       "visibility": "public"
     },
     "X_Vwcz2ZL1": {
@@ -142,8 +148,10 @@
     },
     "qskThSYA1P": {
       "created": "2026-06-28",
-      "currentPath": "_config/Memory/MEMORY.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/Memory/MEMORY.md",
+      "previousPaths": [
+        "_config/Memory/MEMORY.md"
+      ],
       "route": "/trove/qskThSYA1P",
       "title": "ACAC Memory Index",
       "type": "memory",
@@ -162,8 +170,10 @@
     },
     "vuO9iZrVWu": {
       "created": "2026-06-28",
-      "currentPath": "_config/Agents/common.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/Agents/common.md",
+      "previousPaths": [
+        "_config/Agents/common.md"
+      ],
       "route": "/trove/vuO9iZrVWu",
       "title": "Common Agent Rules",
       "type": "agent-entry",
@@ -172,8 +182,10 @@
     },
     "yKLASXCycn": {
       "created": "2026-06-28",
-      "currentPath": "_config/Agents/claude.md",
-      "previousPaths": [],
+      "currentPath": "forge/_config/Agents/claude.md",
+      "previousPaths": [
+        "_config/Agents/claude.md"
+      ],
       "route": "/trove/yKLASXCycn",
       "title": "Claude Agent Entry",
       "type": "agent-entry",
@@ -232,7 +244,13 @@
     "_config/Agents/common.md": "vuO9iZrVWu",
     "_config/Memory/Conventions/trove-note-convention.md": "Tx8SwdTFoS",
     "_config/Memory/MEMORY.md": "qskThSYA1P",
-    "_config/index.md": "FL87bCPt08"
+    "_config/index.md": "FL87bCPt08",
+    "forge/_config/Agents/agent.md": "9m41s1bWfU",
+    "forge/_config/Agents/claude.md": "yKLASXCycn",
+    "forge/_config/Agents/common.md": "vuO9iZrVWu",
+    "forge/_config/Memory/Conventions/trove-note-convention.md": "Tx8SwdTFoS",
+    "forge/_config/Memory/MEMORY.md": "qskThSYA1P",
+    "forge/_config/index.md": "FL87bCPt08"
   },
   "version": 1
 }

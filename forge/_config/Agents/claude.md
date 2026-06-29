@@ -20,10 +20,10 @@ The first baseline is about source structure, reproducible build flow, and read-
 
 1. Read the root `README.md`.
 2. Read `trove/Projects/ai-context-as-code/index.md`.
-3. Read `trove/_config/index.md`.
-4. Use `scripts/sync_agent_docs.py` after changing files in `trove/_config/Agents/`.
+3. Read `forge/_config/index.md`.
+4. Use `scripts/sync_agent_docs.py` after changing files in `forge/_config/Agents/`.
 
 ## Boundaries
 
 Do not change user-level Claude configuration from this repo.
-Keep this entry file generated from trove source documents.
+Keep this entry file generated from forge source documents.

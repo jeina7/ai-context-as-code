@@ -11,7 +11,9 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TROVE_DIR = ROOT / "trove"
+FORGE_DIR = ROOT / "forge"
 REGISTRY_PATH = ROOT / "data" / "id-registry.json"
+SOURCE_ROOTS = ((TROVE_DIR, ""), (FORGE_DIR, "forge"))
 
 REQUIRED_FIELDS = {
     "type",
@@ -65,14 +67,30 @@ class ValidationReport:
     warnings: list[tuple[str, str]]
 
 
+def source_relative_path(path: Path) -> str | None:
+    resolved = path.resolve()
+    for source_root, prefix in SOURCE_ROOTS:
+        try:
+            rel_path = resolved.relative_to(source_root.resolve()).as_posix()
+        except ValueError:
+            continue
+        return f"{prefix}/{rel_path}" if prefix else rel_path
+    return None
+
+
 def rel_trove_path(path: Path) -> str:
-    return path.relative_to(TROVE_DIR).as_posix()
+    rel_path = source_relative_path(path)
+    if rel_path is None:
+        raise ValueError(f"{path} is outside source roots")
+    return rel_path
 
 
 def iter_markdown_files() -> list[Path]:
-    if not TROVE_DIR.exists():
-        return []
-    return sorted(TROVE_DIR.rglob("*.md"))
+    paths: list[Path] = []
+    for source_root, _prefix in SOURCE_ROOTS:
+        if source_root.exists():
+            paths.extend(source_root.rglob("*.md"))
+    return sorted(paths)
 
 
 def parse_frontmatter(raw: str) -> dict[str, str]:
@@ -151,10 +169,12 @@ def resolve_wikilink_target(note: Note, target: str, lookup: set[str]) -> bool:
         base = note.path.parent
         candidate = (base / target).resolve()
         try:
-            candidate.relative_to(TROVE_DIR.resolve())
+            rel_path = rel_trove_path(candidate)
         except ValueError:
             return False
-        return candidate.with_suffix(".md").exists() or candidate.exists()
+        candidate_md = candidate if candidate.suffix == ".md" else candidate.with_suffix(".md")
+        rel_md = source_relative_path(candidate_md)
+        return rel_path in lookup or (rel_md in lookup if rel_md else False) or candidate_md.exists() or candidate.exists()
 
     return False
 
@@ -167,7 +187,7 @@ def validate() -> ValidationReport:
 
     for path in iter_markdown_files():
         rel_path = rel_trove_path(path)
-        if "_assets" in path.relative_to(TROVE_DIR).parts:
+        if "_assets" in Path(rel_path).parts:
             errors.append((rel_path, "markdown files are not allowed under _assets/"))
 
         note, parse_errors = parse_markdown(path)

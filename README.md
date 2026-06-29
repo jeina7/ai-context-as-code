@@ -11,8 +11,9 @@ It is the working reference implementation for moving jeina's local Obsidian ope
 ## Current Status
 
 - `acac.sh` is deployed with Cloudflare Workers static assets.
-- `trove/` is the editable source layer for public-safe context notes.
-- `scripts/build_trove.py` builds JSON metadata, markdown payloads, and static site output from `trove/`.
+- `trove/` is the editable source layer for public-safe user-facing context notes.
+- `forge/` is the editable source layer for agent-facing config, system notes, archives, and hidden storage.
+- `scripts/build_trove.py` builds JSON metadata, markdown payloads, and static site output from `trove/` and `forge/`.
 - The static reader supports the home view, trove navigation, note pages, search, wikilinks, backlinks, and bounded relation previews.
 - `scripts/source_write_service.py` provides local-only helpers for future source edits with preview, validation, and rollback behavior.
 - Claude Code live connection, MCP, hooks, and automatic memory sync stay outside this first baseline.
@@ -23,6 +24,7 @@ It is the working reference implementation for moving jeina's local Obsidian ope
 trove/
   Daily/
   Projects/
+forge/
   _config/
     Agents/
     Memory/
@@ -40,17 +42,18 @@ dist/
 
 ## Source And Output
 
-- `trove/` is the source layer people and agents edit.
+- `trove/` is the user-facing context source layer.
+- `forge/` is the agent-facing and system source layer.
 - `site/` is the static reader shell.
 - `scripts/` contains validation, build, deploy-check, local serving, and source-write helper scripts.
 - `tests/` covers local helper behavior that should stay independent from the public reader.
 - `data/id-registry.json` is committed so stable `/trove/<id>` routes can survive file moves.
 - Other `data/*.json`, `_build/`, and `dist/` are generated output and should not be edited by hand.
-- `trove/_assets/` is internal storage and is intentionally hidden from navigation and search.
+- `forge/_assets/` is internal storage and is intentionally hidden from navigation and search.
 
 ## Trove Note Rules
 
-Every markdown source note in `trove/` should have:
+Every markdown source note in `trove/` or `forge/` should have:
 
 - required frontmatter fields such as `type`, `title`, `description`, `status`, `created`, `updated`, and `visibility`;
 - an H1 that exactly matches the `title` frontmatter value;
@@ -87,7 +90,7 @@ Serve the built `dist/` output locally with the same app-shell fallback used by 
 python3 scripts/serve_dist.py --port 4173
 ```
 
-Regenerate root agent entry files after editing `trove/_config/Agents/`:
+Regenerate root agent entry files after editing `forge/_config/Agents/`:
 
 ```bash
 python3 scripts/sync_agent_docs.py

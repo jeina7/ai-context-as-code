@@ -55,7 +55,7 @@ def main() -> int:
             fail(errors, f"_assets item leaked into search: {item.get('path')}")
 
     hidden = set(tree.get("hidden", []))
-    if "_assets" not in hidden:
+    if "_assets" not in hidden and "forge/_assets" not in hidden:
         fail(errors, "tree.json does not mark _assets as hidden")
     tree_text = json.dumps(tree, ensure_ascii=False)
     if '"path": "_assets' in tree_text or '"path": "_assets/' in tree_text:

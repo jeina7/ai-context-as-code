@@ -14,14 +14,14 @@ id: 9m41s1bWfU
 
 This file is the source for the repository-local `AGENTS.md`.
 It should stay small and point agents toward the trove source.
-Detailed reusable rules belong in `_config/Memory/`.
+Detailed reusable rules belong in `forge/_config/Memory/`.
 
 ## Start Here
 
 1. Read the root `README.md`.
 2. Read `trove/Projects/ai-context-as-code/index.md`.
-3. Read `trove/_config/Memory/MEMORY.md`.
-4. Use `scripts/sync_agent_docs.py` after changing files in `trove/_config/Agents/`.
+3. Read `forge/_config/Memory/MEMORY.md`.
+4. Use `scripts/sync_agent_docs.py` after changing files in `forge/_config/Agents/`.
 
 ## Implementation Scope
 

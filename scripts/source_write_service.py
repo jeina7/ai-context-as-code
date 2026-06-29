@@ -25,10 +25,12 @@ import validate_trove
 
 ROOT = Path(__file__).resolve().parents[1]
 TROVE_DIR = ROOT / "trove"
+FORGE_DIR = ROOT / "forge"
+SOURCE_ROOTS = ((TROVE_DIR, ""), (FORGE_DIR, "forge"))
 
-KNOWN_TROVE_ROOTS = {"Daily", "Projects", "_config", "_archived", "_assets"}
-FORBIDDEN_TROVE_PARTS = {"_assets"}
-ALLOWED_LIFECYCLE_ROOTS = {"Daily", "Projects", "_config", "_archived"}
+FORBIDDEN_SOURCE_PARTS = {"_assets"}
+ALLOWED_TROVE_ROOTS = {"Daily", "Projects"}
+ALLOWED_FORGE_ROOTS = {"_config", "_archived"}
 ID_ALPHABET = string.digits + string.ascii_uppercase + string.ascii_lowercase + "_-"
 HARD_DELETE_CONFIRMATION = "HARD_DELETE_UNCOMMITTED_LOCAL_NOTE"
 DEFAULT_VALIDATION_COMMANDS = [
@@ -128,14 +130,44 @@ def repo_relative(path: Path) -> str:
     return path.relative_to(ROOT).as_posix()
 
 
+def source_relative_path(path: Path) -> str | None:
+    resolved = path.resolve()
+    for source_root, prefix in SOURCE_ROOTS:
+        try:
+            rel_path = resolved.relative_to(source_root.resolve()).as_posix()
+        except ValueError:
+            continue
+        return f"{prefix}/{rel_path}" if prefix else rel_path
+    return None
+
+
+def source_root_and_parts(path: Path) -> tuple[str, tuple[str, ...]]:
+    resolved = path.resolve()
+    try:
+        rel_to_trove = resolved.relative_to(TROVE_DIR.resolve())
+        return "trove", rel_to_trove.parts
+    except ValueError:
+        pass
+
+    try:
+        rel_to_forge = resolved.relative_to(FORGE_DIR.resolve())
+        return "forge", rel_to_forge.parts
+    except ValueError as exc:
+        raise SourceWriteError(f"source writes must stay under trove/ or forge/: {path}") from exc
+
+
 def resolve_candidate_path(path_value: str | Path) -> Path:
     path = Path(path_value)
     if path.is_absolute():
         return path.resolve()
 
     parts = path.parts
-    if parts and parts[0] in KNOWN_TROVE_ROOTS:
+    if parts and parts[0] in {"trove", "forge"}:
+        return (ROOT / path).resolve()
+    if parts and parts[0] in {"Daily", "Projects"}:
         return (TROVE_DIR / path).resolve()
+    if parts and parts[0] in {"_config", "_archived", "_assets"}:
+        return (FORGE_DIR / path).resolve()
     return (ROOT / path).resolve()
 
 
@@ -147,13 +179,10 @@ def safe_source_path(path_value: str | Path, *, must_exist: bool = False) -> Pat
     except ValueError as exc:
         raise SourceWriteError(f"path is outside repo: {path_value}") from exc
 
-    try:
-        rel_to_trove = path.relative_to(TROVE_DIR)
-    except ValueError as exc:
-        raise SourceWriteError(f"source writes must stay under trove/: {path_value}") from exc
+    _source_root, source_parts = source_root_and_parts(path)
 
-    if any(part in FORBIDDEN_TROVE_PARTS for part in rel_to_trove.parts):
-        raise SourceWriteError(f"source writes are forbidden under trove/_assets/: {path_value}")
+    if any(part in FORBIDDEN_SOURCE_PARTS for part in source_parts):
+        raise SourceWriteError(f"source writes are forbidden under _assets/: {path_value}")
 
     if path.suffix != ".md":
         raise SourceWriteError(f"source write target must be a markdown file: {path_value}")
@@ -165,10 +194,14 @@ def safe_source_path(path_value: str | Path, *, must_exist: bool = False) -> Pat
 
 
 def require_lifecycle_path(path: Path) -> None:
-    rel_to_trove = path.relative_to(TROVE_DIR)
-    if not rel_to_trove.parts or rel_to_trove.parts[0] not in ALLOWED_LIFECYCLE_ROOTS:
-        allowed = ", ".join(sorted(ALLOWED_LIFECYCLE_ROOTS))
-        raise SourceWriteError(f"source lifecycle writes must target one of: {allowed}")
+    source_root, source_parts = source_root_and_parts(path)
+    if source_root == "trove":
+        allowed = ALLOWED_TROVE_ROOTS
+    else:
+        allowed = ALLOWED_FORGE_ROOTS
+    if not source_parts or source_parts[0] not in allowed:
+        allowed_display = "trove/Daily, trove/Projects, forge/_config, forge/_archived"
+        raise SourceWriteError(f"source lifecycle writes must target one of: {allowed_display}")
 
 
 def require_existing_parent(path: Path) -> None:
@@ -194,13 +227,16 @@ def load_id_registry() -> dict[str, Any]:
     return registry
 
 
-def registry_trove_path(path: Path) -> str:
-    return path.relative_to(TROVE_DIR).as_posix()
+def registry_source_path(path: Path) -> str:
+    rel_path = source_relative_path(path)
+    if rel_path is None:
+        raise SourceWriteError(f"path is outside source roots: {repo_relative(path)}")
+    return rel_path
 
 
 def require_unregistered_target(path: Path) -> None:
     registry = load_id_registry()
-    rel_path = registry_trove_path(path)
+    rel_path = registry_source_path(path)
     if rel_path in registry.get("paths", {}):
         raise SourceWriteError(f"target path is already registered: {rel_path}")
 
@@ -573,6 +609,17 @@ def rollback_modified_file(path: Path, before_text: str, expected_text: str) -> 
     return True, None
 
 
+def rollback_renamed_file(source: Path, target: Path, expected_text: str) -> tuple[bool, str | None]:
+    if source.exists():
+        return False, f"rollback failed because source path already exists: {repo_relative(source)}"
+    if not target.exists():
+        return False, f"rollback failed because target path is missing: {repo_relative(target)}"
+    if target.read_text(encoding="utf-8") != expected_text:
+        return False, f"rollback skipped because file changed after rename: {repo_relative(target)}"
+    target.rename(source)
+    return True, None
+
+
 def create_note(
     *,
     source_path: str | Path,
@@ -799,6 +846,93 @@ def apply_rename_title(
     )
 
 
+def apply_rename_path(
+    *,
+    source_path: str | Path,
+    note_id: str | None = None,
+    new_file_name: str | None = None,
+    target_path: str | Path | None = None,
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = rename_note(
+        source_path=source_path,
+        note_id=note_id,
+        new_file_name=new_file_name,
+        target_path=target_path,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_rename_path",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if len(preview.changed_files) != 2:
+        raise SourceWriteError("rename path apply expected exactly two changed file entries")
+
+    source = existing_note_path(source_path)
+    source_rel = repo_relative(source)
+    target_rel = preview.after_summary.get("sourcePath")
+    if not target_rel:
+        raise SourceWriteError("rename path preview did not produce a target path")
+    if source_rel != preview.before_summary.get("sourcePath") or source_rel != preview.changed_files[0]:
+        raise SourceWriteError("rename path preview source does not match source path")
+
+    target = safe_source_path(target_rel, must_exist=False)
+    require_lifecycle_path(target)
+    require_existing_parent(target)
+    require_available_target(target)
+    if source.parent != target.parent:
+        raise SourceWriteError("rename path apply cannot move folders; use move apply instead")
+
+    before = source.read_text(encoding="utf-8")
+    before_note = parse_markdown_note(before, source_rel)
+    after_note = parse_markdown_note(before, target_rel)
+    if before_note.errors:
+        raise SourceWriteError(f"source markdown is invalid: {'; '.join(before_note.errors)}")
+    if after_note.errors:
+        raise SourceWriteError(f"target markdown is invalid: {'; '.join(after_note.errors)}")
+    if before_note.note_id and after_note.note_id and before_note.note_id != after_note.note_id:
+        raise SourceWriteError(f"route id would change: {before_note.note_id} -> {after_note.note_id}")
+
+    source.rename(target)
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_rename_path",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=list(preview.changed_files),
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_renamed_file(source, target, before)
+    errors = ["validation failed; rename path apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_rename_path",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else list(preview.changed_files),
+        rolled_back_files=list(preview.changed_files) if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
+    )
+
+
 def rename_note(
     *,
     source_path: str | Path,
@@ -867,13 +1001,14 @@ def move_note(
         folder = resolve_candidate_path(target_folder)
         try:
             folder.relative_to(ROOT)
-            rel_to_trove = folder.relative_to(TROVE_DIR)
         except ValueError as exc:
-            raise SourceWriteError(f"target folder must stay under trove/: {target_folder}") from exc
-        if not rel_to_trove.parts or rel_to_trove.parts[0] not in ALLOWED_LIFECYCLE_ROOTS:
+            raise SourceWriteError(f"target folder must stay under trove/ or forge/: {target_folder}") from exc
+        source_root, source_parts = source_root_and_parts(folder)
+        allowed = ALLOWED_TROVE_ROOTS if source_root == "trove" else ALLOWED_FORGE_ROOTS
+        if not source_parts or source_parts[0] not in allowed:
             raise SourceWriteError("target folder is not an allowed lifecycle folder")
-        if any(part in FORBIDDEN_TROVE_PARTS for part in rel_to_trove.parts):
-            raise SourceWriteError("target folder cannot be under trove/_assets/")
+        if any(part in FORBIDDEN_SOURCE_PARTS for part in source_parts):
+            raise SourceWriteError("target folder cannot be under _assets/")
         if not folder.is_dir():
             raise SourceWriteError(f"target folder does not exist: {repo_relative(folder)}")
         target = folder / path.name
@@ -906,8 +1041,8 @@ def archive_note(
 ) -> DiffPreview:
     path = existing_note_path(source_path)
     rel_path = repo_relative(path)
-    rel_to_trove = path.relative_to(TROVE_DIR)
-    if rel_to_trove.parts and rel_to_trove.parts[0] == "_archived":
+    source_root, source_parts = source_root_and_parts(path)
+    if source_root == "forge" and source_parts and source_parts[0] == "_archived":
         raise SourceWriteError("note is already under _archived/")
 
     before = path.read_text(encoding="utf-8")
@@ -916,15 +1051,15 @@ def archive_note(
 
     archive_base = resolve_candidate_path(archive_root)
     try:
-        archive_rel = archive_base.relative_to(TROVE_DIR)
+        archive_rel = archive_base.relative_to(FORGE_DIR)
     except ValueError as exc:
-        raise SourceWriteError("archive root must stay under trove/") from exc
+        raise SourceWriteError("archive root must stay under forge/") from exc
     if not archive_rel.parts or archive_rel.parts[0] != "_archived":
-        raise SourceWriteError("archive root must be under trove/_archived/")
+        raise SourceWriteError("archive root must be under forge/_archived/")
     if not archive_base.is_dir():
         raise SourceWriteError(f"archive root does not exist: {repo_relative(archive_base)}")
 
-    target = archive_base / rel_to_trove
+    target = archive_base.joinpath(*source_parts)
     target = safe_source_path(target, must_exist=False)
     require_lifecycle_path(target)
     require_available_target(target)
@@ -940,7 +1075,7 @@ def archive_note(
         errors=errors,
         before_note=before_note,
         after_note=after_note,
-        warnings=["archive preview moves the note under trove/_archived/ and keeps its id"],
+        warnings=["archive preview moves the note under forge/_archived/ and keeps its id"],
     )
 
 
@@ -977,6 +1112,7 @@ def note_id_errors(note: MarkdownNote, expected_note_id: str | None) -> list[str
 createNote = create_note
 applyCreateNote = apply_create_note
 applyRenameTitle = apply_rename_title
+applyRenamePath = apply_rename_path
 renameNote = rename_note
 moveNote = move_note
 archiveNote = archive_note
@@ -1035,6 +1171,13 @@ def main(argv: list[str] | None = None) -> int:
     rename_path_parser.add_argument("--new-file-name")
     rename_path_parser.add_argument("--target-path")
     rename_path_parser.add_argument("--note-id")
+
+    apply_rename_path_parser = subparsers.add_parser("apply-rename-path", help="Rename a note file path and run validation")
+    apply_rename_path_parser.add_argument("--source-path", required=True)
+    apply_rename_path_parser.add_argument("--new-file-name")
+    apply_rename_path_parser.add_argument("--target-path")
+    apply_rename_path_parser.add_argument("--note-id")
+    apply_rename_path_parser.add_argument("--skip-build", action="store_true")
 
     move_parser = subparsers.add_parser("preview-move", help="Preview moving a note")
     move_parser.add_argument("--source-path", required=True)
@@ -1126,6 +1269,18 @@ def main(argv: list[str] | None = None) -> int:
             )
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-rename-path":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_rename_path(
+                source_path=args.source_path,
+                new_file_name=args.new_file_name,
+                target_path=args.target_path,
+                note_id=args.note_id,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "preview-move":
             preview = move_note(

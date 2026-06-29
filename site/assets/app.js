@@ -306,11 +306,7 @@ function currentRouteNote() {
 }
 
 function displayTreeLabel(node) {
-  if (node.displayName) return node.displayName;
-  if (node.path === "_config") return "Operating layer";
-  if (node.path === "_archived") return "Archive";
-  if (node.path === "_config/Agents") return "Agent entries";
-  return node.title || node.name || "Untitled";
+  return node.name || node.displayName || node.title || "Untitled";
 }
 
 function stableDomId(value) {
@@ -319,7 +315,7 @@ function stableDomId(value) {
 
 function renderHome() {
   const startHere = state.home.startHere || [];
-  const troveLayers = state.home.troveLayers || [];
+  const forgeLayers = state.home.forgeLayers || state.home.troveLayers || [];
   const recentDaily = compactNotes([state.home.today, state.home.recentDaily]);
   const projectDocs = compactNotes([
     state.home.currentProject,
@@ -336,7 +332,7 @@ function renderHome() {
         <h1 class="home-title">${escapeHtml(state.home.title || "AI Context as Code")}</h1>
         <p class="home-copy">${escapeHtml(
           state.home.description ||
-            "First cloud-based ACAC context instance built from trove markdown source.",
+            "First cloud-based ACAC context instance built from trove and forge markdown source.",
         )}</p>
         <div class="scope-row" aria-label="Reader scope">
           <span class="pill success">read-only</span>
@@ -410,7 +406,7 @@ function renderHome() {
                 <p class="module-description">Agent-facing and archived markdown that shapes the trove source.</p>
               </div>
             </div>
-            ${renderDocList(troveLayers, { showSummary: false })}
+            ${renderDocList(forgeLayers, { showSummary: false })}
           </section>
 
           <section class="module compact">
@@ -445,13 +441,13 @@ function renderStructureGrid() {
       body: "Durable project context: designs, decisions, references, and worklogs.",
     },
     {
-      name: "Operating layer",
-      count: counts._config || 0,
+      name: "Forge config",
+      count: counts["forge/_config"] || 0,
       body: "Agent-facing memory, skills, commands, and entry sources.",
     },
     {
       name: "Archive",
-      count: counts._archived || 0,
+      count: counts["forge/_archived"] || 0,
       body: "Retired public-safe context, separated from the active surface.",
     },
   ];
@@ -521,7 +517,7 @@ function renderHomeContext() {
         </li>
         <li>
           <strong>Generated output</strong>
-          <div class="context-meta">The site reads JSON and markdown payloads built from trove source.</div>
+          <div class="context-meta">The site reads JSON and markdown payloads built from trove and forge source.</div>
         </li>
         <li>
           <strong>Dashboard analytics first</strong>
@@ -802,7 +798,7 @@ function renderSearchContext(query, results) {
   contextPanel.innerHTML = `
     <section class="context-section">
       <h2>Search scope</h2>
-      <p class="context-meta">Public notes from working context, Operating layer, and Archive. _assets is hidden.</p>
+      <p class="context-meta">Public notes from TROVES and FORGE. _assets is hidden.</p>
     </section>
     <section class="context-section">
       <h2>Current query</h2>
@@ -1434,7 +1430,9 @@ function findRelatedContext(note) {
 function countByTopFolder() {
   const counts = {};
   for (const note of state.notes) {
-    const top = note.path.split("/")[0];
+    let top = note.path.split("/")[0];
+    if (note.path.startsWith("forge/_config/")) top = "forge/_config";
+    if (note.path.startsWith("forge/_archived/")) top = "forge/_archived";
     counts[top] = (counts[top] || 0) + 1;
   }
   return counts;
@@ -1480,12 +1478,19 @@ function firstLine(value) {
 }
 
 function isSpecialPath(path) {
-  return String(path || "").startsWith("_config/") || String(path || "").startsWith("_archived/");
+  const value = String(path || "");
+  return (
+    value.startsWith("forge/_config/") ||
+    value.startsWith("forge/_archived/") ||
+    value.startsWith("_config/") ||
+    value.startsWith("_archived/")
+  );
 }
 
 function layerLabelForPath(path) {
-  if (String(path || "").startsWith("_config/")) return "Operating layer";
-  if (String(path || "").startsWith("_archived/")) return "Archive";
+  const value = String(path || "");
+  if (value.startsWith("forge/_config/") || value.startsWith("_config/")) return "Operating layer";
+  if (value.startsWith("forge/_archived/") || value.startsWith("_archived/")) return "Archive";
   return "Trove layer";
 }
 

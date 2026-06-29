@@ -21,8 +21,8 @@ The current note-writing convention lives in a focused convention note.
 
 - Source notes are the source of truth; generated files and runtime memories should point back to source notes.
 - `Daily/` holds day-level context and pointers, while project folders hold detailed worklog and decisions.
-- `_config/Agents/` source documents generate root entry files for local repository use only.
-- [[trove-note-convention]] defines the executable note-writing rules for `trove/**/*.md`.
+- `forge/_config/Agents/` source documents generate root entry files for local repository use only.
+- [[trove-note-convention]] defines the executable note-writing rules for `trove/**/*.md` and `forge/**/*.md`.
 
 ## Promotion Criteria
 

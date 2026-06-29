@@ -1,7 +1,7 @@
 ---
 type: convention
 title: "Trove Note Convention"
-description: "Executable writing rules for ACAC trove source notes"
+description: "Executable writing rules for ACAC source notes"
 status: active
 created: 2026-06-29
 updated: 2026-06-29
@@ -12,17 +12,18 @@ id: Tx8SwdTFoS
 
 # Trove Note Convention
 
-This convention keeps `trove/` readable as source, not as generated site output.
+This convention keeps `trove/` and `forge/` readable as source, not as generated site output.
 It adapts the strongest legacy knowledge-base rules to the ACAC first instance without private infrastructure assumptions.
-Use it when creating or editing `trove/**/*.md`, then verify with the local trove scripts.
+Use it when creating or editing `trove/**/*.md` or `forge/**/*.md`, then verify with the local trove scripts.
 
 ## Scope
 
-- `trove/` is the editable source layer.
+- `trove/` is the editable user-facing context source layer.
+- `forge/` is the editable agent-facing and system source layer.
 - `data/`, `_build/`, and `dist/` are generated outputs unless a script explicitly says otherwise.
 - This convention covers markdown notes only; code, static assets, and generated JSON follow their own toolchain.
-- `_config/` source content is written in English.
-- `Daily/` and `Projects/` content stays Korean-first unless a note has a clear reason to be English.
+- `forge/_config/` source content is written in English.
+- `trove/Daily/` and `trove/Projects/` content stays Korean-first unless a note has a clear reason to be English.
 
 ## Frontmatter
 
@@ -80,7 +81,7 @@ visibility: public
 
 ## Edit Checklist
 
-Before finishing a trove note edit:
+Before finishing a source note edit:
 
 - Required frontmatter fields are present.
 - Natural-language frontmatter values use double quotes.

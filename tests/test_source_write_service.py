@@ -18,7 +18,7 @@ class SourceWriteServiceTests(unittest.TestCase):
 
     def test_safe_source_path_blocks_assets(self) -> None:
         with self.assertRaises(service.SourceWriteError):
-            service.safe_source_path("trove/_assets/example.md")
+            service.safe_source_path("forge/_assets/example.md")
 
     def test_safe_source_path_blocks_repo_escape(self) -> None:
         with self.assertRaises(service.SourceWriteError):
@@ -255,11 +255,160 @@ Line three.
         self.assertTrue(preview.route_impact.route_preserved)
         self.assertEqual(preview.after_summary["route"], "/trove/zz2t-H9rM0")
 
+    def test_apply_rename_path_renames_file_after_successful_validation(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-source.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-target.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Rename Path",
+            description="Rename path note used by source write service tests",
+            note_type="research",
+            note_id="RenPath001",
+            summary_lines=[
+                "First rename path summary line.",
+                "Second rename path summary line.",
+                "Third rename path summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_rename_path(
+            source_path=source,
+            note_id="RenPath001",
+            new_file_name=target.name,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertFalse(source.exists())
+        self.assertTrue(target.exists())
+        self.assertEqual(target.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(
+            result.applied_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-rename-path-source.md",
+                "trove/Projects/ai-context-as-code/Research/local-rename-path-target.md",
+            ],
+        )
+        self.assertTrue(result.preview.route_impact.route_preserved)
+
+    def test_apply_rename_path_rolls_back_when_validation_fails(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-fail-source.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-fail-target.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Rename Path Failure",
+            description="Rename path failure note used by source write service tests",
+            note_type="research",
+            note_id="RenPathBad",
+            summary_lines=[
+                "First failed rename path summary line.",
+                "Second failed rename path summary line.",
+                "Third failed rename path summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_rename_path(
+            source_path=source,
+            note_id="RenPathBad",
+            new_file_name=target.name,
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertEqual(source.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(
+            result.rolled_back_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-rename-path-fail-source.md",
+                "trove/Projects/ai-context-as-code/Research/local-rename-path-fail-target.md",
+            ],
+        )
+        self.assertIn("validation failed", "\n".join(result.errors))
+
+    def test_apply_rename_path_rejects_wrong_note_id_without_writing(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-wrong-id.md"
+        target = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-wrong-id-target.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Rename Path Wrong ID",
+            description="Rename path wrong id note used by source write service tests",
+            note_type="research",
+            note_id="RenPathMis",
+            summary_lines=[
+                "First wrong id rename path summary line.",
+                "Second wrong id rename path summary line.",
+                "Third wrong id rename path summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_rename_path(
+            source_path=source,
+            note_id="WrongNote1",
+            new_file_name=target.name,
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertEqual(source.read_text(encoding="utf-8"), markdown)
+        self.assertIn("note id mismatch", "\n".join(result.errors))
+
+    def test_apply_rename_path_does_not_move_between_folders(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-rename-path-no-move.md"
+        target = ROOT / "trove" / "Daily" / "2026-06" / "local-rename-path-no-move.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+
+        markdown = service.compose_note_markdown(
+            title="Local Rename Path No Move",
+            description="Rename path no move note used by source write service tests",
+            note_type="research",
+            note_id="RenNoMove1",
+            summary_lines=[
+                "First no move rename path summary line.",
+                "Second no move rename path summary line.",
+                "Third no move rename path summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        with self.assertRaises(service.SourceWriteError):
+            service.apply_rename_path(
+                source_path=source,
+                note_id="RenNoMove1",
+                target_path=target,
+                validation_commands=[[sys.executable, "-c", "print('ok')"]],
+            )
+
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+
     def test_move_note_preview_blocks_assets_and_allows_project_folder(self) -> None:
         with self.assertRaises(service.SourceWriteError):
             service.move_note(
                 source_path="trove/Projects/ai-context-as-code/index.md",
-                target_path="trove/_assets/index.md",
+                target_path="forge/_assets/index.md",
             )
 
         preview = service.move_note(
@@ -281,7 +430,7 @@ Line three.
         self.assertTrue(preview.ok, preview.errors)
         self.assertTrue(preview.route_impact.route_preserved)
         self.assertEqual(preview.after_summary["status"], "archived")
-        self.assertEqual(preview.after_summary["sourcePath"], "trove/_archived/Projects/ai-context-as-code/index.md")
+        self.assertEqual(preview.after_summary["sourcePath"], "forge/_archived/Projects/ai-context-as-code/index.md")
         self.assertIn('status: "archived"', preview.diff)
 
     def test_hard_delete_note_requires_confirmation_token(self) -> None:

@@ -19,6 +19,7 @@ import validate_trove
 
 ROOT = Path(__file__).resolve().parents[1]
 TROVE_DIR = ROOT / "trove"
+FORGE_DIR = ROOT / "forge"
 DATA_DIR = ROOT / "data"
 BUILD_DIR = ROOT / "_build"
 PAYLOAD_DIR = BUILD_DIR / "trove"
@@ -172,15 +173,23 @@ def layer_for_path(path: str) -> dict[str, str]:
         return {"key": "daily", "label": "Daily context"}
     if path.startswith("Projects/"):
         return {"key": "projects", "label": "Project context"}
-    if path.startswith("_config/"):
+    if path == "forge/_config" or path.startswith("forge/_config/") or path.startswith("_config/"):
         return {"key": "operating", "label": "Operating layer"}
-    if path.startswith("_archived/"):
+    if path == "forge/_archived" or path.startswith("forge/_archived/") or path.startswith("_archived/"):
         return {"key": "archive", "label": "Archive"}
+    if path.startswith("forge/"):
+        return {"key": "forge", "label": "Forge"}
     return {"key": "trove", "label": "Trove"}
 
 
 def display_folder_name(rel_path: str, raw_name: str) -> str:
     names = {
+        "forge/_config": "Operating layer",
+        "forge/_archived": "Archive",
+        "forge/_config/Agents": "Agent entries",
+        "forge/_config/Commands": "Commands",
+        "forge/_config/Memory": "Memory",
+        "forge/_config/Skills": "Skills",
         "_config": "Operating layer",
         "_archived": "Archive",
         "_config/Agents": "Agent entries",
@@ -211,9 +220,8 @@ def resolve_link_target(
     if "/" in target:
         candidate = (note.path.parent / target).resolve()
         candidate_md = candidate if candidate.suffix == ".md" else candidate.with_suffix(".md")
-        try:
-            rel_path = candidate_md.relative_to(TROVE_DIR.resolve()).as_posix()
-        except ValueError:
+        rel_path = validate_trove.source_relative_path(candidate_md)
+        if rel_path is None:
             return None
         return lookup.get(rel_path) or lookup.get(rel_path.removesuffix(".md"))
 
@@ -259,8 +267,15 @@ def build_backlinks(notes: list[validate_trove.Note]) -> dict[str, Any]:
     return result
 
 
-def build_tree_node(path: Path, note_by_path: dict[str, dict[str, Any]]) -> dict[str, Any]:
-    rel = path.relative_to(TROVE_DIR).as_posix()
+def build_tree_node(
+    path: Path,
+    note_by_path: dict[str, dict[str, Any]],
+    *,
+    source_root: Path = TROVE_DIR,
+    path_prefix: str = "",
+) -> dict[str, Any]:
+    rel_inside_source = path.relative_to(source_root).as_posix()
+    rel = f"{path_prefix}/{rel_inside_source}" if path_prefix else rel_inside_source
     node: dict[str, Any] = {
         "name": path.name,
         "displayName": display_folder_name(rel, path.name),
@@ -284,9 +299,17 @@ def build_tree_node(path: Path, note_by_path: dict[str, dict[str, Any]]) -> dict
         if child.is_dir():
             if child.name == "_assets":
                 continue
-            children.append(build_tree_node(child, note_by_path))
+            children.append(
+                build_tree_node(
+                    child,
+                    note_by_path,
+                    source_root=source_root,
+                    path_prefix=path_prefix,
+                )
+            )
         elif child.suffix == ".md" and child.name != "index.md":
-            child_rel = child.relative_to(TROVE_DIR).as_posix()
+            child_inside_source = child.relative_to(source_root).as_posix()
+            child_rel = f"{path_prefix}/{child_inside_source}" if path_prefix else child_inside_source
             item = note_by_path.get(child_rel)
             if item:
                 children.append(
@@ -308,14 +331,24 @@ def build_tree_node(path: Path, note_by_path: dict[str, dict[str, Any]]) -> dict
 
 def build_tree(notes: list[validate_trove.Note]) -> dict[str, Any]:
     note_by_path = {note.rel_path: note_item(note) for note in notes}
-    groups = {"main": ["Daily", "Projects"], "system": ["_config", "_archived"], "hidden": ["_assets"]}
+    groups = {
+        "main": ["Daily", "Projects"],
+        "system": ["forge/_config", "forge/_archived"],
+        "hidden": ["forge/_assets"],
+    }
     tree: dict[str, Any] = {**groups, "nodes": {"main": [], "system": []}}
 
-    for group in ("main", "system"):
-        for name in groups[group]:
-            path = TROVE_DIR / name
-            if path.exists():
-                tree["nodes"][group].append(build_tree_node(path, note_by_path))
+    for name in groups["main"]:
+        path = TROVE_DIR / name
+        if path.exists():
+            tree["nodes"]["main"].append(build_tree_node(path, note_by_path))
+
+    for name in ("_config", "_archived"):
+        path = FORGE_DIR / name
+        if path.exists():
+            tree["nodes"]["system"].append(
+                build_tree_node(path, note_by_path, source_root=FORGE_DIR, path_prefix="forge")
+            )
 
     return tree
 
@@ -504,10 +537,15 @@ def build_home(notes: list[validate_trove.Note]) -> dict[str, Any]:
             by_path.get("Projects/ai-context-as-code/index.md"),
             latest_daily,
             latest_design,
-            by_path.get("_config/index.md"),
-            by_path.get("_config/Memory/MEMORY.md"),
+            by_path.get("forge/_config/index.md"),
+            by_path.get("forge/_config/Memory/MEMORY.md"),
         ]
     )
+    forge_layers = [
+        by_path[path]
+        for path in ["forge/_config/index.md", "forge/_config/Memory/MEMORY.md"]
+        if path in by_path
+    ]
 
     return {
         "title": "AI Context as Code",
@@ -520,11 +558,8 @@ def build_home(notes: list[validate_trove.Note]) -> dict[str, Any]:
         "latestDesign": latest_design,
         "latestDecision": latest_decision,
         "latestWorklog": latest_worklog,
-        "troveLayers": [
-            by_path[path]
-            for path in ["_config/index.md", "_config/Memory/MEMORY.md"]
-            if path in by_path
-        ],
+        "forgeLayers": forge_layers,
+        "troveLayers": forge_layers,
     }
 
 

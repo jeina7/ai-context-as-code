@@ -13,13 +13,14 @@ id: vuO9iZrVWu
 # Common Agent Rules
 
 These rules apply to agents working inside this repository.
-The trove source should stay readable by humans and machines.
+The trove and forge source should stay readable by humans and machines.
 Generated outputs should be reproducible from source and scripts.
 Reusable note-writing rules live in the trove memory convention.
 
 ## Source And Output
 
-- Treat `trove/` as the editable source layer.
+- Treat `trove/` as the editable user-facing context source layer.
+- Treat `forge/` as the editable agent-facing and system source layer.
 - Treat `data/`, `_build/`, and `dist/` as generated output unless a script explicitly says otherwise.
 - Do not create `trove/Home.md`; the root `README.md` and generated home data own the first screen.
 - Do not expose `_assets/` in navigation or search as a knowledge section.
@@ -33,9 +34,9 @@ Reusable note-writing rules live in the trove memory convention.
 
 ## Writing
 
-- Follow `[[trove-note-convention]]` when creating or editing `trove/**/*.md`.
-- Use English for `_config/` source content.
-- Use Korean-first content for `Daily/` and `Projects/`.
+- Follow `[[trove-note-convention]]` when creating or editing `trove/**/*.md` or `forge/**/*.md`.
+- Use English for `forge/_config/` source content.
+- Use Korean-first content for `trove/Daily/` and `trove/Projects/`.
 - Keep frontmatter values that contain natural language in double quotes.
 - Keep H1 equal to the `title` frontmatter value.
 - Do not create or hand-edit `id`; the build manages it through `data/id-registry.json`.

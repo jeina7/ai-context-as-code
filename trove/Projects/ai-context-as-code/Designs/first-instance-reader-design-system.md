@@ -20,9 +20,9 @@ ACAC 첫 public reader는 landing page가 아니라 읽기 가능한 context 작
 ## 제품 표면 원칙
 
 - 첫 화면은 제품 소개 hero가 아니라 dashboard예요.
-- 사용자는 `Daily/`, `Projects/`, `_config/`, `_archived/`의 역할을 바로 구분할 수 있어야 해요.
-- `_assets/`는 storage라서 navigation, search, dashboard 어디에도 지식 섹션으로 노출하지 않아요.
-- `_config/`와 `_archived/`는 숨기지 않고 trove layer로 구분해요.
+- 사용자는 `Daily/`, `Projects/`, `forge/_config/`, `forge/_archived/`의 역할을 바로 구분할 수 있어야 해요.
+- `forge/_assets/`는 storage라서 navigation, search, dashboard 어디에도 지식 섹션으로 노출하지 않아요.
+- `forge/_config/`와 `forge/_archived/`는 숨기지 않고 FORGE layer로 구분해요.
 - 모든 화면은 public-safe, read-only, generated output boundary를 드러내야 해요.
 
 ## 색상 토큰
@@ -93,7 +93,7 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 | Background | 전체 reader의 조용한 바탕 |
 | Sidebar surface | source tree와 search entry |
 | Reader surface | 문서와 dashboard의 주 작업 영역 |
-| Module surface | Start here, Build status, Trove layers 같은 의미 block |
+| Module surface | Start here, Build status, FORGE 같은 의미 block |
 | State card | missing, empty, fatal build output 같은 예외 상태 |
 
 카드 안에 또 카드를 넣지 않아요.
@@ -103,14 +103,14 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 
 ### Sidebar
 
-- Brand, search, working context, Trove layers 순서로 둬요.
-- `Daily/`와 `Projects/`는 working context예요.
-- `_config/`와 `_archived/`는 divider 아래 trove system layer예요.
+- Brand, search, TROVES, FORGE 순서로 둬요.
+- `Daily/`와 `Projects/`는 TROVES예요.
+- `forge/_config/`와 `forge/_archived/`는 divider 아래 FORGE예요.
 - Sidebar folder는 chevron으로 접고 펼쳐요.
 - Current route가 들어있는 folder는 자동으로 열려 있어야 해요.
 - `dir`, `day`, `des`, `dec`, `ref`, `log` 같은 텍스트 badge는 쓰지 않아요.
-- `_config`와 `_archived` raw folder name은 1차 navigation label로 노출하지 않고 `Operating layer`, `Archive`를 써요.
-- `_assets/`는 보이지 않아야 해요.
+- `forge/_config`와 `forge/_archived` raw folder name은 1차 navigation label로 노출하지 않고 `Operating layer`, `Archive`를 써요.
+- `forge/_assets/`는 보이지 않아야 해요.
 - Active route는 accent-soft background와 `aria-current="page"`로 표시해요.
 
 ### Reader
@@ -140,14 +140,14 @@ ACAC는 작업 도구라서 둥근 장식이 커지면 안 돼요.
 - Input이 비어 있으면 recent 또는 suggested public notes를 보여줘요.
 - Palette에서 focused result가 없을 때 `Enter`를 누르면 `/search?q=<query>` full results view로 이동해요.
 - 결과는 title, path, summary, type/status/layer label을 보여줘요.
-- `_config/`와 `_archived/` 결과에는 layer label을 붙여요.
-- `_assets/`는 검색 결과에 나오면 안 돼요.
+- `forge/_config/`와 `forge/_archived/` 결과에는 layer label을 붙여요.
+- `forge/_assets/`는 검색 결과에 나오면 안 돼요.
 - 없는 결과에서 새 문서 만들기를 권하지 않아요. 첫 구현은 read-only예요.
 
 ### Home Dashboard
 
 - Home은 product dashboard예요.
-- Trove map, Start here, Current project, Today, Trove layers, Build status를 보여줘요.
+- Trove map, Start here, Current project, Today, FORGE, Build status를 보여줘요.
 - Build status는 public note 수, warning 수, repo-injected manual analytics beacon 여부만 작게 보여줘요.
 - README는 source boundary 설명으로 보여주되 첫 화면의 주인공이 되지 않게 해요.
 
@@ -212,6 +212,6 @@ UI는 이것으로 현재 note 주변 1-hop relation map만 보여주고, full i
 - Home, Note, Search, Missing, Loading 상태가 같은 토큰과 컴포넌트 규칙을 써요.
 - Desktop에서 3-column layout이 안정적으로 보여요.
 - Mobile에서 drawer, reader, context panel이 겹치지 않아요.
-- Search result에 layer label이 붙고 `_assets/`는 보이지 않아요.
+- Search result에 layer label이 붙고 `forge/_assets/`는 보이지 않아요.
 - Broken wikilink는 warning 상태로 보이고 클릭 가능한 정상 링크처럼 오해되지 않아요.
 - `python3 scripts/deploy_check.py`가 통과해야 해요.

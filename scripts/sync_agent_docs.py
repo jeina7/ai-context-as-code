@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate repo-local agent entry files from trove source documents."""
+"""Generate repo-local agent entry files from forge source documents."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-AGENT_SOURCE_DIR = ROOT / "trove" / "_config" / "Agents"
+AGENT_SOURCE_DIR = ROOT / "forge" / "_config" / "Agents"
 
 
 OUTPUTS = {
@@ -39,7 +39,7 @@ def read_source(name: str) -> str:
 
 
 def build_output(output_name: str, source_names: tuple[str, ...]) -> str:
-    source_list = " + ".join(f"trove/_config/Agents/{name}" for name in source_names)
+    source_list = " + ".join(f"forge/_config/Agents/{name}" for name in source_names)
     header = "\n".join(
         [
             f"# {output_name} instructions",
