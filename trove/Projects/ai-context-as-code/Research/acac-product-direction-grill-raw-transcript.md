@@ -25,6 +25,10 @@ id: E73ubE7kLV
 - Included messages: 279 total, 136 user, 143 assistant
 - Excluded: injected AGENTS/project context, tool calls, tool outputs, and messages after the selected decision-documentation answer
 
+## Derived Extract
+
+- [[acac-product-direction-grill-qna-extract]]
+
 ## Raw Q&A
 
 ### Turn 001 — User — 2026-06-29 21:08:18 KST

@@ -36,6 +36,9 @@ def main() -> int:
     if notes != dist_notes:
         fail(errors, "dist/data/notes.json differs from data/notes.json")
 
+    if (DIST_DIR / "data" / "id-registry.json").exists():
+        fail(errors, "dist/data/id-registry.json should not be published")
+
     public_ids = {note["id"] for note in notes}
     if len(public_ids) != len(notes):
         fail(errors, "data/notes.json contains duplicate note IDs")

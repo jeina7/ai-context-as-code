@@ -576,7 +576,12 @@ def copy_site_to_dist(analytics_token: str | None) -> None:
         else:
             shutil.copy2(path, target)
 
-    shutil.copytree(DATA_DIR, DIST_DIR / "data", ignore=shutil.ignore_patterns(".gitkeep"), dirs_exist_ok=True)
+    shutil.copytree(
+        DATA_DIR,
+        DIST_DIR / "data",
+        ignore=shutil.ignore_patterns(".gitkeep", "id-registry.json"),
+        dirs_exist_ok=True,
+    )
     shutil.copytree(PAYLOAD_DIR, DIST_DIR / "content" / "trove", dirs_exist_ok=True)
 
 

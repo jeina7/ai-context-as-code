@@ -76,6 +76,16 @@
       "updated": "2026-06-30",
       "visibility": "public"
     },
+    "sOkKpZBKqF": {
+      "created": "2026-06-30",
+      "currentPath": "Projects/ai-context-as-code/Research/acac-product-direction-grill-qna-extract.md",
+      "previousPaths": [],
+      "route": "/trove/sOkKpZBKqF",
+      "title": "ACAC Product Direction Grill Q&A Extract",
+      "type": "research",
+      "updated": "2026-06-30",
+      "visibility": "internal"
+    },
     "vuO9iZrVWu": {
       "created": "2026-06-28",
       "currentPath": "forge/_config/Agents/common.md",
@@ -114,6 +124,7 @@
   "paths": {
     "Daily/2026-06/2026-06-30.md": "nKPjBxr_J9",
     "Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md": "4dYzPkCVtG",
+    "Projects/ai-context-as-code/Research/acac-product-direction-grill-qna-extract.md": "sOkKpZBKqF",
     "Projects/ai-context-as-code/Research/acac-product-direction-grill-raw-transcript.md": "E73ubE7kLV",
     "Projects/ai-context-as-code/Worklog/2026-06-30.md": "dqkUg3hS9I",
     "Projects/ai-context-as-code/index.md": "zz2t-H9rM0",
