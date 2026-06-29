@@ -1305,6 +1305,20 @@ kbd {
   display: none;
 }
 
+.sidebar-collapse {
+  display: inline-grid;
+  flex: 0 0 auto;
+}
+
+.sidebar-collapse-icon {
+  width: 9px;
+  height: 9px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(135deg);
+  transition: transform 140ms ease;
+}
+
 .icon-button {
   display: inline-grid;
   place-items: center;
@@ -1335,6 +1349,50 @@ kbd {
     height: auto;
     border-width: 1px 0 0;
     background: var(--color-canvas);
+  }
+}
+
+@media (min-width: 781px) {
+  .shell {
+    transition: grid-template-columns 160ms ease;
+  }
+
+  .shell.sidebar-collapsed {
+    grid-template-columns: 64px minmax(0, 1fr) 320px;
+  }
+
+  .shell.sidebar-collapsed .sidebar {
+    overflow: hidden;
+  }
+
+  .shell.sidebar-collapsed .sidebar-header {
+    padding: var(--space-5) var(--space-3);
+  }
+
+  .shell.sidebar-collapsed .sidebar-title-row {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .shell.sidebar-collapsed .brand {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .shell.sidebar-collapsed .brand > span:last-child,
+  .shell.sidebar-collapsed .search-form,
+  .shell.sidebar-collapsed .tree {
+    display: none;
+  }
+
+  .shell.sidebar-collapsed .sidebar-collapse-icon {
+    transform: rotate(-45deg);
+  }
+}
+
+@media (min-width: 781px) and (max-width: 1180px) {
+  .shell.sidebar-collapsed {
+    grid-template-columns: 64px minmax(0, 1fr);
   }
 }
 
@@ -1386,6 +1444,10 @@ kbd {
   .sidebar-close {
     display: inline-grid;
     flex: 0 0 auto;
+  }
+
+  .sidebar-collapse {
+    display: none;
   }
 
   body.nav-open .sidebar {

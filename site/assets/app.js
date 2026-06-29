@@ -17,19 +17,23 @@ const state = {
     results: [],
     lastFocusedElement: null,
   },
+  sidebarCollapsed: false,
 };
 
 const main = document.querySelector("#main");
+const shell = document.querySelector(".shell");
 const contextPanel = document.querySelector("#context");
 const treeRoot = document.querySelector("#tree");
 const searchForm = document.querySelector(".search-form");
 const searchInput = document.querySelector("#global-search");
 const searchPalette = document.querySelector("#search-palette");
+const sidebarCollapseButton = document.querySelector(".sidebar-collapse");
 const paletteDialog = document.querySelector(".palette-dialog");
 const paletteInput = document.querySelector("#palette-search-input");
 const paletteResults = document.querySelector("#palette-results");
 const paletteStatus = document.querySelector("#palette-status");
 const TREE_STATE_KEY = "acac:open-folders";
+const SIDEBAR_STATE_KEY = "acac:sidebar-collapsed";
 
 async function fetchJson(path) {
   const response = await fetch(path);
@@ -43,6 +47,8 @@ async function init() {
   renderLoading("Loading ACAC context");
   updateShortcutHints();
   state.openFolders = loadOpenFolders();
+  state.sidebarCollapsed = loadSidebarCollapsed();
+  syncSidebarState();
 
   try {
     const [notes, tree, home, backlinks, graph, build, searchIndex] = await Promise.all([
@@ -129,12 +135,12 @@ function renderTree() {
   const systemNodes = state.tree.nodes?.system || state.tree.nodes?.special || [];
   treeRoot.innerHTML = `
     <section class="tree-section">
-      <h2 class="tree-section-title">Working context</h2>
+      <h2 class="tree-section-title">TROVES</h2>
       ${renderTreeList(mainNodes, "main")}
     </section>
     <div class="tree-divider" aria-hidden="true"></div>
     <section class="tree-section">
-      <h2 class="tree-section-title">Trove layers</h2>
+      <h2 class="tree-section-title">FORGE</h2>
       ${renderTreeList(systemNodes, "system")}
     </section>
   `;
@@ -229,6 +235,38 @@ function saveOpenFolders() {
   }
 }
 
+function loadSidebarCollapsed() {
+  try {
+    return sessionStorage.getItem(SIDEBAR_STATE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveSidebarCollapsed() {
+  try {
+    sessionStorage.setItem(SIDEBAR_STATE_KEY, String(state.sidebarCollapsed));
+  } catch {
+    // Session persistence is a convenience, not a reader dependency.
+  }
+}
+
+function syncSidebarState() {
+  shell?.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+  if (!sidebarCollapseButton) return;
+  sidebarCollapseButton.setAttribute(
+    "aria-label",
+    state.sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar",
+  );
+  sidebarCollapseButton.setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+}
+
+function toggleSidebarCollapsed() {
+  state.sidebarCollapsed = !state.sidebarCollapsed;
+  saveSidebarCollapsed();
+  syncSidebarState();
+}
+
 function toggleFolder(path) {
   if (!path) return;
   if (state.openFolders.has(path)) {
@@ -315,7 +353,7 @@ function renderHome() {
             <div class="module-header">
               <div>
                 <h2>Trove map</h2>
-                <p class="module-description">The public reader separates working context from operating and archived trove layers.</p>
+                <p class="module-description">The public reader separates troves from the forge that operates and preserves them.</p>
               </div>
             </div>
             ${renderStructureGrid()}
@@ -368,8 +406,8 @@ function renderHome() {
           <section class="module compact">
             <div class="module-header">
               <div>
-                <h2>Trove layers</h2>
-                <p class="module-description">Agent-facing and archived markdown, shown as managed source rather than runtime config.</p>
+                <h2>FORGE</h2>
+                <p class="module-description">Agent-facing and archived markdown that shapes the trove source.</p>
               </div>
             </div>
             ${renderDocList(troveLayers, { showSummary: false })}
@@ -493,7 +531,7 @@ function renderHomeContext() {
     </section>
     <section class="context-section">
       <h2>Search scope</h2>
-      <p class="context-meta">Working context, Operating layer, and Archive are searchable. _assets stays hidden.</p>
+      <p class="context-meta">TROVES and FORGE are searchable. _assets stays hidden.</p>
     </section>
   `;
 }
@@ -738,7 +776,7 @@ function renderSearch() {
           <span class="pill">title</span>
           <span class="pill">path</span>
           <span class="pill">summary</span>
-          <span class="pill special">trove layers included</span>
+          <span class="pill special">forge included</span>
           <span class="pill">_assets hidden</span>
         </div>
       </header>
@@ -1566,6 +1604,11 @@ document.addEventListener("click", (event) => {
   }
   if (action === "toggle-nav") {
     document.body.classList.toggle("nav-open");
+    return;
+  }
+  if (action === "toggle-sidebar") {
+    event.preventDefault();
+    toggleSidebarCollapsed();
     return;
   }
   if (action === "open-search-palette") {
