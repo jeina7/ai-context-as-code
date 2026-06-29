@@ -44,6 +44,16 @@
       "updated": "2026-06-30",
       "visibility": "public"
     },
+    "UBKLr5rA0s": {
+      "created": "2026-06-30",
+      "currentPath": "Projects/ai-context-as-code/Research/acac-visual-direction-grill-raw-transcript.md",
+      "previousPaths": [],
+      "route": "/trove/UBKLr5rA0s",
+      "title": "ACAC Visual Direction Grill Raw Transcript",
+      "type": "research",
+      "updated": "2026-06-30",
+      "visibility": "internal"
+    },
     "dqkUg3hS9I": {
       "created": "2026-06-30",
       "currentPath": "Projects/ai-context-as-code/Worklog/2026-06-30.md",
@@ -53,6 +63,16 @@
       "type": "worklog",
       "updated": "2026-06-30",
       "visibility": "public"
+    },
+    "mz9Mw6b6aE": {
+      "created": "2026-06-30",
+      "currentPath": "Projects/ai-context-as-code/Research/acac-visual-direction-grill-qna-extract.md",
+      "previousPaths": [],
+      "route": "/trove/mz9Mw6b6aE",
+      "title": "ACAC Visual Direction Grill Q&A Extract",
+      "type": "research",
+      "updated": "2026-06-30",
+      "visibility": "internal"
     },
     "nKPjBxr_J9": {
       "created": "2026-06-30",
@@ -126,6 +146,8 @@
     "Projects/ai-context-as-code/Designs/ai-native-context-layer-product-model.md": "4dYzPkCVtG",
     "Projects/ai-context-as-code/Research/acac-product-direction-grill-qna-extract.md": "sOkKpZBKqF",
     "Projects/ai-context-as-code/Research/acac-product-direction-grill-raw-transcript.md": "E73ubE7kLV",
+    "Projects/ai-context-as-code/Research/acac-visual-direction-grill-qna-extract.md": "mz9Mw6b6aE",
+    "Projects/ai-context-as-code/Research/acac-visual-direction-grill-raw-transcript.md": "UBKLr5rA0s",
     "Projects/ai-context-as-code/Worklog/2026-06-30.md": "dqkUg3hS9I",
     "Projects/ai-context-as-code/index.md": "zz2t-H9rM0",
     "forge/_config/Agents/agent.md": "9m41s1bWfU",

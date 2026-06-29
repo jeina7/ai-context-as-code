@@ -60,7 +60,7 @@ Important boundaries:
 - ACAC does not promise compatibility with another app's plugin system, folder model, graph view, or sync model.
 - A user may personally migrate existing notes into ACAC, but that is not a product promise.
 - Product copy should avoid "like Obsidian" as a primary explanation.
-- ACAC's own model is Account, selectable Forge, selectable Trove, Project, Section, Gem, Quarry, Ledger, Chronicle, Context Graph, and Relations.
+- ACAC's own model is Account with selected Forge and selected Trove, plus Project, Section, Gem, Quarry, Refine to Trove, Ledger, Ledger Entry, Chronicle, Context Graph, Relations, and Claim.
 
 ## Account Model
 
@@ -341,13 +341,12 @@ Claim rules:
 
 ## Canonical Hierarchy
 
-The v1 canonical content hierarchy is:
+The v1 canonical Gem hierarchy is:
 
 ```text
 Account
 ├── <selected-forge>/
 ├── <selected-trove>/
-│   ├── Quarry/
 │   └── Projects/
 │       └── <project>/
 │           └── <section>/
@@ -364,6 +363,10 @@ Account
 `<selected-forge>` and `<selected-trove>` are selected resources, not literal fixed folder names.
 The account can switch the active Trove, and future Forge Profiles can switch the active Forge.
 
+Quarry is deliberately not shown as part of the canonical Gem hierarchy.
+It is a Trove-scoped raw input surface.
+The app may display Quarry beside Projects, and the source store may persist Quarry items, but Quarry items are not canonical Gems until Refine to Trove places them into the Project, Section, Gem tree.
+
 `Projects/` replaces the earlier `Domains/` idea.
 Project is the correct unit because ACAC context is organized around active work and evolving durable context, not abstract taxonomy.
 
@@ -375,6 +378,35 @@ It may have generated cache artifacts, but those artifacts are not source and sh
 This hierarchy is a product model, not necessarily the exact local filesystem layout.
 The local materialized tree should be readable as markdown files.
 The cloud source store can use a structured internal model.
+
+## Identity And URL Model
+
+ACAC keeps both semantic paths and stable internal IDs.
+
+Human-facing paths should be semantic.
+Web URLs, reader navigation, and local materialized paths should expose meaningful Trove, Project, Section, and Gem names rather than random IDs.
+This keeps published context understandable and shareable.
+
+System identity should be stable.
+Durable objects that can be renamed, moved, linked, audited, reverted, imported, or related should have stable internal IDs.
+This includes at least Troves, Gems, Quarry items, Ledger Entries, and Forge source items.
+
+The registry maps:
+
+- stable ID
+- current semantic path
+- previous paths
+- display title and slug
+- origin provenance for imports
+- source hashes used by Ledger and revert checks
+
+Rename Gem and Move Gem change semantic paths.
+They should not change the Gem's stable ID.
+Backlinks, Relations, Ledger evidence, origin provenance, and revert data should refer to stable IDs internally.
+
+When a semantic path changes, ACAC should preserve previous-path knowledge.
+For Web, that can support redirects, moved notices, or compatibility links.
+For local materialized source, that can support link repair and conflict explanation.
 
 ## Product Surfaces
 
@@ -416,8 +448,14 @@ Useful editor affordances:
 
 ### Web
 
-The Web product is the read, share, publish, and import surface.
-It is not the v1 write surface.
+The Web product is the read, share, publish, import, and owner write surface.
+It is not the primary trusted agent-integration write surface in v1.
+That role belongs to the Desktop App and CLI.
+
+Web has two distinct modes:
+
+- published reader mode: read-only public or invited access
+- authenticated owner mode: semantic write access for the user's own Troves
 
 Web use cases:
 
@@ -425,17 +463,22 @@ Web use cases:
 - linkable project or context reader
 - agent-readable project handbook
 - client-facing delivery room
-- published Chronicle
+- published read-only Chronicle view
 - public/private publish preview
 - Trove discovery and import
+- owner Gem edit, archive, and delete through semantic actions
+- owner Quarry create for rough input
 - future team shared knowledge layer
 
 Published public Troves can be read without login.
 Private or shared Troves require login.
 Import Trove requires login.
+Owner write requires login and ownership of the target Trove.
 
-Web v1 should remain read-only for published Troves.
-Comments, edit, and review workflow are future features.
+Web v1 should remain read-only for published reader mode.
+For owner mode, create starts as a Quarry item, not as a canonical Gem.
+Edit, Archive Gem, and Delete Gem still go through the same semantic write actions and Ledger recording as Desktop writes.
+Comments, review workflow, shared editing, and origin write-back are future features.
 
 ### CLI
 
@@ -599,7 +642,7 @@ It stores:
 - Forge source
 - Ledger Entries
 - registry data
-- Context Graph derived data or rebuild inputs
+- rebuild inputs needed for Context Graph generation
 
 Each device has a full local materialized copy.
 Agents read that local copy like files.
@@ -607,6 +650,10 @@ The Desktop App syncs local changes to the ACAC cloud source store in the backgr
 
 Publish is explicit.
 Background sync and public publish are separate operations.
+
+Context Graph data, search indexes, navigation indexes, and Chronicle render output may be stored for performance.
+They are derived data, not canonical source.
+They should be rebuildable from Gem markdown, structured metadata, Quarry items, Forge source, Ledger Entries, registry data, and import provenance.
 
 ## Local Materialized Source
 
@@ -749,14 +796,17 @@ It turns Web from only a reader into a context sharing and adoption surface.
 
 ## Web Reader And Publish
 
-Web is read-only for published Troves in v1.
+Published reader mode is read-only for published Troves in v1.
 It supports:
 
 - public reader
 - invited private reader
 - import flow
-- published Chronicle
+- read-only Chronicle view derived from the published Trove's Ledger
 - LLM-readable published context
+
+Authenticated owner mode is separate.
+It can support Quarry create and semantic writes for the user's own Troves, but it should not expose public anonymous write or shared editing in v1.
 
 Published Troves should eventually provide agent-readable manifests, such as a Trove manifest or `llms.txt` style surface.
 The exact shape is still open, but the direction fits the product.
@@ -942,7 +992,9 @@ V1 should not include:
 - Relations is the user-facing graph surface.
 - Claim is hidden internal primitive.
 - Desktop App is the primary write surface.
-- Web is read, publish, share, and import surface.
+- Web is read, publish, share, import, and owner write surface.
+- Published reader mode is read-only.
+- Owner Web writes create Quarry items or use semantic actions.
 - CLI is v1 semantic action interface.
 - MCP is future adapter.
 - Read path is filesystem-speed local materialized source.
