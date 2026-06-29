@@ -620,6 +620,36 @@ def rollback_renamed_file(source: Path, target: Path, expected_text: str) -> tup
     return True, None
 
 
+def remove_empty_dirs_until(path: Path, stop: Path) -> None:
+    current = path.resolve()
+    stop = stop.resolve()
+    while current != stop and current.is_dir():
+        try:
+            current.rmdir()
+        except OSError:
+            return
+        current = current.parent
+
+
+def rollback_archived_file(
+    source: Path,
+    target: Path,
+    before_text: str,
+    expected_text: str,
+    archive_root: Path,
+) -> tuple[bool, str | None]:
+    if source.exists():
+        return False, f"rollback failed because source path already exists: {repo_relative(source)}"
+    if not target.exists():
+        return False, f"rollback failed because archive target is missing: {repo_relative(target)}"
+    if target.read_text(encoding="utf-8") != expected_text:
+        return False, f"rollback skipped because archive target changed after write: {repo_relative(target)}"
+    source.write_text(before_text, encoding="utf-8")
+    target.unlink()
+    remove_empty_dirs_until(target.parent, archive_root)
+    return True, None
+
+
 def create_note(
     *,
     source_path: str | Path,
@@ -1020,6 +1050,92 @@ def apply_move_note(
     )
 
 
+def apply_archive_note(
+    *,
+    source_path: str | Path,
+    note_id: str | None = None,
+    archive_root: str | Path = "_archived",
+    validation_commands: list[list[str]] | None = None,
+) -> ApplyResult:
+    preview = archive_note(
+        source_path=source_path,
+        note_id=note_id,
+        archive_root=archive_root,
+    )
+    if not preview.ok:
+        return ApplyResult(
+            ok=False,
+            operation="apply_archive_note",
+            mode="apply",
+            preview=preview,
+            validation=None,
+            applied_files=[],
+            rolled_back_files=[],
+            errors=list(preview.errors),
+            warnings=list(preview.warnings),
+        )
+
+    if len(preview.changed_files) != 2:
+        raise SourceWriteError("archive apply expected exactly two changed file entries")
+
+    source = existing_note_path(source_path)
+    source_rel = repo_relative(source)
+    target_rel = preview.after_summary.get("sourcePath")
+    if not target_rel:
+        raise SourceWriteError("archive preview did not produce a target path")
+    if source_rel != preview.before_summary.get("sourcePath") or source_rel != preview.changed_files[0]:
+        raise SourceWriteError("archive preview source does not match source path")
+
+    target = safe_source_path(target_rel, must_exist=False)
+    require_lifecycle_path(target)
+    require_available_target(target)
+
+    before = source.read_text(encoding="utf-8")
+    after = replace_frontmatter_value(before, "status", "archived")
+    before_note = parse_markdown_note(before, source_rel)
+    after_note = parse_markdown_note(after, target_rel)
+    if before_note.errors:
+        raise SourceWriteError(f"source markdown is invalid: {'; '.join(before_note.errors)}")
+    if after_note.errors:
+        raise SourceWriteError(f"archive markdown is invalid: {'; '.join(after_note.errors)}")
+    if before_note.note_id and after_note.note_id and before_note.note_id != after_note.note_id:
+        raise SourceWriteError(f"route id would change: {before_note.note_id} -> {after_note.note_id}")
+
+    archive_base = resolve_candidate_path(archive_root)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(after, encoding="utf-8")
+    source.unlink()
+    validation = run_validation(validation_commands)
+
+    if validation.ok:
+        return ApplyResult(
+            ok=True,
+            operation="apply_archive_note",
+            mode="apply",
+            preview=preview,
+            validation=validation,
+            applied_files=list(preview.changed_files),
+            rolled_back_files=[],
+            warnings=list(preview.warnings),
+        )
+
+    rollback_ok, rollback_error = rollback_archived_file(source, target, before, after, archive_base)
+    errors = ["validation failed; archive apply was not completed"]
+    if rollback_error:
+        errors.append(rollback_error)
+    return ApplyResult(
+        ok=False,
+        operation="apply_archive_note",
+        mode="apply",
+        preview=preview,
+        validation=validation,
+        applied_files=[] if rollback_ok else list(preview.changed_files),
+        rolled_back_files=list(preview.changed_files) if rollback_ok else [],
+        errors=errors,
+        warnings=list(preview.warnings),
+    )
+
+
 def rename_note(
     *,
     source_path: str | Path,
@@ -1203,6 +1319,7 @@ applyRenamePath = apply_rename_path
 renameNote = rename_note
 applyMoveNote = apply_move_note
 moveNote = move_note
+applyArchiveNote = apply_archive_note
 archiveNote = archive_note
 hardDeleteNote = hard_delete_note
 runValidation = run_validation
@@ -1283,6 +1400,12 @@ def main(argv: list[str] | None = None) -> int:
     archive_parser = subparsers.add_parser("preview-archive", help="Preview archiving a note")
     archive_parser.add_argument("--source-path", required=True)
     archive_parser.add_argument("--note-id")
+
+    apply_archive_parser = subparsers.add_parser("apply-archive", help="Archive a note and run validation")
+    apply_archive_parser.add_argument("--source-path", required=True)
+    apply_archive_parser.add_argument("--note-id")
+    apply_archive_parser.add_argument("--archive-root", default="_archived")
+    apply_archive_parser.add_argument("--skip-build", action="store_true")
 
     hard_delete_parser = subparsers.add_parser("preview-hard-delete", help="Preview hard delete guard")
     hard_delete_parser.add_argument("--source-path", required=True)
@@ -1403,6 +1526,17 @@ def main(argv: list[str] | None = None) -> int:
             preview = archive_note(source_path=args.source_path, note_id=args.note_id)
             print_json(preview.to_dict())
             return 0 if preview.ok else 1
+
+        if args.command == "apply-archive":
+            commands = DEFAULT_VALIDATION_COMMANDS[:1] if args.skip_build else DEFAULT_VALIDATION_COMMANDS
+            result = apply_archive_note(
+                source_path=args.source_path,
+                note_id=args.note_id,
+                archive_root=args.archive_root,
+                validation_commands=commands,
+            )
+            print_json(result.to_dict())
+            return 0 if result.ok else 1
 
         if args.command == "preview-hard-delete":
             preview = hard_delete_note(

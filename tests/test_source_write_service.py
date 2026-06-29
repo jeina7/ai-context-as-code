@@ -11,6 +11,17 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import source_write_service as service  # noqa: E402
 
 
+def remove_empty_dirs_until(path: Path, stop: Path) -> None:
+    current = path.resolve()
+    stop = stop.resolve()
+    while current != stop and current.is_dir():
+        try:
+            current.rmdir()
+        except OSError:
+            return
+        current = current.parent
+
+
 class SourceWriteServiceTests(unittest.TestCase):
     def test_safe_source_path_blocks_repo_outside_trove(self) -> None:
         with self.assertRaises(service.SourceWriteError):
@@ -608,6 +619,124 @@ Line three.
         self.assertEqual(preview.after_summary["status"], "archived")
         self.assertEqual(preview.after_summary["sourcePath"], "forge/_archived/Projects/ai-context-as-code/index.md")
         self.assertIn('status: "archived"', preview.diff)
+
+    def test_apply_archive_note_moves_file_and_sets_archived_status(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-source.md"
+        target = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-source.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(target.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Archive Note",
+            description="Archive note used by source write service tests",
+            note_type="research",
+            note_id="ArchOk0001",
+            summary_lines=[
+                "First archive summary line.",
+                "Second archive summary line.",
+                "Third archive summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_archive_note(
+            source_path=source,
+            note_id="ArchOk0001",
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertTrue(result.ok, result.errors)
+        self.assertFalse(source.exists())
+        self.assertTrue(target.exists())
+        archived = target.read_text(encoding="utf-8")
+        self.assertIn('status: "archived"', archived)
+        self.assertIn("id: ArchOk0001", archived)
+        self.assertEqual(
+            result.applied_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-archive-source.md",
+                "forge/_archived/Projects/ai-context-as-code/Research/local-archive-source.md",
+            ],
+        )
+        self.assertTrue(result.preview.route_impact.route_preserved)
+
+    def test_apply_archive_note_rolls_back_when_validation_fails(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-fail.md"
+        target = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-fail.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(target.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Archive Failure",
+            description="Archive failure note used by source write service tests",
+            note_type="research",
+            note_id="ArchFail01",
+            summary_lines=[
+                "First failed archive summary line.",
+                "Second failed archive summary line.",
+                "Third failed archive summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_archive_note(
+            source_path=source,
+            note_id="ArchFail01",
+            validation_commands=[[sys.executable, "-c", "import sys; sys.exit(7)"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertEqual(source.read_text(encoding="utf-8"), markdown)
+        self.assertEqual(result.applied_files, [])
+        self.assertEqual(
+            result.rolled_back_files,
+            [
+                "trove/Projects/ai-context-as-code/Research/local-archive-fail.md",
+                "forge/_archived/Projects/ai-context-as-code/Research/local-archive-fail.md",
+            ],
+        )
+        self.assertIn("validation failed", "\n".join(result.errors))
+
+    def test_apply_archive_note_rejects_wrong_note_id_without_writing(self) -> None:
+        source = ROOT / "trove" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-wrong-id.md"
+        target = ROOT / "forge" / "_archived" / "Projects" / "ai-context-as-code" / "Research" / "local-archive-wrong-id.md"
+        source.unlink(missing_ok=True)
+        target.unlink(missing_ok=True)
+        self.addCleanup(lambda: source.unlink(missing_ok=True))
+        self.addCleanup(lambda: target.unlink(missing_ok=True))
+        self.addCleanup(lambda: remove_empty_dirs_until(target.parent, ROOT / "forge" / "_archived"))
+
+        markdown = service.compose_note_markdown(
+            title="Local Archive Wrong ID",
+            description="Archive wrong id note used by source write service tests",
+            note_type="research",
+            note_id="ArchBadID1",
+            summary_lines=[
+                "First wrong id archive summary line.",
+                "Second wrong id archive summary line.",
+                "Third wrong id archive summary line.",
+            ],
+        )
+        source.write_text(markdown, encoding="utf-8")
+
+        result = service.apply_archive_note(
+            source_path=source,
+            note_id="WrongNote1",
+            validation_commands=[[sys.executable, "-c", "print('ok')"]],
+        )
+
+        self.assertFalse(result.ok)
+        self.assertTrue(source.exists())
+        self.assertFalse(target.exists())
+        self.assertIn("note id mismatch", "\n".join(result.errors))
 
     def test_hard_delete_note_requires_confirmation_token(self) -> None:
         blocked = service.hard_delete_note(
