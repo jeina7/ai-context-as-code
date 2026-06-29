@@ -60,7 +60,7 @@ Important boundaries:
 - ACAC does not promise compatibility with another app's plugin system, folder model, graph view, or sync model.
 - A user may personally migrate existing notes into ACAC, but that is not a product promise.
 - Product copy should avoid "like Obsidian" as a primary explanation.
-- ACAC's own model is Account, Trove, Domain, Section, Gem, Quarry, Forge, Ledger, Chronicle, Context Graph, and Relations.
+- ACAC's own model is Account, selectable Forge, selectable Trove, Project, Section, Gem, Quarry, Ledger, Chronicle, Context Graph, and Relations.
 
 ## Account Model
 
@@ -68,8 +68,8 @@ ACAC uses a simple account model in v1.
 
 ```text
 Account
-├── Forge
-├── Troves
+├── <selected-forge>
+├── <selected-trove>
 ├── .acac
 └── account settings
 ```
@@ -78,12 +78,17 @@ There is no separate Workspace, Vault, Atelier, Foundry, or Library layer in v1.
 One account is one ACAC space.
 This keeps hierarchy simple and avoids adding a container that does not carry a distinct user job.
 
+`<selected-forge>` and `<selected-trove>` are selected account resources.
+They should not be modeled as literal permanent root folder names such as `Forge/` and `Troves/` in the product hierarchy.
+The account can switch the active Trove.
+V1 starts with one active Forge, while future Forge Profiles can make Forge selection explicit.
+
 Rejected alternatives:
 
 - `Workspace`: too generic and unnecessary for v1.
 - `Vault`: too strongly associated with another document app.
 - `Atelier` or `Foundry`: evocative, but the extra hierarchy does not solve a v1 product problem.
-- `User -> Troves` with no account-level Forge/Ledger thinking: too simple once Forge, sync, and history are included.
+- `User -> Troves` with no selected Forge, system store, or history thinking: too simple once Forge, sync, and history are included.
 
 ## Pricing Boundary
 
@@ -92,7 +97,7 @@ The v1 pricing boundary is simple:
 | Plan area | Free | Paid |
 |---|---|---|
 | Troves | One Trove | Multiple Troves |
-| Forge | One Forge | One Forge in v1 |
+| Forge | One active Forge | Forge Profiles later |
 | Desktop App sync | Basic sync | More capacity and history |
 | Web publish | Basic publish | Private/shared reader and richer publish controls |
 | Import | Not core free value | Import Trove |
@@ -111,29 +116,30 @@ Future paid or team features:
 ### Trove
 
 A **Trove** is the main unit for publish, import, share, sync, and visibility.
-It is a collection of canonical Gems organized by domain and section.
+It is a collection of canonical Gems organized by project and section.
 
 Trove-level visibility is the v1 boundary.
 Gem-level visibility is not part of v1.
 If public and private material need different visibility, they should live in different Troves.
 
-### Domain
+### Project
 
-A **Domain** is a knowledge area inside a Trove.
+A **Project** is a bounded workstream, subject, or durable context area inside a Trove.
 Examples:
 
-- `product`
-- `storage`
-- `agent-integration`
-- `pricing`
-- `runtime`
+- `ai-context-as-code`
+- `client-work`
+- `personal-finance`
+- `product-research`
+- `agent-runtime`
 
-Domains are created as content accumulates.
+Projects are created as content accumulates.
 They are not a fixed global taxonomy.
+The word Project is preferred over Domain because ACAC is organized around work and context evolution, not abstract knowledge taxonomy.
 
 ### Section
 
-A **Section** groups Gems by role inside a Domain.
+A **Section** groups Gems by role inside a Project.
 Sections are not Gem classes.
 They are placement conventions that help humans and agents decide where a Gem belongs.
 
@@ -147,7 +153,7 @@ Default section candidates:
 - `troubleshooting`
 - `archive`
 
-The exact default section set should stay compatible with the existing note convention: domain first, type or role below it.
+The exact default section set should stay compatible with the intended source convention: project first, type or role below it.
 Agent refinement should use these section conventions when placing or moving Gems.
 
 ### Gem
@@ -196,7 +202,7 @@ It contains durable operating context that changes agent behavior.
 V1 Forge structure:
 
 ```text
-Forge/
+<forge>/
 ├── Agents/
 ├── Skills/
 ├── Commands/
@@ -216,7 +222,7 @@ Memory is operating context for agents, while Troves are publishable knowledge c
 ### Forge Profile
 
 **Forge Profile** is a future feature.
-V1 has one account-level Forge.
+V1 starts with one active Forge.
 
 A future account may have several Forge Profiles, such as default, client-safe, and experimental.
 That feature should not be included in the first product spec.
@@ -228,7 +234,10 @@ Each Trove has its own Ledger.
 Forge also has its own Ledger.
 
 Ledger is not a Gem and is not shown in the normal Trove tree.
-Raw Ledger data lives in the hidden system store.
+Raw Ledger data lives in the hidden `.acac` system store.
+In the user-facing product model, Ledger is a history and audit system, not a content folder.
+Ledger is the source of truth for work history.
+Human-readable history documents or views are derived from Ledger, not edited as source.
 
 Ledger exists to support:
 
@@ -258,6 +267,7 @@ Each Ledger Entry includes:
 V1 revert is Ledger Entry based.
 ACAC does not erase the old Entry.
 It creates a new Entry that reverts the effect of a previous Entry.
+One-click revert should operate at the Ledger Entry level.
 
 ### Chronicle
 
@@ -267,6 +277,9 @@ Each Trove has its own Chronicle.
 Chronicle is generated from that Trove's Ledger.
 It is read-only.
 The user should not directly edit Chronicle as source.
+Chronicle is not a Gem and is not shown as a normal editable folder inside a Trove.
+It is surfaced in the app as a friendly history, activity, or audit view.
+Any stored Chronicle artifact is generated output and an implementation detail, not canonical content.
 
 Chronicle should be friendly enough that a person can return weeks later and understand:
 
@@ -332,19 +345,32 @@ The v1 canonical content hierarchy is:
 
 ```text
 Account
-├── Forge
-├── Troves/
-│   └── <trove>
-│       ├── Quarry
-│       ├── Chronicle
-│       ├── Ledger
-│       └── Domains/
-│           └── <domain>
-│               └── Sections/
-│                   └── <section>
-│                       └── <gem>.md
+├── <selected-forge>/
+├── <selected-trove>/
+│   ├── Quarry/
+│   └── Projects/
+│       └── <project>/
+│           └── <section>/
+│               └── <gem>.md
 └── .acac/
+    ├── ledger/
+    │   ├── troves/
+    │   └── forge/
+    ├── registry/
+    ├── config/
+    └── state/
 ```
+
+`<selected-forge>` and `<selected-trove>` are selected resources, not literal fixed folder names.
+The account can switch the active Trove, and future Forge Profiles can switch the active Forge.
+
+`Projects/` replaces the earlier `Domains/` idea.
+Project is the correct unit because ACAC context is organized around active work and evolving durable context, not abstract taxonomy.
+
+Ledger and Chronicle are deliberately not normal children of the Trove content tree.
+Raw Ledger Entries live under `.acac/ledger/`.
+Chronicle is surfaced through the app as a read-only history view derived from Ledger.
+It may have generated cache artifacts, but those artifacts are not source and should not define the product hierarchy.
 
 This hierarchy is a product model, not necessarily the exact local filesystem layout.
 The local materialized tree should be readable as markdown files.
@@ -470,7 +496,7 @@ V1 semantic write actions:
 | Refine to Trove | Turn Quarry input into canonical Trove context. |
 | Edit Gem | Modify an existing Gem. |
 | Rename Gem | Change a Gem title, slug, or display name. |
-| Move Gem | Move a Gem to another section, domain, or Trove. |
+| Move Gem | Move a Gem to another section, project, or Trove. |
 | Archive Gem | Remove a Gem from the active surface while preserving history. |
 | Delete Gem | Remove a Gem from source in limited cases. |
 | Import Trove | Bring another published Trove into the user's account as a forked copy. |
@@ -568,7 +594,7 @@ It stores:
 
 - Gem markdown body
 - structured metadata
-- Trove, Domain, and Section structure
+- Trove, Project, and Section structure
 - Quarry items
 - Forge source
 - Ledger Entries
@@ -639,10 +665,11 @@ Recommended structure:
 ```text
 .acac/
 ├── ledger/
+│   ├── troves/
+│   └── forge/
 ├── registry/
 ├── generated/
 │   ├── agents/
-│   ├── chronicles/
 │   └── indexes/
 ├── config/
 └── state/
@@ -650,13 +677,16 @@ Recommended structure:
 
 Meanings:
 
-- `ledger`: raw Ledger Entries
+- `ledger/troves`: raw Trove Ledger Entries
+- `ledger/forge`: raw Forge Ledger Entries for Forge changes
 - `registry`: stable identity, semantic path, previous paths, origin provenance
 - `generated/agents`: generated Claude Code and Codex runtime entries
-- `generated/chronicles`: generated Chronicle output
 - `generated/indexes`: search, navigation, and Context Graph indexes
-- `config`: user-selected workspace settings and adapter configuration
+- `config`: user-selected Forge, Trove, sync, publish, and adapter configuration
 - `state`: local-only runtime state such as last sync, adapter health, and last generated hash
+
+Chronicle output can be cached under `generated/` if needed, but it should be treated as disposable generated view data.
+The product-facing Chronicle is the read-only app view derived from Ledger.
 
 `state` is local-only and should not be source store truth.
 `config` may be source-store backed when it represents durable user choices.
@@ -685,7 +715,7 @@ Sync model:
 Source model:
 
 ```text
-Forge/
+<forge>/
 └── Agents/
     ├── Common.md
     ├── Codex.md
@@ -760,7 +790,7 @@ Free-form relationship names should be avoided.
 Recommended node types:
 
 - `Trove`
-- `Domain`
+- `Project`
 - `Section`
 - `Gem`
 - `QuarryItem`
@@ -773,7 +803,7 @@ Recommended node types:
 
 Recommended edge types:
 
-- `contains`: Trove to Domain to Section to Gem
+- `contains`: Trove to Project to Section to Gem
 - `links_to`: explicit markdown or wikilink
 - `about`: Gem to Concept
 - `mentions`: Gem to Concept or ExternalRef
@@ -897,17 +927,17 @@ V1 should not include:
 - Primary user is a Claude Code and Codex heavy solo builder or maker.
 - ACAC stands independent from existing document apps.
 - Account model has no separate workspace layer in v1.
-- V1 has one account-level Forge.
+- V1 starts with one active Forge.
 - Troves are the publish, import, share, sync, and visibility unit.
 - Multiple Troves are paid.
-- Trove hierarchy is Domain, Section, Gem.
+- Trove hierarchy is Project, Section, Gem.
 - Quarry is Trove-specific.
 - Refine to Trove is manually triggered.
 - Forge contains Agents, Skills, Commands, and Memory.
 - Memory belongs in Forge.
-- Ledger is append-only and Trove-specific.
-- Forge has its own Ledger.
-- Chronicle is Trove-specific and generated from Ledger.
+- Ledger is append-only hidden system history.
+- Trove Ledger is v1 priority; Forge Ledger is system-store history for Forge changes.
+- Chronicle is the generated read-only app view from Ledger, not editable source or a Gem tree folder.
 - Context Graph is first-class derived layer.
 - Relations is the user-facing graph surface.
 - Claim is hidden internal primitive.
@@ -925,7 +955,7 @@ V1 should not include:
 
 ## Remaining Open Questions
 
-- Exact default Domain and Section templates for a new Trove.
+- Exact default Project and Section templates for a new Trove.
 - Exact local materialized filesystem layout.
 - Exact ACAC cloud source store schema.
 - Exact Context Graph node and edge schema after prototype validation.
